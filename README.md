@@ -56,11 +56,29 @@ Josh approves before anything goes to Loxo. `data/` is never committed.
 Add `--limit 2` to try a couple of candidates first. To use another job,
 candidate file or scorecard: `--job`, `--candidates`, `--scorecard`.
 
-What is built: the scorecard, the prompt, the model call, the checks on every
-answer, the average, the flags for the recruiter, and the dry-run report.
-What is not built yet: reading from Loxo, writing back to Loxo, and the
-automatic trigger. Those wait for the Loxo key.
+## With the real Loxo account (day one, once the key is in `.env`)
+
+```
+npm run loxo:check                                  # connection test, lists the IDs for .env
+npm run loxo:check -- --job 123 --probe             # job title, candidate count, raw sample saved to data/probe/
+npm run score:claude -- --loxo-job 123 --limit 3    # score 3 real candidates, dry run
+npm run score:claude -- --loxo-job 123              # the whole job, dry run
+```
+
+A dry run never writes to Loxo. It saves the report and `loxo-payloads.json`,
+exactly what would be written. After Josh approves: set `LOXO_WRITE_ENABLED=true`
+and `DRY_RUN=false`, then add `--write`. A candidate who already has an AI
+scorecard on that job is skipped, so a re-run does not create duplicates.
+
+## Automatic scoring
+
+`npm run serve` starts a small server that Loxo calls when a candidate is
+added to a job (`node scripts/register-webhook.js --url https://.../loxo/webhook`
+sets that up). Only jobs listed in `LOXO_AUTO_SCORE_JOB_IDS` are scored. It needs
+to run somewhere with a public https address; where to host it is still to decide.
 
 ## Status
 
-Scoped, not started. Waiting on access details from DP. See `CLAUDE.md`.
+Built: scoring, Loxo read, Loxo write (scorecard or note), automatic scoring
+server. Tested on made-up data and a simulated Loxo. Not yet run against the
+real account: waiting on the Loxo key. See `CLAUDE.md`.

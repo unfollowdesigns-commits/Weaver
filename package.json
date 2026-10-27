@@ -11,7 +11,9 @@
     "test": "node --test",
     "score:sample": "node scripts/score-job.js --provider mock",
     "score:openai": "node scripts/score-job.js --provider openai",
-    "score:claude": "node scripts/score-job.js --provider claude"
+    "score:claude": "node scripts/score-job.js --provider claude",
+    "loxo:check": "node scripts/loxo-check.js",
+    "serve": "node scripts/serve.js"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "0.133.0"

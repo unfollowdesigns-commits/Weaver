@@ -1,10 +1,15 @@
 #!/usr/bin/env node
-// Scores every candidate in a job file and writes a dry-run report to data/runs/.
-// Reads local files only. Nothing is written to Loxo.
+// Scores every candidate on a job and writes a dry-run report to data/runs/.
 //
-//   node scripts/score-job.js --provider mock|openai|claude
+// From sample files (no Loxo needed):
+//   node scripts/score-job.js --provider mock|openai|claude [--limit 3]
 //     [--job samples/job.sample.json] [--candidates samples/candidates.sample.json]
-//     [--scorecard config/scorecards/example.v1.json] [--limit 3] [--concurrency 3]
+//
+// From a real Loxo job (read-only unless --write):
+//   node scripts/score-job.js --provider claude --loxo-job 123 [--limit 3] [--write]
+//
+// --write only writes when .env has LOXO_WRITE_ENABLED=true and DRY_RUN=false.
+// Otherwise the exact payloads that would be written are saved next to the report.
 
 import fs from "node:fs";
 import path from "node:path";
@@ -15,6 +20,9 @@ import { loadTemplate } from "../src/prompt.js";
 import { getProvider } from "../src/providers/index.js";
 import { scoreJob } from "../src/score.js";
 import { toMarkdown, toHtml } from "../src/report.js";
+import { loxoClientFromEnv } from "../src/loxo/index.js";
+import { fetchJobForScoring } from "../src/loxo/read.js";
+import { buildPayload, writeResult, writeConfigFromEnv, writesAllowed } from "../src/loxo/write.js";
 
 loadEnv();
 
@@ -23,18 +31,32 @@ const { values: args } = parseArgs({
     provider: { type: "string", default: process.env.SCORING_PROVIDER || "mock" },
     job: { type: "string", default: "samples/job.sample.json" },
     candidates: { type: "string", default: "samples/candidates.sample.json" },
+    "loxo-job": { type: "string" },
     scorecard: { type: "string", default: "config/scorecards/example.v1.json" },
     limit: { type: "string" },
     concurrency: { type: "string", default: "3" },
+    write: { type: "boolean", default: false },
   },
 });
 
-const job = JSON.parse(fs.readFileSync(args.job, "utf8"));
-let candidates = JSON.parse(fs.readFileSync(args.candidates, "utf8"));
-if (args.limit) candidates = candidates.slice(0, Number(args.limit));
+const limit = args.limit ? Number(args.limit) : undefined;
 const scorecard = loadScorecard(args.scorecard);
 const template = loadTemplate();
 const provider = await getProvider(args.provider);
+
+let job, candidates, client;
+if (args["loxo-job"]) {
+  client = loxoClientFromEnv(process.env, { allowWrites: args.write });
+  console.log(`Reading job ${args["loxo-job"]} from Loxo ...`);
+  const loaded = await fetchJobForScoring(client, args["loxo-job"], { limit });
+  ({ job, candidates } = loaded);
+  console.log(`  ${loaded.pipelineCount} on the pipeline, ${candidates.length} loaded${loaded.failures.length ? `, ${loaded.failures.length} could not be read` : ""}`);
+  for (const f of loaded.failures) console.log(`  could not read entry ${f.entry_id}: ${f.error}`);
+} else {
+  job = JSON.parse(fs.readFileSync(args.job, "utf8"));
+  candidates = JSON.parse(fs.readFileSync(args.candidates, "utf8"));
+  if (limit) candidates = candidates.slice(0, limit);
+}
 
 console.log(`Scoring ${candidates.length} candidates for "${job.title}" with ${provider.name} (${provider.model})`);
 const results = await scoreJob({
@@ -50,6 +72,29 @@ const meta = { jobTitle: job.title, scorecard: `${scorecard.id}.v${scorecard.ver
 fs.writeFileSync(path.join(dir, "results.json"), JSON.stringify({ meta, results }, null, 2));
 fs.writeFileSync(path.join(dir, "report.md"), toMarkdown(results, meta));
 fs.writeFileSync(path.join(dir, "report.html"), toHtml(results, meta));
+
+if (args["loxo-job"]) {
+  const cfg = writeConfigFromEnv();
+  const scored = results.filter((r) => r.status === "scored");
+  if (args.write && writesAllowed()) {
+    console.log(`\nWriting ${scored.length} results to Loxo as ${cfg.target}s ...`);
+    for (const r of scored) {
+      try {
+        const out = await writeResult(client, r, cfg);
+        console.log(`  ${out.status.padEnd(7)} ${r.candidate_name ?? r.candidate_id}${out.reason ? ` (${out.reason})` : ""}`);
+      } catch (err) {
+        console.log(`  FAILED  ${r.candidate_name ?? r.candidate_id}: ${err.message}`);
+        process.exitCode = 1;
+      }
+    }
+  } else {
+    const payloads = scored.map((r) => {
+      try { return { candidate: r.candidate_name, ...buildPayload(r, cfg) }; } catch (err) { return { candidate: r.candidate_name, error: err.message }; }
+    });
+    fs.writeFileSync(path.join(dir, "loxo-payloads.json"), JSON.stringify(payloads, null, 2));
+    console.log(`\nDry run: nothing written to Loxo. What would be written: ${path.join(dir, "loxo-payloads.json")}`);
+  }
+}
 
 const errors = results.filter((r) => r.status !== "scored").length;
 console.log(`\nDone. ${results.length - errors} scored, ${errors} errors. Report: ${path.join(dir, "report.html")}`);

@@ -16,6 +16,7 @@ export async function scoreCandidate({ candidate, job, scorecard, template, prov
     provider: provider.name,
     scored_at: new Date().toISOString(),
     review_status: "awaiting_review",
+    loxo: candidate.loxo ?? null,
   };
 
   let lastError = "";

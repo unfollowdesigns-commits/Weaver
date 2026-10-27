@@ -125,8 +125,34 @@ this build. This system runs on the REST API.
 
 ## Findings
 
-Empty until the first API key arrives. Record confirmed API behaviour here,
-with the endpoint and the date, so nothing gets re-guessed later.
+Record confirmed API behaviour here, with the endpoint and the date, so
+nothing gets re-guessed later.
+
+From Loxo's official API reference (https://loxo.readme.io/llms.txt), read
+27 Oct 2026. Documented, not yet tested on the real account:
+
+1. Resume text: yes. `GET /{slug}/people/{person_id}/resumes` lists resumes,
+   newest first; `GET /{slug}/people/{person_id}/resumes/{id}` returns the
+   extracted text and says if it was truncated.
+2. Write-back: yes, as a real scorecard. `POST /{slug}/scorecards` takes
+   person_id, job_id, scorecard_type_id (required), recommendation type,
+   summary, and scorecard_attributes (name, score, notes) per criterion.
+   Alternative: a note via `POST /{slug}/person_events`.
+3. Trigger: webhooks exist. `POST /{slug}/webhooks` with item_type
+   `candidate`, action `create`, endpoint_url. No polling needed.
+
+Also documented: candidates on a job `GET /{slug}/jobs/{job_id}/candidates`
+(scroll_id pagination, filter by person_id); person and intake notes
+`GET /{slug}/people/{id}` (field `description`); work history
+`GET /{slug}/people/{id}/job_profiles`; activity notes
+`GET /{slug}/person_events?person_id=` (notes_format=plain). Auth: bearer
+token, URL https://{domain}/api/{agency_slug}/..., default domain app.loxo.co.
+API keys: Settings > API Keys, account admins only. API is a paid feature.
+
+Not documented: response field names (schemas are empty), webhook body
+format, rate limits. `src/loxo/map.js` guesses with fallbacks; confirm with
+`npm run loxo:check -- --job <id> --probe` and the first saved webhook in
+data/webhooks/, then record the real names here.
 
 ## Status
 
@@ -140,6 +166,14 @@ The candidate record sent to the model leaves out name, contact details,
 pay and graduation years. Candidate text is fenced as data, so instructions
 hidden in a resume are ignored and flagged.
 
-Not built, waiting on the five items from the client: reading from Loxo,
-writing back to Loxo, the trigger (n8n). The example scorecard is a
-placeholder until the client sends theirs.
+Same day, also built from Loxo's API reference: Loxo read (job, pipeline,
+person, work history, latest resume text, notes), write-back as a Loxo
+scorecard or a note (blocked until LOXO_WRITE_ENABLED=true and DRY_RUN=false;
+skips candidates that already have an AI scorecard), and a small webhook
+server for automatic scoring, limited to the jobs in LOXO_AUTO_SCORE_JOB_IDS.
+Tested against a simulated Loxo only.
+
+Open: run it on the real account (needs the five items), confirm field
+names, decide where the webhook server is hosted (n8n in front of it, or on
+its own; costs money, ask Houssem), compensation (left out of the model input
+on purpose; decide with the client), and the client's real scorecard.
