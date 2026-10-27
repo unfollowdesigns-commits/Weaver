@@ -1,0 +1,281 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Candidate scoring in Loxo: preview</title>
+<style>
+  /* Colours and fonts are tokens so the page can be switched to District Partners'
+     own palette and type in one place once we have them. */
+  :root {
+    --bg: #f6f4ef;
+    --surface: #ffffff;
+    --text: #1d1d1b;
+    --muted: #5f5e59;
+    --line: #d9d5ca;
+    --accent: #1f3a5f;
+    --accent-text: #ffffff;
+    --good: #2e6b45;
+    --warn: #8a5a12;
+    --font-head: Georgia, "Times New Roman", serif;
+    --font-body: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #151514;
+      --surface: #1e1e1c;
+      --text: #ecebe6;
+      --muted: #a8a69d;
+      --line: #3a3935;
+      --accent: #9db9de;
+      --accent-text: #151514;
+      --good: #7fc096;
+      --warn: #d9a85a;
+    }
+  }
+  * { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font: 16px/1.6 var(--font-body);
+  }
+  .wrap { max-width: 860px; margin: 0 auto; padding: 0 16px; }
+  .banner {
+    background: var(--accent);
+    color: var(--accent-text);
+    font-size: 14px;
+    padding: 10px 0;
+  }
+  h1, h2, h3 { font-family: var(--font-head); font-weight: 400; line-height: 1.2; margin: 0; }
+  h1 { font-size: clamp(30px, 6vw, 44px); margin-bottom: 16px; }
+  h2 { font-size: clamp(22px, 4vw, 28px); margin-bottom: 12px; }
+  h3 { font-size: 18px; margin-bottom: 6px; }
+  header { padding: 48px 0 32px; }
+  header p { max-width: 60ch; color: var(--muted); margin: 0; font-size: 18px; }
+  section { padding: 36px 0; border-top: 1px solid var(--line); }
+  p { margin: 0 0 12px; max-width: 66ch; }
+  .muted { color: var(--muted); }
+  .small { font-size: 14px; }
+
+  ol.steps { margin: 16px 0 0; padding-left: 20px; max-width: 66ch; }
+  ol.steps li { margin-bottom: 8px; padding-left: 4px; }
+
+  .meta { display: flex; flex-wrap: wrap; gap: 4px 24px; margin: 12px 0 20px; font-size: 14px; color: var(--muted); }
+  .meta b { color: var(--text); font-weight: 600; }
+
+  table { width: 100%; border-collapse: collapse; background: var(--surface); border: 1px solid var(--line); }
+  th, td { text-align: left; padding: 10px 12px; border-bottom: 1px solid var(--line); font-size: 15px; vertical-align: top; }
+  th { font-size: 12px; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); font-weight: 600; }
+  td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
+  tr.row { cursor: pointer; }
+  tr.row:hover td { background: color-mix(in srgb, var(--accent) 6%, var(--surface)); }
+  tr.row:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+  tr.detail td { background: var(--bg); padding: 16px 12px 20px; }
+  tr.detail[hidden] { display: none; }
+  .rec { font-weight: 600; }
+  .rec.yes { color: var(--good); }
+  .rec.maybe { color: var(--warn); }
+  .rec.no { color: var(--muted); }
+  .tablewrap { overflow-x: auto; }
+
+  .crit { display: grid; grid-template-columns: 1fr auto; gap: 2px 16px; margin: 0 0 16px; max-width: 460px; font-size: 14px; }
+  .crit span:nth-child(even) { text-align: right; font-variant-numeric: tabular-nums; }
+  .assessment { max-width: 62ch; margin-bottom: 8px; }
+  .review { font-size: 13px; color: var(--muted); border-top: 1px solid var(--line); padding-top: 8px; margin-top: 12px; max-width: 62ch; }
+
+  .note {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    padding: 16px;
+    font-size: 14px;
+    max-width: 62ch;
+    white-space: pre-wrap;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  }
+  dl.options { margin: 16px 0 0; max-width: 66ch; }
+  dl.options dt { font-weight: 600; margin-top: 12px; }
+  dl.options dd { margin: 0; color: var(--muted); }
+
+  ol.needs { margin: 16px 0 0; padding: 0; list-style: none; counter-reset: n; max-width: 70ch; }
+  ol.needs li { counter-increment: n; padding: 16px 0 16px 40px; border-bottom: 1px solid var(--line); position: relative; }
+  ol.needs li:first-child { border-top: 1px solid var(--line); }
+  ol.needs li::before {
+    content: counter(n);
+    position: absolute; left: 0; top: 16px;
+    font-family: var(--font-head); font-size: 22px; line-height: 1.2; color: var(--accent);
+  }
+  .roleline { font-size: 14px; color: var(--muted); margin: 0 0 12px; }
+  @media (max-width: 600px) {
+    #cands th:nth-child(2), #cands tr.row td:nth-child(2) { display: none; }
+  }
+  ol.needs b { display: block; margin-bottom: 2px; }
+  ol.needs span { color: var(--muted); }
+
+  ul.plain { margin: 12px 0 0; padding-left: 20px; max-width: 66ch; }
+  ul.plain li { margin-bottom: 6px; }
+  footer { padding: 28px 0 56px; border-top: 1px solid var(--line); color: var(--muted); font-size: 14px; }
+</style>
+</head>
+<body>
+
+<div class="banner"><div class="wrap">Preview with made-up data. No real candidates, and nothing here is connected to Loxo.</div></div>
+
+<header>
+  <div class="wrap">
+    <h1>Candidate scoring in Loxo</h1>
+    <p>When candidates are added to a job, each one is read against your scorecard and gets a score and a short written assessment in Loxo. Your team reviews every one. This page shows what that would look like, and what we need from you to build it.</p>
+  </div>
+</header>
+
+<section>
+  <div class="wrap">
+    <h2>How it works</h2>
+    <ol class="steps">
+      <li>A candidate is added to a job in Loxo.</li>
+      <li>The system collects that candidate's details from Loxo.</li>
+      <li>Claude reads them against the job's scorecard and writes the scores and a short assessment.</li>
+      <li>The result is saved on the candidate in Loxo, marked as waiting for your review.</li>
+    </ol>
+    <p class="muted small" style="margin-top:16px">It can also score a whole job at once, for the 20 to 100 candidates you want to compare.</p>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <h2>What your team would see</h2>
+    <p>A sample job with eight made-up candidates. Click a row to open the assessment.</p>
+    <div class="meta">
+      <span><b>Job</b> VP Sales, sample company</span>
+      <span><b>Scorecard</b> 9 example criteria, scored 1 to 5</span>
+      <span><b>Candidates</b> 8</span>
+    </div>
+    <div class="tablewrap">
+      <table id="cands">
+        <thead>
+          <tr><th>Candidate</th><th>Current role</th><th class="num">Average</th><th>Recommendation</th></tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+    <p class="small muted" style="margin-top:12px">Example criteria. Yours replace these. Scale used: 3 meets the bar, 4 is strong, 5 is exceptional.</p>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <h2>What gets saved in Loxo</h2>
+    <p>This is how the result could appear on a candidate's record, if we use a note. Whether it goes in a note, a custom field or the scorecard itself depends on what your Loxo account allows. See question 4 below.</p>
+    <div class="note" id="note"></div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <h2>What we need from you</h2>
+    <p>Five things. Send them in any order.</p>
+    <ol class="needs">
+      <li><b>A Loxo API key</b><span>Read-only to start. In Loxo it is created under the account's API or integrations settings. Please do not paste it in an email or chat. We will agree a safe way to hand it over.</span></li>
+      <li><b>One job that has real candidates on it</b><span>Open the job in Loxo and send us the number at the end of the web address.</span></li>
+      <li><b>Your scorecard</b><span>The list of criteria, the scale, and whether the criteria stay the same for every job or change per job.</span></li>
+      <li><b>Where the score should go in Loxo</b><span>A scorecard, a custom field, or a note on the candidate.</span></li>
+      <li><b>Your Loxo plan</b><span>Found under account or billing settings. This needs Professional or above.</span></li>
+    </ol>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <h2>Ground rules</h2>
+    <ul class="plain">
+      <li>A person at your firm reviews every score. The system gives a recommendation with its reasons. It never decides an outcome.</li>
+      <li>It starts read-only. Nothing is written to Loxo until you have seen a trial run on one job and said yes.</li>
+      <li>Candidate data stays in Loxo and in a private project folder. It is not copied into chats.</li>
+      <li>We confirm what Loxo actually provides, such as resume text and how it signals a new candidate, before promising anything built on it. That is the first thing we test.</li>
+    </ul>
+  </div>
+</section>
+
+<footer><div class="wrap">Made-up sample, prepared for District Partners.</div></footer>
+
+<script>
+  const criteria = [
+    "Sector experience", "Stage fit", "Scope of past roles", "Team leadership", "Results delivered",
+    "Functional depth", "Communication", "Reason for moving", "Location and availability"
+  ];
+  const people = [
+    { name: "Candidate A", role: "VP Sales, Series C software company",
+      s: [5,4,5,4,5,4,4,4,3], rec: "Yes",
+      text: "Has built and run a sales team through two funding rounds, which matches the growth stage here. Results are clear and recent. The open point is location, so ask early about relocation." },
+    { name: "Candidate B", role: "Head of Revenue, private equity backed services firm",
+      s: [4,5,4,4,4,4,5,4,5], rec: "Yes",
+      text: "Strong fit for a backed company in a growth phase, with experience across both new business and account growth. Communicates clearly. Sector is adjacent, not identical." },
+    { name: "Candidate C", role: "Regional Sales Director, public company",
+      s: [4,3,4,5,4,4,3,3,4], rec: "Yes",
+      text: "Leads a large team and delivers consistently, but at a much larger and more structured company. Worth testing how comfortable they are with less process." },
+    { name: "Candidate D", role: "Director of Sales, growth stage startup",
+      s: [3,5,3,3,4,3,4,5,5], rec: "Maybe",
+      text: "Right stage and very motivated, but the team they have led is small compared with what this role needs. A strong prospect in two years rather than now." },
+    { name: "Candidate E", role: "Sales Lead, regional agency",
+      s: [3,3,3,3,3,3,4,3,4], rec: "Maybe",
+      text: "Meets the bar on most points without standing out on any. Little evidence in the record about results. A call would settle it." },
+    { name: "Candidate F", role: "Senior Account Executive",
+      s: [3,3,2,2,3,3,4,4,5], rec: "No",
+      text: "Good individual seller, but has not managed people or a budget. The role asks for both." },
+    { name: "Candidate G", role: "Chief Commercial Officer, early stage company",
+      s: [2,4,3,3,3,3,3,2,3], rec: "No",
+      text: "Different sector and a thin record on results. The notes also suggest they are unlikely to want a move at this point." },
+    { name: "Candidate H", role: "Business Development Manager",
+      s: [2,2,2,2,3,2,3,3,4], rec: "No",
+      text: "Early in their career for a role at this level. Worth keeping in mind for a more junior search." }
+  ];
+  people.forEach(p => { p.avg = p.s.reduce((a, b) => a + b, 0) / p.s.length; });
+  people.sort((a, b) => b.avg - a.avg);
+
+  const tbody = document.querySelector("#cands tbody");
+  const cls = { Yes: "yes", Maybe: "maybe", No: "no" };
+
+  people.forEach((p, i) => {
+    const tr = document.createElement("tr");
+    tr.className = "row";
+    tr.tabIndex = 0;
+    tr.setAttribute("role", "button");
+    tr.setAttribute("aria-expanded", "false");
+    tr.innerHTML = `<td>${p.name}</td><td>${p.role}</td><td class="num">${p.avg.toFixed(1)}</td><td class="rec ${cls[p.rec]}">${p.rec}</td>`;
+
+    const d = document.createElement("tr");
+    d.className = "detail";
+    d.hidden = true;
+    const rows = criteria.map((c, k) => `<span>${c}</span><span>${p.s[k]}</span>`).join("");
+    d.innerHTML = `<td colspan="4">
+      <p class="roleline">${p.role}</p>
+      <div class="crit">${rows}</div>
+      <p class="assessment">${p.text}</p>
+      <div class="review">Waiting for review by a recruiter. Not final.</div>
+    </td>`;
+
+    const toggle = () => {
+      d.hidden = !d.hidden;
+      tr.setAttribute("aria-expanded", String(!d.hidden));
+    };
+    tr.addEventListener("click", toggle);
+    tr.addEventListener("keydown", e => {
+      if (e.key === "Enter" || e.key === " ") { e.preventDefault(); toggle(); }
+    });
+    tbody.append(tr, d);
+  });
+
+  const best = people[0];
+  document.getElementById("note").textContent =
+`Scored against: VP Sales scorecard (example)
+Average: ${best.avg.toFixed(1)} of 5
+Recommendation: ${best.rec}
+
+${best.text}
+
+Status: waiting for recruiter review.
+Written by the scoring system, not a person.`;
+</script>
+</body>
+</html>

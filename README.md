@@ -29,6 +29,7 @@ changes in how they work.
 
 - `n8n/workflows/` exported n8n workflows (the automation)
 - `prompts/scoring/` the instructions Claude follows to score a candidate
+- `preview/` a single-page demo with made-up data, to show DP what to expect (open `preview/index.html`)
 - `scripts/` small helper scripts (Node)
 - `data/` local working data, never committed
 - `CLAUDE.md` the full build brief and findings
