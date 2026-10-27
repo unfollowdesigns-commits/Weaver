@@ -107,6 +107,16 @@ free on professional plans and worth Josh turning on for ad-hoc questions,
 but it cannot score candidates automatically and is not the foundation of
 this build. This system runs on the REST API.
 
+## Where things live
+
+- Code: GitHub `unfollowdesigns-commits/Weaver`. The repo is the source of
+  truth.
+- Houssem's Mac: `~/Documents/District Partners/4 BUILD - Loxo Candidate Scoring`,
+  a clone of the repo. The local `.env` with the real keys lives only here.
+- Client preview (sample data, no client name):
+  https://claude.ai/artifact/AUCwjDSusArDCtc5Lrhoqm, built from
+  `preview/shortlist.html`.
+
 ## Findings
 
 Empty until the first API key arrives. Record confirmed API behaviour here,
