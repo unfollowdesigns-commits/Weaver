@@ -1,0 +1,19 @@
+{
+  "name": "loxo-candidate-scoring",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Scores candidates on a Loxo job against a scorecard and writes an assessment back for recruiter review.",
+  "engines": {
+    "node": ">=20.9"
+  },
+  "scripts": {
+    "test": "node --test",
+    "score:sample": "node scripts/score-job.js --provider mock",
+    "score:openai": "node scripts/score-job.js --provider openai",
+    "score:claude": "node scripts/score-job.js --provider claude"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "0.133.0"
+  }
+}

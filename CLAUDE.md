@@ -55,6 +55,12 @@ Do not build these in v1 even if they seem useful.
 
 No new services without a reason written down here.
 
+- OpenAI (added 27 Oct 2026): testing only, because Houssem has an OpenAI key
+  and no Claude key yet. Sits behind the same provider switch
+  (`SCORING_PROVIDER`). Production scoring stays on Claude. Remove once the
+  Claude key is in place.
+- `@anthropic-ai/sdk` is the only package dependency.
+
 ## Unknowns to resolve before writing feature code
 
 These three change the shape of the build. Test them first, against a real
@@ -124,4 +130,16 @@ with the endpoint and the date, so nothing gets re-guessed later.
 
 ## Status
 
-Scoped, not started. Waiting on the five items from the client.
+27 Oct 2026: scoring half built, by Houssem's decision, before the Loxo key
+(an exception to "test the unknowns first"; that part does not depend on
+them). Built and tested on made-up data: scorecard file, scoring prompt v1,
+Claude / OpenAI / offline providers, answer checks, average and recruiter
+flags computed in code, ranked dry-run report. See README.
+
+The candidate record sent to the model leaves out name, contact details,
+pay and graduation years. Candidate text is fenced as data, so instructions
+hidden in a resume are ignored and flagged.
+
+Not built, waiting on the five items from the client: reading from Loxo,
+writing back to Loxo, the trigger (n8n). The example scorecard is a
+placeholder until the client sends theirs.

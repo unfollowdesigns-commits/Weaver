@@ -1,0 +1,31 @@
+{
+  "id": "example",
+  "version": 1,
+  "name": "Example executive scorecard (placeholder until the client's real one arrives)",
+  "scale": {
+    "min": 1,
+    "max": 5,
+    "labels": {
+      "1": "Well below the bar",
+      "2": "Below the bar",
+      "3": "Meets the bar",
+      "4": "Strong",
+      "5": "Exceptional"
+    }
+  },
+  "criteria": [
+    { "id": "sector", "label": "Sector experience", "description": "Depth of experience in the company's sector or a close neighbour." },
+    { "id": "stage", "label": "Stage fit", "description": "Has worked at a company of similar size, stage and funding (for example growth stage, PE or VC backed)." },
+    { "id": "scope", "label": "Scope of past roles", "description": "Size of the teams, budgets, territories or revenue they have been responsible for, compared with this role." },
+    { "id": "leadership", "label": "Team leadership", "description": "Evidence of hiring, developing and leading a team at the level this role needs." },
+    { "id": "results", "label": "Results delivered", "description": "Specific, verifiable outcomes in past roles, such as growth, targets met or teams built." },
+    { "id": "functional", "label": "Functional depth", "description": "Command of the function this role leads." },
+    { "id": "communication", "label": "Communication", "description": "How clearly they communicate, as shown in notes from conversations and in their materials." },
+    { "id": "motivation", "label": "Reason for moving", "description": "Whether the record shows a credible, job-related reason to consider this move now." },
+    { "id": "logistics", "label": "Location and availability", "description": "Fit with the role's location, travel and timing needs, as stated in the job." }
+  ],
+  "recommendation": {
+    "values": ["yes", "no"],
+    "meaning": "yes: worth advancing to a recruiter conversation for this search. no: not for this search."
+  }
+}
