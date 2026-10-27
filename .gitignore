@@ -1,0 +1,19 @@
+# Secrets
+.env
+.env.*
+!.env.example
+
+# Dependencies
+node_modules/
+
+# Local data: candidate records, dry-run outputs, exports from Loxo.
+# Real people's personal and compensation data. Never committed.
+data/*
+!data/.gitkeep
+
+# n8n exports can embed credentials. Only commit exports that have been checked.
+*.credentials.json
+
+# OS and editor
+.DS_Store
+*.log
