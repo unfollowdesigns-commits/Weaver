@@ -144,3 +144,17 @@ test("firstArray finds the list in common response shapes", () => {
   assert.deepEqual(firstArray({ other: [{ id: 2 }] }), [{ id: 2 }]);
   assert.deepEqual(firstArray(null), []);
 });
+
+test("maps the field names used by the community Loxo MCP: month/year, string company and skills", () => {
+  const c = mapCandidate({
+    entry: { id: 1, person_id: 4 },
+    person: { id: 4, title: "CRO", company: "Beta Inc", skillsets: "SaaS, Forecasting", education_profiles: [{ degree: "MBA", school: "Wharton", year: 2009 }],
+      job_profiles: [{ title: "CRO", company: { name: "Beta Inc" }, month: 1, year: 2022, end_month: null, end_year: null }] },
+  });
+  assert.equal(c.current_company, "Beta Inc");
+  assert.deepEqual(c.skills, ["SaaS", "Forecasting"]);
+  assert.equal(c.work_history[0].start, "2022-01");
+  assert.equal(c.work_history[0].end, null);
+  assert.deepEqual(c.education, [{ degree: "MBA", field: null, institution: "Wharton" }]);
+  assert.ok(!JSON.stringify(c.education).includes("2009"));
+});

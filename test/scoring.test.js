@@ -105,3 +105,11 @@ test("a whole job scores end to end, ranked, all awaiting review", async () => {
   assert.ok(results.every((r) => r.status === "scored" && r.review_status === "awaiting_review"));
   for (let i = 1; i < results.length; i++) assert.ok(results[i - 1].average >= results[i].average);
 });
+
+test("flags a candidate whose resume could not be read", async () => {
+  const noResume = candidates.find((c) => !c.resume_text);
+  const r = await scoreCandidate({ candidate: noResume, job, scorecard, template, provider: createMockProvider() });
+  assert.ok(r.flags.some((f) => f.startsWith("no_resume_text")));
+  const withResume = await scoreCandidate({ candidate: candidates[0], job, scorecard, template, provider: createMockProvider() });
+  assert.ok(!withResume.flags.some((f) => f.startsWith("no_resume_text")));
+});

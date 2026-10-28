@@ -59,17 +59,20 @@ export function mapCandidate({ entry, person, jobProfiles = [], resumeText = "",
     id: String(first(p.id, personIdOf(entry))),
     name,
     current_title: first(p.current_title, p.title),
-    current_company: first(p.current_company, p.company?.name, p.company_name),
+    current_company: first(p.current_company, typeof p.company === "string" ? p.company : p.company?.name, p.company_name),
     location,
-    work_history: jobProfiles.map((jp) => ({
+    // Field names cross-checked against tbensonwest/loxo-mcp-server (community code built on the same API):
+    // job profiles use month/year and end_month/end_year; the person record may embed job_profiles.
+    work_history: (jobProfiles.length ? jobProfiles : p.job_profiles ?? []).map((jp) => ({
       title: first(jp.title),
       company: first(jp.company_name, jp.company?.name),
-      start: first(jp.start_date, yearMonth(jp.start_year, jp.start_month)),
+      start: first(jp.start_date, yearMonth(jp.start_year ?? jp.year, jp.start_month ?? jp.month)),
       end: first(jp.end_date, yearMonth(jp.end_year, jp.end_month)),
       summary: stripHtml(jp.description ?? ""),
     })),
-    education: [],
-    skills: Array.isArray(p.skillsets) ? p.skillsets.map((s) => s?.name ?? s).filter(Boolean) : [],
+    // Degree and school only: graduation years are left out (age proxy).
+    education: (p.education_profiles ?? []).map((e) => ({ degree: first(e.degree), field: null, institution: first(e.school, e.institution) })),
+    skills: skillList(p.skillsets),
     notes,
     resume_text: resumeText,
     loxo: {
@@ -77,6 +80,12 @@ export function mapCandidate({ entry, person, jobProfiles = [], resumeText = "",
       job_candidate_id: first(entry?.id),
     },
   };
+}
+
+function skillList(s) {
+  if (Array.isArray(s)) return s.map((x) => x?.name ?? x).filter(Boolean);
+  if (typeof s === "string") return s.split(",").map((x) => x.trim()).filter(Boolean);
+  return [];
 }
 
 // Pulls the extracted text out of a resumes_show response.

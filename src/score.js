@@ -28,7 +28,10 @@ export async function scoreCandidate({ candidate, job, scorecard, template, prov
         lastError = `invalid answer: ${check.errors.join("; ")}`;
         continue;
       }
-      return { ...base, status: "scored", model, usage: usage ?? null, ...finalize(answer, scorecard) };
+      const result = { ...base, status: "scored", model, usage: usage ?? null, ...finalize(answer, scorecard) };
+      // A scanned PDF has no extractable text: tell the recruiter the resume was not read.
+      if (!candidate.resume_text?.trim()) result.flags.push("no_resume_text: resume missing or not readable as text; scored on profile and notes only");
+      return result;
     } catch (err) {
       lastError = err.message;
     }

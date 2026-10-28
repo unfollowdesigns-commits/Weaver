@@ -154,6 +154,16 @@ format, rate limits. `src/loxo/map.js` guesses with fallbacks; confirm with
 `npm run loxo:check -- --job <id> --probe` and the first saved webhook in
 data/webhooks/, then record the real names here.
 
+Cross-check, 28 Oct 2026: the community server tbensonwest/loxo-mcp-server
+(unofficial, not used in the build) reads the same API. Its code shows lists
+under `candidates` / `people` with `scroll_id` and `total_count`; person
+fields `title`, `company` (text), `city`/`state`/`country`, `description`,
+`skillsets` (comma text), `job_profiles` with `month`/`year`/`end_month`/
+`end_year` and `company.name`; `education_profiles` with `school`/`year`;
+and compensation fields on the person (`compensation`, `salary`, `bonus`,
+`equity`), which stay out of the model input. `src/loxo/map.js` handles both
+these names and the earlier guesses. Still to confirm on the real account.
+
 ## Status
 
 27 Oct 2026: scoring half built, by Houssem's decision, before the Loxo key
@@ -177,3 +187,10 @@ Open: run it on the real account (needs the five items), confirm field
 names, decide where the webhook server is hosted (n8n in front of it, or on
 its own; costs money, ask Houssem), compensation (left out of the model input
 on purpose; decide with the client), and the client's real scorecard.
+
+Decisions, 27 Oct 2026 (Houssem): production runs in the client's own
+accounts (their Anthropic account and server host, Houssem invited as admin);
+they pay usage directly, Houssem charges setup plus a monthly management fee.
+Code stays in Houssem's repo and deploys to their host. At onboarding, also
+connect Loxo's official MCP to the client's Claude workspace as an extra
+(not the unofficial community server).
