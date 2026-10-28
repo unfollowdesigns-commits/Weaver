@@ -34,7 +34,7 @@ changes in how they work.
 - `samples/` made-up job and candidates for testing
 - `test/` automated checks (`npm test`)
 - `scripts/` commands to run: dry run on a job, the server, the hourly sweep
-- `docs/` build plan, runbook (Railway), recruiter guide
+- `docs/` build plan, runbook (Render), recruiter guide
 - `data/` local working data, never committed
 - `CLAUDE.md` the full build brief and findings
 
@@ -72,7 +72,7 @@ scorecard on that job is skipped, so a re-run does not create duplicates.
 
 ## Automatic scoring
 
-Two pieces, both on Railway (see `docs/RUNBOOK.v1.md`):
+Two pieces, both on Render (see `docs/RUNBOOK.v2.md`):
 
 - `npm start` runs the server that Loxo calls when a candidate is added to a
   chosen job (`LOXO_AUTO_SCORE_JOB_IDS`). Scored within about a minute.

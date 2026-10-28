@@ -1,3 +1,6 @@
+> **Superseded by `RUNBOOK.v2.md` (Render), 28 Oct 2026.** Railway paused new
+> sign-ups after a security incident on 21 Oct 2026.
+
 # Runbook v1 · running the scoring system on Railway
 
 For Houssem. Plain steps. Menu names on Railway may move slightly; the setting

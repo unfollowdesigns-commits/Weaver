@@ -50,8 +50,9 @@ Do not build these in v1 even if they seem useful.
 
 - Loxo REST API for read and write.
 - Claude API for scoring. One call per candidate so 100 candidates is fine.
-- Railway for hosting: one always-on web service (webhook) and one hourly
-  cron service (sweep), in the client's own account. Decided 28 Oct 2026.
+- Render for hosting (Pro workspace, Virginia region): one always-on web
+  service (webhook) and one hourly cron job (sweep), in the client's own
+  account. Decided 28 Oct 2026; see docs/RUNBOOK.v2.md.
   n8n was dropped: the server already does the trigger and orchestration.
 - Node for any scripts.
 
@@ -205,3 +206,11 @@ Batch API at half price (the batches are the only state), daily cap,
 duplicate filter, already-assessed check before calling the AI, input limits
 with flags, server with nothing written to disk. Runbook and recruiter guide in
 docs/. 35 tests pass.
+
+Later on 28 Oct 2026: hosting moved from Railway to Render. Railway's status
+page: security incident on 21 Oct 2026, customers told to rotate credentials
+stored in environment variables, new sign-ups paused with no reopening date.
+Not acceptable for candidate data, and the client could not sign up anyway.
+Render: Pro workspace needed to invite Houssem (Hobby allows one member); Pro
+also gives the SOC 2 Type 2 report. Roughly $27-33/month in total; confirm
+the Pro price at sign-up.
