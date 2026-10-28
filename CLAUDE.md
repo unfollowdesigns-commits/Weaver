@@ -108,6 +108,10 @@ Ask for all five in one message.
   hiring decisions is regulated in some US jurisdictions, and Loxo draws the
   same line for their own tool.
 - Never overwrite an existing file. Add a new version beside it.
+- Commit messages are shown in the hosting dashboard, which the client will
+  see once the system runs in their account. Keep them short and neutral:
+  what changed in the system, nothing else. No client names, no prices, no
+  comments on vendors or decisions. Reasons go in this file, not in commits.
 
 ## Note on MCP
 
