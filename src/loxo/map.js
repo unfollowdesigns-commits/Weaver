@@ -42,18 +42,37 @@ function yearMonth(y, m) {
   return m ? `${y}-${String(m).padStart(2, "0")}` : String(y);
 }
 
-export function mapCandidate({ entry, person, jobProfiles = [], resumeText = "", events = [] }) {
+// Input limits: enough for a full reading, small enough to keep the bill steady.
+// Anything left out is recorded in `trimmed` and shown to the recruiter as a flag.
+export const LIMITS = { notes: 30, notesChars: 15000, resumeChars: 40000 };
+
+export function mapCandidate({ entry, person, jobProfiles = [], resumeText = "", resumeTruncated = false, events = [] }) {
   const p = unwrap(person, "person");
   const name = first(p.name, [p.first_name, p.last_name].filter(Boolean).join(" "));
   const location = first(p.location, [p.city, p.state, p.country].filter(Boolean).join(", "));
+  const trimmed = [];
 
   const notes = [];
   const intake = stripHtml(p.description ?? "");
   if (intake) notes.push({ date: null, text: `Intake notes: ${intake}` });
+  let chars = intake.length;
   for (const e of events) {
     const text = stripHtml(e.notes ?? "");
-    if (text) notes.push({ date: first(e.created_at), text });
+    if (!text) continue;
+    if (notes.length >= LIMITS.notes || chars + text.length > LIMITS.notesChars) {
+      trimmed.push("notes_trimmed");
+      break;
+    }
+    notes.push({ date: first(e.created_at), text });
+    chars += text.length;
   }
+
+  let resume = typeof resumeText === "string" ? resumeText : "";
+  if (resume.length > LIMITS.resumeChars) {
+    resume = resume.slice(0, LIMITS.resumeChars);
+    trimmed.push("resume_trimmed");
+  }
+  if (resumeTruncated) trimmed.push("resume_truncated");
 
   return {
     id: String(first(p.id, personIdOf(entry))),
@@ -74,7 +93,8 @@ export function mapCandidate({ entry, person, jobProfiles = [], resumeText = "",
     education: (p.education_profiles ?? []).map((e) => ({ degree: first(e.degree), field: null, institution: first(e.school, e.institution) })),
     skills: skillList(p.skillsets),
     notes,
-    resume_text: resumeText,
+    resume_text: resume,
+    trimmed,
     loxo: {
       person_id: first(p.id, personIdOf(entry)),
       job_candidate_id: first(entry?.id),
@@ -86,6 +106,12 @@ function skillList(s) {
   if (Array.isArray(s)) return s.map((x) => x?.name ?? x).filter(Boolean);
   if (typeof s === "string") return s.split(",").map((x) => x.trim()).filter(Boolean);
   return [];
+}
+
+// Loxo says whether the extracted resume text was cut short.
+export function resumeTruncatedOf(raw) {
+  const r = unwrap(raw, "resume");
+  return Boolean(r.truncated ?? r.text_truncated ?? r.is_truncated ?? false);
 }
 
 // Pulls the extracted text out of a resumes_show response.

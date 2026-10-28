@@ -27,14 +27,14 @@ changes in how they work.
 
 ## Folders
 
-- `n8n/workflows/` exported n8n workflows (the automation)
 - `prompts/scoring/` the instructions Claude follows to score a candidate
 - `preview/` a single-page demo with made-up data, to show DP what to expect (open `preview/index.html`)
 - `src/` the scoring engine (Node)
 - `config/scorecards/` scorecards, one file per version
 - `samples/` made-up job and candidates for testing
 - `test/` automated checks (`npm test`)
-- `scripts/` commands to run, such as a dry run on a job
+- `scripts/` commands to run: dry run on a job, the server, the hourly sweep
+- `docs/` build plan, runbook (Railway), recruiter guide
 - `data/` local working data, never committed
 - `CLAUDE.md` the full build brief and findings
 
@@ -72,13 +72,20 @@ scorecard on that job is skipped, so a re-run does not create duplicates.
 
 ## Automatic scoring
 
-`npm run serve` starts a small server that Loxo calls when a candidate is
-added to a job (`node scripts/register-webhook.js --url https://.../loxo/webhook`
-sets that up). Only jobs listed in `LOXO_AUTO_SCORE_JOB_IDS` are scored. It needs
-to run somewhere with a public https address; where to host it is still to decide.
+Two pieces, both on Railway (see `docs/RUNBOOK.v1.md`):
+
+- `npm start` runs the server that Loxo calls when a candidate is added to a
+  chosen job (`LOXO_AUTO_SCORE_JOB_IDS`). Scored within about a minute.
+- `npm run sweep` runs every hour: scores anyone missed and the candidates
+  already on a newly chosen job, through Claude's half-price Batch API.
+
+Cost guards: chosen jobs only, already-assessed candidates skipped before the AI
+is called, duplicates ignored, a daily cap, a cap per sweep, and a spending
+limit on the Anthropic account.
 
 ## Status
 
-Built: scoring, Loxo read, Loxo write (scorecard or note), automatic scoring
-server. Tested on made-up data and a simulated Loxo. Not yet run against the
-real account: waiting on the Loxo key. See `CLAUDE.md`.
+Built and tested (35 automated tests, simulated Loxo): scoring, Loxo read and
+write, server, hourly sweep with batch pricing, cost guards. Not yet run on the
+real Loxo account: waiting on the client's key. See `CLAUDE.md` and
+`docs/BUILD-PLAN.v1.md`.

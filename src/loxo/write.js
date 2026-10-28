@@ -58,6 +58,29 @@ export function buildPayload(result, cfg) {
   return cfg.target === "note" ? { path: "/person_events", body: buildNotePayload(result, cfg) } : { path: "/scorecards", body: buildScorecardPayload(result, cfg) };
 }
 
+const NOTE_MARKER = "AI assessment, awaiting recruiter review";
+
+// Person IDs on a job that already have an AI assessment, in one pass per job.
+// Checked before calling the AI, so nobody is paid for twice.
+export async function aiScoredPersonIds(client, jobId, cfg) {
+  const ids = new Set();
+  if (cfg.target === "note") {
+    const events = await client.list("/person_events", { job_ids: [jobId], notes_format: "plain", query: `"${NOTE_MARKER}"` });
+    for (const e of events) if (String(e.notes ?? "").includes(NOTE_MARKER)) ids.add(String(e.person_id ?? e.person?.id));
+  } else {
+    const cards = await client.list("/scorecards", { job_id: jobId });
+    for (const s of cards) if (s.external_creator_name === AI_AUTHOR) ids.add(String(s.person_id ?? s.person?.id));
+  }
+  ids.delete("undefined");
+  return ids;
+}
+
+export async function hasAiAssessment(client, jobId, personId, cfg) {
+  if (cfg.target === "note") return (await aiScoredPersonIds(client, jobId, cfg)).has(String(personId));
+  const cards = firstArray(await client.get("/scorecards", { person_id: personId, job_id: jobId }));
+  return cards.some((s) => s.external_creator_name === AI_AUTHOR);
+}
+
 // Skips a candidate that already has an AI scorecard for this job, so re-runs do not pile up duplicates.
 export async function writeResult(client, result, cfg) {
   if (result.status !== "scored") return { status: "skipped", reason: "not scored" };

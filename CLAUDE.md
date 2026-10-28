@@ -50,7 +50,9 @@ Do not build these in v1 even if they seem useful.
 
 - Loxo REST API for read and write.
 - Claude API for scoring. One call per candidate so 100 candidates is fine.
-- n8n for orchestration and the trigger.
+- Railway for hosting: one always-on web service (webhook) and one hourly
+  cron service (sweep), in the client's own account. Decided 28 Oct 2026.
+  n8n was dropped: the server already does the trigger and orchestration.
 - Node for any scripts.
 
 No new services without a reason written down here.
@@ -194,3 +196,12 @@ they pay usage directly, Houssem charges setup plus a monthly management fee.
 Code stays in Houssem's repo and deploys to their host. At onboarding, also
 connect Loxo's official MCP to the client's Claude workspace as an extra
 (not the unofficial community server).
+
+28 Oct 2026 (Houssem): hosting is Railway (Hobby, about $5/month, up to 3
+members per project; Pro if they need compliance documents or more members).
+Render was considered and dropped on cost: its free workspace cannot invite
+members, so it needs Pro. Built the same day: hourly sweep using Claude's
+Batch API at half price (the batches are the only state), daily cap,
+duplicate filter, already-assessed check before calling the AI, input limits
+with flags, server with nothing written to disk. Runbook and recruiter guide in
+docs/. 35 tests pass.

@@ -22,7 +22,7 @@ import { scoreJob } from "../src/score.js";
 import { toMarkdown, toHtml } from "../src/report.js";
 import { loxoClientFromEnv } from "../src/loxo/index.js";
 import { fetchJobForScoring } from "../src/loxo/read.js";
-import { buildPayload, writeResult, writeConfigFromEnv, writesAllowed } from "../src/loxo/write.js";
+import { buildPayload, writeResult, writeConfigFromEnv, writesAllowed, aiScoredPersonIds } from "../src/loxo/write.js";
 
 loadEnv();
 
@@ -56,6 +56,14 @@ if (args["loxo-job"]) {
   job = JSON.parse(fs.readFileSync(args.job, "utf8"));
   candidates = JSON.parse(fs.readFileSync(args.candidates, "utf8"));
   if (limit) candidates = candidates.slice(0, limit);
+}
+
+// When writing, skip anyone who already has an AI assessment before paying for the AI.
+if (args["loxo-job"] && args.write && writesAllowed()) {
+  const done = await aiScoredPersonIds(client, args["loxo-job"], writeConfigFromEnv());
+  const before = candidates.length;
+  candidates = candidates.filter((c) => !done.has(String(c.loxo?.person_id)));
+  if (before !== candidates.length) console.log(`  ${before - candidates.length} already assessed, skipped`);
 }
 
 console.log(`Scoring ${candidates.length} candidates for "${job.title}" with ${provider.name} (${provider.model})`);

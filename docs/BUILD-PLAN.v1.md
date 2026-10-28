@@ -12,12 +12,12 @@ and the step-by-step package delivered to the client. Two decisions are marked
 | Houssem's Mac | Development, day-one tests, trial run | Houssem | In use |
 | Loxo | Candidates in, scorecards out | Client | Waiting for API key |
 | Anthropic API (Claude) | The scoring | Client (Houssem invited) | To create at go-live |
-| Render | Runs the system 24/7 | Client (Houssem invited) | To create at go-live **[Houssem to approve]** |
+| Railway | Runs the system 24/7 | Client (Houssem invited) | Decided 28 Oct 2026; test on Houssem's own account first |
 | Client's Claude workspace | Loxo MCP for quick questions (extra) | Client | At onboarding |
 
 Not used, and why:
 
-- **n8n** **[Houssem to approve dropping it]**. The server we built already
+- **n8n** (dropped, approved 28 Oct 2026). The server we built already
   receives Loxo's webhook, queues, scores and writes back. n8n would add a
   platform, a login, a monthly cost and a second place where things can break,
   for no gain. The brief lists n8n under Stack; update it if approved.
@@ -37,9 +37,9 @@ Not used, and why:
   official MCP is free on the client's plan and supported. Used only as a
   cross-check of field names.
 
-## 2. Hosting: Render, compared
+## 2. Hosting: Railway (decided 28 Oct 2026), compared
 
-| Need | Render | Railway (runner-up) | Vercel | Cloud Run |
+| Need | Render (dropped) | Railway (chosen) | Vercel | Cloud Run |
 |---|---|---|---|---|
 | Always-on server for Loxo's webhook | Yes, Starter instance | Yes | Functions only | Yes |
 | Scheduled job (hourly safety sweep) | Yes, built-in cron jobs | Yes | Yes, with time limits | Needs Cloud Scheduler |
@@ -47,24 +47,24 @@ Not used, and why:
 | Client owns billing, Houssem invited | Yes | Yes | Yes | Yes, but complex |
 | Deploy from Houssem's private GitHub | Yes | Yes | Yes | Via build setup |
 | Setup by a non-technical client | ~10 minutes | ~10 minutes | ~10 minutes | Hours |
-| Rough running cost (see note) | ~$8/month compute + plan fee | ~$5–20/month usage | $20/seat/month | Often free tier |
+| Rough running cost | ~$8/month compute + Pro plan (needed to invite members) | ~$5/month on Hobby, usage included | $20/seat/month | Often free tier |
 
-Why Render over Railway: fixed, predictable monthly price per service (the
-client sees the same bill every month), and cron jobs are a first-class
-service type. Railway is a fine fallback if Render's plan rules do not fit.
-
-**Check before the client signs up:** third-party sources disagree on Render's
-workspace plan fees and seat rules in 2026. Confirm on render.com/pricing
-whether a free Hobby workspace can invite Houssem as a member, or whether
-a paid workspace plan is needed.
+Decision, from each provider's own pages: **Railway Hobby**. $5/month
+including $5 of usage, which covers our small server (about $3.50/month at
+Railway's published rates); cron jobs supported (5 minutes minimum); up to 3
+members per project, so the client can invite Houssem. Render's free workspace
+allows a single member, so Render would need its Pro plan (about $27–33/month
+in total). Move the client to Railway Pro ($20/month including $20 of usage)
+only if they need compliance documents or more members. Check at sign-up: a
+US East region, and the current Hobby terms.
 
 ## 3. Architecture as it will run
 
 ```
-Loxo ──(webhook: candidate added)──▶ Render web service ──▶ Claude API
+Loxo ──(webhook: candidate added)──▶ Railway web service ──▶ Claude API
   ▲                                        │
   └────────(scorecard written)─────────────┘
-Render cron job, every hour: re-check chosen jobs, score anyone missed
+Railway cron service, every hour: re-check chosen jobs, score anyone missed
 ```
 
 - **Fast path:** the webhook. A candidate added to a chosen job is scored in
@@ -80,14 +80,13 @@ Render cron job, every hour: re-check chosen jobs, score anyone missed
 
 In order. Each step tested, committed, pushed.
 
-1. **Hourly safety sweep.** A script the Render cron job runs, with a daily cap
+1. **Hourly safety sweep.** A script the Railway cron service runs, with a daily cap
    on candidates scored (cost control). Re-runs are already safe: anyone with
    an AI scorecard on that job is skipped.
 2. **Server without disk.** Production keeps no files; the webhook body and
    dry-run payloads are only saved locally on the Mac for day one.
-3. **Render blueprint (`render.yaml`).** Declares the web service, the cron job
-   and the settings names, so production is created in one step with no manual
-   clicking.
+3. **Railway setup.** Both services from the same repo, settings listed in
+   `docs/RUNBOOK.v1.md`. Done.
 4. **Scorecard from Loxo (optional, depends on Josh's answer).** Loxo has
    scorecard templates per job. If his criteria live there, read them from Loxo,
    so his team changes criteria in Loxo without asking us.
@@ -149,9 +148,9 @@ scores 10 of the same candidates themselves; compare. Adjust the prompt as a new
 version (`scoring-prompt.v2.md`), compare Claude Opus with Sonnet for quality
 and cost, repeat until Josh says the scores read like his team's judgement.
 
-**Step 3 · Production setup.** Client creates the Anthropic and Render
+**Step 3 · Production setup.** Client creates the Anthropic and Railway
 accounts and invites Houssem (15 minutes, a short guide provided). Deploy from
-GitHub with the blueprint, enter the keys in Render's settings, register the
+GitHub, enter the keys in Railway's settings, register the
 Loxo webhook, switch writing on for the test job only.
 
 **Step 4 · Go live.** Switch on the jobs Josh chooses; the sweep scores the

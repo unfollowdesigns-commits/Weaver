@@ -1,5 +1,5 @@
 import { firstArray } from "./client.js";
-import { mapJob, mapCandidate, personIdOf, resumeTextOf } from "./map.js";
+import { mapJob, mapCandidate, personIdOf, resumeTextOf, resumeTruncatedOf } from "./map.js";
 
 // Read-only. Collects one job and everything needed to score its candidates.
 
@@ -24,16 +24,18 @@ export async function loadCandidate(client, entry) {
 
   // Resumes come newest first; read the extracted text of the latest one.
   let resumeText = "";
-  if (resumes[0]?.id) resumeText = resumeTextOf(await client.get(`/people/${personId}/resumes/${resumes[0].id}`));
+  let resumeTruncated = false;
+  if (resumes[0]?.id) {
+    const raw = await client.get(`/people/${personId}/resumes/${resumes[0].id}`);
+    resumeText = resumeTextOf(raw);
+    resumeTruncated = resumeTruncatedOf(raw);
+  }
 
-  return mapCandidate({ entry, person, jobProfiles: profiles, resumeText, events });
+  return mapCandidate({ entry, person, jobProfiles: profiles, resumeText, resumeTruncated, events });
 }
 
-export async function fetchJobForScoring(client, jobId, { limit, concurrency = 3, onProgress } = {}) {
-  const job = await fetchJob(client, jobId);
-  let entries = await listJobCandidates(client, jobId);
-  if (limit) entries = entries.slice(0, limit);
-
+// Loads candidates with a few requests at a time, so Loxo is not flooded.
+export async function loadCandidates(client, entries, { concurrency = 3, onProgress } = {}) {
   const candidates = [];
   const failures = [];
   let next = 0;
@@ -50,5 +52,13 @@ export async function fetchJobForScoring(client, jobId, { limit, concurrency = 3
     }
   }
   await Promise.all(Array.from({ length: Math.min(concurrency, entries.length || 1) }, worker));
+  return { candidates, failures };
+}
+
+export async function fetchJobForScoring(client, jobId, { limit, concurrency = 3, onProgress } = {}) {
+  const job = await fetchJob(client, jobId);
+  let entries = await listJobCandidates(client, jobId);
+  if (limit) entries = entries.slice(0, limit);
+  const { candidates, failures } = await loadCandidates(client, entries, { concurrency, onProgress });
   return { job, candidates, failures, pipelineCount: entries.length };
 }
