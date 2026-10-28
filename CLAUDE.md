@@ -122,6 +122,9 @@ this build. This system runs on the REST API.
   truth.
 - Houssem's Mac: `~/Documents/District Partners/4 BUILD - Loxo Candidate Scoring`,
   a clone of the repo. The local `.env` with the real keys lives only here.
+- Test server (Houssem's own Render, free plan, sample data only, Virginia):
+  https://loxo-scoring-test.onrender.com, service srv-dbgvokg8v5cc73fm4csg,
+  deploys automatically from this branch. Delete it at go-live.
 - Client preview (sample data, no client name):
   https://claude.ai/artifact/AUCwjDSusArDCtc5Lrhoqm, built from
   `preview/shortlist.html`.
