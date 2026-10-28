@@ -38,7 +38,7 @@ try {
     client: loxoClientFromEnv(process.env, { allowWrites: writes }),
     provider: await getProvider(process.env.SCORING_PROVIDER || "mock"),
     jobIds,
-    scorecard: loadScorecard(process.env.SCORECARD_FILE || "config/scorecards/example.v1.json"),
+    scorecard: loadScorecard(process.env.SCORECARD_FILE || "config/scorecards/standard-executive.v1.json"),
     template: loadTemplate(),
     cfg: writeConfigFromEnv(),
     writes,

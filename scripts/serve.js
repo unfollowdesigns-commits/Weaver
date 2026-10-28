@@ -33,7 +33,7 @@ if (secret.length < 16) {
   process.exit(1);
 }
 const allowedJobs = new Set((process.env.LOXO_AUTO_SCORE_JOB_IDS ?? "").split(",").map((s) => s.trim()).filter(Boolean));
-const scorecard = loadScorecard(process.env.SCORECARD_FILE || "config/scorecards/example.v1.json");
+const scorecard = loadScorecard(process.env.SCORECARD_FILE || "config/scorecards/standard-executive.v1.json");
 const template = loadTemplate();
 const provider = await getProvider(process.env.SCORING_PROVIDER || "mock");
 const client = loxoClientFromEnv(process.env, { allowWrites: true });

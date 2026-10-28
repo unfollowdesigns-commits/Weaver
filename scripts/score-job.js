@@ -32,7 +32,7 @@ const { values: args } = parseArgs({
     job: { type: "string", default: "samples/job.sample.json" },
     candidates: { type: "string", default: "samples/candidates.sample.json" },
     "loxo-job": { type: "string" },
-    scorecard: { type: "string", default: "config/scorecards/example.v1.json" },
+    scorecard: { type: "string", default: "config/scorecards/standard-executive.v1.json" },
     limit: { type: "string" },
     concurrency: { type: "string", default: "3" },
     write: { type: "boolean", default: false },

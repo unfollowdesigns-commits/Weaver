@@ -83,17 +83,19 @@ detail as unverified until a call against the real account proves it.
 
 ## Needed from the client
 
-Ask for all five in one message.
+Simplified 28 Oct 2026 (Houssem: the client has no scorecard and should not
+have to design one). Ask for two things only:
 
 1. Loxo API key, read access first. Write access added after a working demo.
+   If "API Keys" is missing in Loxo Settings, Loxo support switches it on
+   (paid feature, Professional plan or above).
 2. One job ID with real candidates on it.
-3. The scorecard: the list of criteria, the scale, and whether the list is
-   fixed or changes per job. Reference point, a real DP scorecard used nine
-   criteria scored 1 to 5, where 3 meets, 4 is strong, 5 is exceptional, with
-   an average and a yes or no recommendation.
-4. Where the score should land in Loxo. A scorecard field, a custom field or
-   a note.
-5. Confirmation of their Loxo plan tier.
+
+Decided by us, shown to Josh for a yes or a change:
+- Scorecard: `config/scorecards/standard-executive.v1.json`, nine criteria
+  scored 1 to 5, each with what 3 (meets) and 5 (exceptional) look like.
+  Josh can change it; a per-job scorecard comes later if he asks.
+- Where the score lands: a Loxo scorecard on the candidate.
 
 ## Rules
 

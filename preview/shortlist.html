@@ -212,7 +212,7 @@
       <div>
         <span class="label">Sample search</span>
         <div class="title">VP Sales, growth stage software company</div>
-        <div class="sub">9 example criteria · ranked by average score · <span id="count">8</span> candidates</div>
+        <div class="sub">Standard executive scorecard, 9 criteria · ranked by average score · <span id="count">8</span> candidates</div>
       </div>
       <button class="sim" id="sim" type="button">Add a candidate to this job</button>
     </div>
@@ -226,19 +226,18 @@
       <span>#</span><span>Candidate</span><span class="r">Average</span><span>Advance</span><span class="r">Review</span>
     </div>
     <div id="list"></div>
-    <div class="sheet-foot">Open a row to see the scorecard. All names, roles and scores here are invented. The criteria are examples and will be replaced by yours.</div>
+    <div class="sheet-foot">Open a row to see the scorecard. All names, roles and scores here are invented. These are the standard criteria for executive searches; you can change any of them.</div>
   </div>
 </div></section>
 
 <section class="sec"><div class="wrap">
   <h2>What lands in Loxo</h2>
   <div>
-    <p class="intro">The same result, written onto the candidate's record. Where it goes depends on what your Loxo account allows.</p>
+    <p class="intro">The same result, saved as a scorecard on the candidate's record in Loxo.</p>
     <div class="record">
-      <div class="record-head"><span>Candidate record · note</span><span id="rec-who"></span></div>
+      <div class="record-head"><span>Candidate record · AI scorecard</span><span id="rec-who"></span></div>
       <div class="record-body" id="rec-body"></div>
     </div>
-    <div class="where"><span>Scorecard</span><span>Custom field</span><span>Note</span></div>
   </div>
 </div></section>
 
@@ -255,13 +254,10 @@
 <section class="sec"><div class="wrap">
   <h2>What we need from you</h2>
   <div>
-    <p class="intro">Five things to build it on your real account. Send them in any order.</p>
+    <p class="intro">Two things to run it on your real account. Everything else we set up.</p>
     <ol class="asks">
       <li><div><b>A Loxo API key</b><span>Read-only to start. Please do not send it by email or chat; we will agree a safe way to hand it over.</span></div></li>
       <li><div><b>One job with real candidates on it</b><span>Open the job in Loxo and send the number at the end of the web address.</span></div></li>
-      <li><div><b>Your scorecard</b><span>The criteria, the scale, and whether the criteria stay the same for every search or change per job.</span></div></li>
-      <li><div><b>Where the score should go</b><span>A scorecard, a custom field, or a note on the candidate.</span></div></li>
-      <li><div><b>Your Loxo plan</b><span>Found under account or billing settings. This needs Professional or above.</span></div></li>
     </ol>
   </div>
 </div></section>
@@ -284,8 +280,8 @@
 <script>
 (function () {
   var criteria = [
-    "Sector experience", "Stage fit", "Scope of past roles", "Team leadership", "Results delivered",
-    "Functional depth", "Communication", "Reason for moving", "Location and availability"
+    "Industry and market knowledge", "Stage and context fit", "Scale and scope", "Leadership and team building", "Track record of results",
+    "Functional expertise", "Executive presence and communication", "Strategic judgement", "Motivation and availability"
   ];
   var people = [
     { id: "a", name: "Candidate A", role: "VP Sales, Series C software company", s: [5,4,5,4,5,4,4,4,3], rec: "Yes",
@@ -354,7 +350,7 @@
     var best = sorted[0];
     document.getElementById("rec-who").textContent = best.name;
     document.getElementById("rec-body").textContent =
-      "Scored against: VP Sales scorecard (example)\n" +
+      "Scored against: Standard executive search scorecard\n" +
       "Average: " + avg(best).toFixed(1) + " of 5\n" +
       "Recommendation: " + best.rec + "\n\n" +
       criteria.map(function (c, k) { return c + ": " + best.s[k]; }).join("\n") + "\n\n" +

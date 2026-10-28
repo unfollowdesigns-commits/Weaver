@@ -9,7 +9,7 @@ Tick each box before moving on.
   preview https://claude.ai/artifact/AUCwjDSusArDCtc5Lrhoqm and proposal
   https://claude.ai/artifact/UcbpNer23XpoTsCVEcdTEg.
 - [ ] **Houssem** — Send Josh the message (answers to his four questions, the two
-  links, the five items).
+  links, the two things we need).
 - [ ] **Houssem** — 15-minute call if he wants: show the preview; ask whether the
   scorecard changes per job, how many candidates a month, and whether pay
   expectations should count.
@@ -17,14 +17,13 @@ Tick each box before moving on.
   (for example Bitwarden Send or 1Password), or he pastes it into your `.env`
   himself on a screen share. Never email, never chat.
 
-## Phase 2 · Josh sends the five items
+## Phase 2 · Josh sends two things
 
-- [ ] **Josh** — Loxo API key (read-only), one job ID, his scorecard, where
-  scores go (scorecard or note), his Loxo plan.
+- [ ] **Josh** — Loxo API key and one job ID.
 - [ ] **Houssem** — Put the key, the agency slug and the job ID in `.env` on the
   Mac (`LOXO_API_KEY`, `LOXO_AGENCY_SLUG`, `LOXO_TEST_JOB_ID`).
-- [ ] **Houssem** — Send Claude his scorecard (criteria and scale). Not the key.
-- [ ] **Claude** — Turn his scorecard into `config/scorecards/<name>.v1.json`.
+- [ ] **Josh** — Looks at the standard scorecard (in the preview) and says yes
+  or what to change. **Claude** makes any change as a new version.
 
 ## Phase 3 · Day one, read-only, from the Mac (about 1 hour, together)
 
