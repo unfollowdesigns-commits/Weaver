@@ -97,6 +97,42 @@ In order. Each step tested, committed, pushed.
    advisory.
 7. **Runbook.** How to deploy, switch a job on or off, rotate a key, read the logs.
 
+## 4b. Keeping the bill reasonable without lowering quality
+
+Prices used (Anthropic, per million tokens): Claude Opus 5.5 $4 in / $20 out;
+Claude Sonnet 5.5 $2 in / $10 out. Message Batches run at half price but are
+not instant.
+
+Rough cost per candidate: about $0.05 to $0.14 on Opus (long resume, high
+effort at the top end), about half that on Sonnet. 600 candidates a month:
+about $30 to $80 on Opus, $15 to $40 on Sonnet. Measure the real figure in
+the trial before promising anything.
+
+Already built:
+- Each candidate is scored once per job; re-runs skip anyone who already has
+  an AI scorecard.
+- Only the jobs the client chooses are scored.
+- At most two attempts per candidate; no retry loops on the AI.
+- HTML and contact details stripped before sending, so fewer tokens.
+
+To build (added to the list above):
+- **Half price for anything not urgent.** The sweep and the first pass on a
+  newly switched-on job use the Batch API. New candidates from the webhook
+  stay instant.
+- **Daily cap and an account spending limit.** A bug or a flood of candidates
+  can never run up a large bill.
+- **Ignore duplicate webhooks.** The same person and job within a short window
+  is scored once.
+- **Keep inputs lean, never silently cut.** Keep the newest notes and the
+  latest resume; if anything is left out, the scorecard says so.
+- **Cost on record.** Tokens used are logged per candidate; a monthly cost
+  summary per job.
+
+Decided in calibration, with the client's own judgement as the bar:
+- Opus versus Sonnet, and effort high versus medium. Use the cheapest
+  setting that scores the 10 calibration candidates as well as the best one.
+  If the cheaper setting is worse, keep the better one: quality first.
+
 ## 5. The package, step by step
 
 **Step 0 · Agreement.** Scope (the four things in the brief), the five items,
