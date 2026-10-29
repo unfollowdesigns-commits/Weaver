@@ -86,6 +86,8 @@ ${model.stands.length ? `<table class="t"><thead><tr><th>Candidate</th><th>Stage
   for (const p of model.profiles) {
     n++;
     const facts = [["Stage", progress(p, stages)], ["Current base", ed(money(p.pay.base))], ["Bonus", ed(money(p.pay.bonus))], ["Equity", ed(money(p.pay.equity))]];
+    if (p.pay.check && !["unknown", "norange"].includes(p.pay.check.kind)) facts.push(["Against the range", ed(p.pay.check.label)]);
+    if (p.pay.notes?.length) facts.push(["Pay notes", ed(p.pay.notes.join(" "))]);
     if (p.team?.average != null) facts.push(["Our screen", `<span class="big">${p.team.average.toFixed(1)}<small> / 5</small></span>${p.team.recommendation ? `<span class="rec">${esc(p.team.recommendation)}</span>` : ""}`]);
     if (p.education.length) facts.push(["Education", ed(p.education.join(" · "))]);
     if (p.linkedin) facts.push(["Profile", li(p)]);

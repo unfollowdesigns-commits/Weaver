@@ -166,3 +166,22 @@ test("records with nothing to read are listed, not sent to the AI", async () => 
   const { toHtml } = await import("../src/report.js");
   assert.ok(toHtml(results, { jobTitle: "x", scorecard: "s", provider: "m", when: "now" }).includes("Not enough in Loxo"));
 });
+
+test("pay is shown to the team from Loxo and notes, checked against the range, never sent to the AI", async () => {
+  const { payNotesOf, baseFromNotes, payCheck, jobPayRange } = await import("../src/pay.js");
+  const notes = payNotesOf(["Strong call, very structured. Currently $225k base with a 25% bonus. Open to remote."]);
+  assert.deepEqual(notes, ["Currently $225k base with a 25% bonus."]);
+  assert.equal(baseFromNotes(notes), 225000);
+  const range = jobPayRange({ salary_min: "180000", salary_max: "200000" });
+  assert.deepEqual(payCheck(225000, range), { kind: "above", label: "Above range by about $25k" });
+  assert.equal(payCheck(190000, range).kind, "within");
+  assert.equal(payCheck(null, range).kind, "unknown");
+  const c = { ...candidates[0], report: { compensation: {}, pay_notes: notes } };
+  const res = await scoreJob({ candidates: [c], job: { ...job, pay_range: range }, scorecard, template, provider: createMockProvider() });
+  assert.equal(res[0].pay.base, 225000);
+  assert.equal(res[0].pay.base_source, "notes");
+  assert.ok(!JSON.stringify(toPromptRecord(c)).includes("225"));
+  const { toHtml } = await import("../src/report.js");
+  const html = toHtml(res, { jobTitle: "x", scorecard: "s", provider: "m", when: "now" });
+  assert.ok(html.includes("Above range by about $25k") && html.includes("not used in the score"));
+});

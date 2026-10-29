@@ -1,3 +1,4 @@
+import { payFor } from "../pay.js";
 import fs from "node:fs";
 
 // Builds the content of a client pipeline report from Loxo and Weaver's first reads.
@@ -48,7 +49,8 @@ export function buildReportModel({ job, candidates, results = [], teamCards = ne
       linkedin: c.report?.linkedin ?? null,
       stage: bucket,
       stage_rank: bucket === "out" ? -1 : order.indexOf(bucket),
-      pay: c.report?.compensation ?? {},
+      // Pay fields when filled, else the base written in the team's notes (src/pay.js).
+      pay: (() => { const pf = payFor(c, job.pay_range ?? null); return { ...(c.report?.compensation ?? {}), base: pf.base, notes: pf.notes, check: pf.check }; })(),
       industry: read?.industry ?? null,
       signal: read?.strongest_signal ?? "",
       watch: read?.watch_item ?? "",

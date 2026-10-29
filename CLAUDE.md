@@ -326,6 +326,14 @@ Open items (updated 29 Oct 2026):
   ranked view is our report. Do not write into recruiters' pipeline comments
   without Josh's agreement.
 - Compensation stays out of the scoring unless the client decides otherwise.
+  30 Oct 2026: Josh noted the report showed no salaries; Josh's first message
+  asked to analyze "compensation and location". Decision: pay is shown to the
+  team, never to the AI. src/pay.js: pay fields when filled, else pay
+  sentences from the team's notes (where it lives on their account), the
+  search's salary range (job salary_min/max), and a plain above/within/below
+  range check. In the first-read report (Pay column, pay box per candidate,
+  "not used in the score") and in the client report. Not written to Loxo.
+  To ask Josh: separate check (built) or inside the score.
 - Webhook secret travels in the URL query (Loxo cannot send headers, as far
   as documented); it can appear in the host's request logs. Only account
   members see those logs. Rotate it if anyone leaves.

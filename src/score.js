@@ -1,3 +1,4 @@
+import { payFor } from "./pay.js";
 import { buildPrompt } from "./prompt.js";
 import { outputSchema } from "./schema.js";
 import { validateAnswer, finalize } from "./validate.js";
@@ -82,6 +83,8 @@ export async function scoreJob({ candidates, concurrency = 3, onResult, skipThin
       results[i] = skipThin && isThin(c)
         ? { ...resultBase({ candidateId: c.id, candidateName: c.name ?? null, loxo: c.loxo ?? null, job: rest.job, scorecard: rest.scorecard, template: rest.template, provider: rest.provider }), status: "skipped", reason: "not enough in Loxo to score (no resume, work history or notes)" }
         : await scoreCandidate({ candidate: c, ...rest });
+      // Pay facts for the team's report, attached after scoring: the AI never saw them.
+      results[i].pay = payFor(c, rest.job?.pay_range ?? null);
       onResult?.(results[i], i);
     }
   }

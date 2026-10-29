@@ -1,3 +1,4 @@
+import { payNotesOf, jobPayRange } from "../pay.js";
 // Turns Loxo records into the shapes the scorer uses.
 // Loxo does not publish response schemas, so field names here are best guesses with
 // fallbacks. Check them against a real response (scripts/loxo-check.js --probe) and
@@ -32,6 +33,8 @@ export function mapJob(raw) {
     description: first(j.description_text?.trim(), stripHtml(first(j.description, j.public_description, j.internal_description) ?? "")) ?? "",
     // The firm's own scorecard template on this job in Loxo, when there is one.
     scorecard_template: scorecardTemplateOf(j),
+    // Salary range, for the recruiter-facing pay check only. Never sent to the AI.
+    pay_range: jobPayRange(j),
   };
 }
 
@@ -127,6 +130,8 @@ export function mapCandidate({ entry, person, jobProfiles = [], educationProfile
     report: {
       stage: stageOf(entry, stageNames),
       compensation: compensationOf(p),
+      // Pay sentences from the team's notes, for the recruiter only (src/pay.js).
+      pay_notes: payNotesOf([stripHtml(p.description ?? ""), ...events.map((e) => stripHtml(e.notes ?? ""))]),
       linkedin: first(p.linkedin_url, p.linkedin, p.linkedin_profile_url),
     },
   };
