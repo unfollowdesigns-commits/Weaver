@@ -131,3 +131,38 @@ test("10. the job description is scrubbed of pay before drafting and report writ
   const model = { job, people: [], top: [] };
   assert.ok(!narrativeRequest(model).user.includes("180,000"));
 });
+
+test("second review, names: hyphens, lowercase in Loxo, apostrophes, accents, handles; everyday words kept", () => {
+  const leak = (name, text) => scrubName(text, name);
+  assert.equal(leak("Jane Roe-Smith", "Ms. Roe joined. Smith led. Roe-Smith signed."), "Ms. [name] joined. [name] led. [name] signed.");
+  assert.equal(leak("jane mcdonald", "MCDONALD, JANE\nJane McDonald, controller."), "[name], [name]\n[name] [name], controller.");
+  assert.equal(leak("Patrick O'Brien", "Patrick O’Brien led audits. O'Brien again."), "[name] [name] led audits. [name] again.");
+  assert.equal(leak("José García", "Jose Garcia, CPA. García built it."), "[name] [name], CPA. [name] built it.");
+  assert.equal(leak("Mark Young", "Ernst & Young audit. Mark the date. Mark Young led it."), "Ernst & Young audit. Mark the date. [name] [name] led it.");
+  assert.equal(leak("Dr. Anne de la Cruz", "Worked de facto as la team lead. Anne de la Cruz, Dr. Cruz."), "Worked de facto as la team lead. [name] de la [name], Dr. [name].");
+  const rec = toPromptRecord({ ...base, name: "Jane Roe", resume_text: "linkedin: /in/janeroe12 · github.com/janeroe\nController." });
+  assert.ok(!/janeroe/i.test(rec.resume_text), rec.resume_text);
+});
+
+test("second review, pay: pay-sized figures caught, business figures and counts kept", () => {
+  for (const s of ["Looking for 250K+.", "He is at 275k today.", "$180-200K range.", "Targeting low 200s.", "Earning in the mid 200s.", "Currently $1.5MM.", "Sits at 240 plus 30%.", "Target cash 300.", "Base of two hundred thousand.", "TC 400 plus carry.", "Wants 220k plus 20%."]) {
+    assert.equal(isAboutPay(s), true, s);
+  }
+  for (const s of ["Rebuilt the TC team.", "The company wants 30M ARR by 2027.", "Cut costs by $500K across the org.", "Saved $250K annually.", "Managed a $500K budget.", "Processed 50k invoices a month.", "Led $800M in partner funding.", "Grew revenue from $14M to $41M."]) {
+    assert.equal(isAboutPay(s), false, s);
+  }
+});
+
+test("second review: graduation year on the line after the degree, and '4 of 5' screen scores", () => {
+  const rec = toPromptRecord({ ...base, resume_text: "MBA\n2004\nController, Acme, 2015 - 2021" });
+  assert.ok(!rec.resume_text.includes("2004") && rec.resume_text.includes("2015 - 2021"));
+  assert.ok(scrubScores("Screen: 4 of 5.").includes("[score removed]"));
+  assert.equal(scrubScores("Managed 3 of 5 regional teams."), "Managed 3 of 5 regional teams.");
+});
+
+test("money: small numbers are not read as salaries", async () => {
+  const { money } = await import("../src/loxo/map.js");
+  assert.equal(money("2.5"), null);
+  assert.equal(money("$90"), 90000);
+  assert.equal(money("12"), null);
+});

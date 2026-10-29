@@ -158,7 +158,9 @@ export const money = (v) => {
   if (!m) return null;
   let n = Number(m[1].replace(/,/g, ""));
   if (/[mM]/.test(m[2] ?? "")) n *= 1e6;
-  else if (/[kK]/.test(m[2] ?? "") || n < 1000) n *= 1000;
+  else if (/[kK]/.test(m[2] ?? "") || (n >= 20 && n < 1000)) n *= 1000;
+  // Below 20,000 is not an annual salary (an hourly rate, a percent): not read as pay.
+  if (n < 20000) return null;
   return isFinite(n) && n > 0 ? n : null;
 };
 

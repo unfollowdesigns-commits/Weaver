@@ -106,7 +106,12 @@ export async function writeResult(client, result, cfg) {
   const { path, body } = buildPayload(result, cfg);
   if (cfg.target !== "note") {
     const existing = firstArray(await client.get("/scorecards", { person_id: result.loxo.person_id, job_id: result.job_id }));
-    if (existing.some((s) => s.external_creator_name === AI_AUTHOR && samePerson(s, result.loxo.person_id) && sameJob(s, result.job_id))) return { status: "skipped", reason: "already has an AI scorecard for this job" };
+    const mine = existing.filter((s) => s.external_creator_name === AI_AUTHOR && samePerson(s, result.loxo.person_id) && sameJob(s, result.job_id));
+    if (mine.length) {
+      // Say when the match rests on Loxo's filter alone (the record carried no person id).
+      const unproven = mine.every((s) => pidOf(s) === "");
+      return { status: "skipped", reason: unproven ? "Loxo lists an AI scorecard for this job (no person id on it to confirm)" : "already has an AI scorecard for this job" };
+    }
   }
   const response = await client.post(path, body);
   return { status: "written", id: response?.id ?? response?.scorecard?.id ?? response?.person_event?.id ?? null };
