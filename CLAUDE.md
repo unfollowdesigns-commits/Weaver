@@ -307,6 +307,14 @@ skips candidates that already have an AI scorecard), and a small webhook
 server for automatic scoring, limited to the jobs in LOXO_AUTO_SCORE_JOB_IDS.
 Tested against a simulated Loxo only.
 
+29 Oct 2026, end of day: first results sent to Josh (email + PDF of the 8-candidate
+dry run on the Imperium search, gpt-4.1 on Houssem's key, with his OK). The email
+explains: it lives in Loxo once approved (scorecard, note as fallback), people with
+nothing in Loxo are listed not scored, Claude + Loxo connector works alongside.
+Asked Josh for: 5 to 10 searches for the full test, scorecard feedback, an
+Anthropic account in the firm's name (steps sent). Proposed on the call: a
+10-minute write test on their old "Accounting - Test" search (job 3011811).
+
 Open items (updated 29 Oct 2026):
 - Run on the real account: needs the Loxo key and the list of searches.
 - Confirm Loxo's real field names and webhook body on day one.

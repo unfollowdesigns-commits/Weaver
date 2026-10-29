@@ -36,7 +36,7 @@ const { values: args } = parseArgs({
 });
 
 // Rough cost per candidate, for the estimate only. Measure the real figure on the first run.
-const COST_PER_CANDIDATE = { claude: [0.05, 0.14], mock: [0, 0] };
+const COST_PER_CANDIDATE = { claude: [0.05, 0.14], openai: [0.02, 0.06], mock: [0, 0] };
 
 const client = loxoClientFromEnv(); // read-only: writes are blocked in this client
 const limit = args["limit-per-job"] ? Number(args["limit-per-job"]) : undefined;
