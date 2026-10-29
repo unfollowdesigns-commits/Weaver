@@ -102,6 +102,25 @@ Decided by us, shown to Josh for a yes or a change:
   Josh can change it; a per-job scorecard comes later if he asks.
 - Where the score lands: a Loxo scorecard on the candidate.
 
+Correction, 29 Oct 2026, after DP sent two of their own client pipeline
+reports (kept off the repo: real candidates). DP does have a scorecard:
+- Nine criteria per search, written for that role (e.g. industry insight,
+  technical depth, relocation, scaling, C-suite partnership), scored 1 to 5:
+  1 Does not meet, 2 Weak, 3 Meets, 4 Strong, 5 Exceptional. "We score
+  critically." Average shown as "4.1 / 5", plus an overall recommendation Yes.
+- They score only after the second layer screen, with interview knowledge.
+- Per candidate they write "Where he fits" / "Where to probe", and in tables
+  "Strongest signal" / "Watch item". Industry tag: star for direct industry,
+  open star for adjacent.
+- Stages: Outbound, Responded and initial conversation, First layer screen,
+  Second layer screen and cleared, Submitted to client.
+- Compensation (base, bonus, equity) is shown in their reports to the client.
+Consequences: Weaver is the first read on the record before any call, not a
+replacement for their post-interview scorecard. Use their scale labels and
+wording; criteria per search (drafted from the job, approved by Josh), with
+the standard scorecard as fallback. The pipeline report is the obvious
+phase 2.
+
 ## Rules
 
 - API keys live in a local .env file, never in chat, never committed, never
