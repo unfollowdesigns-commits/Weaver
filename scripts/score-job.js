@@ -7,6 +7,7 @@
 //
 // From a real Loxo job (read-only unless --write):
 //   node scripts/score-job.js --provider claude --loxo-job 123 [--limit 3] [--write]
+//     [--stages "Screened,Submitted to Client"]   only candidates at these Loxo stages
 //
 // --write only writes when .env has LOXO_WRITE_ENABLED=true and DRY_RUN=false.
 // Otherwise the exact payloads that would be written are saved next to the report.
@@ -35,6 +36,7 @@ const { values: args } = parseArgs({
     scorecard: { type: "string", default: "config/scorecards/standard-executive.v2.json" },
     "scorecards-dir": { type: "string", default: process.env.SCORECARD_JOBS_DIR || JOB_SCORECARD_DIR },
     limit: { type: "string" },
+    stages: { type: "string" },
     concurrency: { type: "string", default: "3" },
     write: { type: "boolean", default: false },
   },
@@ -49,7 +51,9 @@ let job, candidates, client;
 if (args["loxo-job"]) {
   client = loxoClientFromEnv(process.env, { allowWrites: args.write });
   console.log(`Reading job ${args["loxo-job"]} from Loxo ...`);
-  const loaded = await fetchJobForScoring(client, args["loxo-job"], { limit });
+  const stages = args.stages ? args.stages.split(",").filter((s) => s.trim()) : null;
+  const loaded = await fetchJobForScoring(client, args["loxo-job"], { limit, stages });
+  if (stages) console.log(`  only stages: ${stages.join(", ")}`);
   ({ job, candidates } = loaded);
   console.log(`  ${loaded.pipelineCount} on the pipeline, ${candidates.length} loaded${loaded.failures.length ? `, ${loaded.failures.length} could not be read` : ""}`);
   for (const f of loaded.failures) console.log(`  could not read entry ${f.entry_id}: ${f.error}`);

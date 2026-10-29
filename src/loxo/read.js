@@ -1,5 +1,5 @@
 import { firstArray } from "./client.js";
-import { mapJob, mapCandidate, personIdOf, resumeTextOf, resumeTruncatedOf, mapHumanScorecard } from "./map.js";
+import { mapJob, mapCandidate, personIdOf, resumeTextOf, resumeTruncatedOf, mapHumanScorecard, stageOf } from "./map.js";
 import { AI_AUTHOR } from "./write.js";
 
 // Read-only. Collects one job and everything needed to score its candidates.
@@ -96,11 +96,16 @@ export async function loadCandidates(client, entries, { concurrency = 3, onProgr
   return { candidates: slots.filter(Boolean), failures };
 }
 
-export async function fetchJobForScoring(client, jobId, { limit, concurrency = 3, onProgress } = {}) {
+// stages: optional list of Loxo stage names to keep (case-insensitive), e.g. ["Screened"].
+export async function fetchJobForScoring(client, jobId, { limit, concurrency = 3, onProgress, stages = null } = {}) {
   const job = await fetchJob(client, jobId);
   let entries = await listJobCandidates(client, jobId);
-  if (limit) entries = entries.slice(0, limit);
   const stageNames = await workflowStageNames(client);
+  if (stages?.length) {
+    const want = stages.map((s) => s.trim().toLowerCase());
+    entries = entries.filter((e) => want.includes(String(stageOf(e, stageNames).name ?? "").toLowerCase()));
+  }
+  if (limit) entries = entries.slice(0, limit);
   const { candidates, failures } = await loadCandidates(client, entries, { concurrency, onProgress, stageNames });
   return { job, candidates, failures, pipelineCount: entries.length };
 }
