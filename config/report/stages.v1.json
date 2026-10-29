@@ -1,0 +1,88 @@
+{
+  "note": "How Loxo pipeline stages map to the stages in the firm's client reports. Patterns are matched against the Loxo stage name, case-insensitive, first match wins. Confirm the real stage names on day one and adjust in a new version. 'No longer in process' is checked first, so a name like 'Client declined' is not read as submitted.",
+  "buckets": [
+    {
+      "id": "out",
+      "label": "No longer in process",
+      "short": "No longer in process",
+      "patterns": [
+        "no longer",
+        "withdr",
+        "declin",
+        "reject",
+        "not interested",
+        "closed",
+        "disqual"
+      ]
+    },
+    {
+      "id": "submitted",
+      "label": "Submitted to client",
+      "short": "Submitted",
+      "patterns": [
+        "submit",
+        "client",
+        "present",
+        "offer",
+        "placed"
+      ]
+    },
+    {
+      "id": "second",
+      "label": "Second layer screen & cleared",
+      "short": "Cleared",
+      "patterns": [
+        "second",
+        "2nd",
+        "cleared",
+        "final"
+      ]
+    },
+    {
+      "id": "first",
+      "label": "First layer screen",
+      "short": "First screen",
+      "patterns": [
+        "first",
+        "1st",
+        "screen",
+        "interview",
+        "qualif"
+      ]
+    },
+    {
+      "id": "responded",
+      "label": "Responded & initial conversation",
+      "short": "Initial conversation",
+      "patterns": [
+        "respond",
+        "replied",
+        "conversation",
+        "contact",
+        "engaged",
+        "call"
+      ]
+    },
+    {
+      "id": "outbound",
+      "label": "Outbound",
+      "short": "Outbound",
+      "patterns": [
+        "outbound",
+        "sourced",
+        "new",
+        "lead",
+        "prospect",
+        "added"
+      ]
+    }
+  ],
+  "unknown": "outbound",
+  "funnel": [
+    "outbound",
+    "responded",
+    "first",
+    "second",
+    "submitted"
+  ]
+}

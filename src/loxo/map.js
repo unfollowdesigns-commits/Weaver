@@ -110,6 +110,58 @@ export function mapCandidate({ entry, person, jobProfiles = [], resumeText = "",
       person_id: first(p.id, personIdOf(entry)),
       job_candidate_id: first(entry?.id),
     },
+    // For the client report only. Never sent to the AI: toPromptRecord is an allowlist.
+    report: {
+      stage: stageOf(entry),
+      compensation: compensationOf(p),
+      linkedin: first(p.linkedin_url, p.linkedin, p.linkedin_profile_url),
+    },
+  };
+}
+
+// Pipeline stage of a candidate on a job. Field names unconfirmed; fallbacks.
+export function stageOf(entry) {
+  const st = entry?.workflow_stage ?? entry?.stage ?? null;
+  return {
+    id: first(entry?.workflow_stage_id, st?.id),
+    name: first(st?.name, entry?.workflow_stage_name, entry?.stage_name, typeof st === "string" ? st : null),
+  };
+}
+
+const money = (v) => {
+  if (typeof v === "number" && isFinite(v)) return v;
+  if (typeof v === "string" && /\d/.test(v)) {
+    const n = Number(v.replace(/[^\d.]/g, ""));
+    return isFinite(n) && n > 0 ? (/k\b/i.test(v) && n < 10000 ? n * 1000 : n) : null;
+  }
+  return null;
+};
+
+// Base, bonus and equity from the person record. Loxo may hold a number, text or an object.
+export function compensationOf(p) {
+  const c = p?.compensation && typeof p.compensation === "object" ? p.compensation : {};
+  return {
+    base: first(money(c.base), money(c.salary), money(p?.salary), typeof p?.compensation !== "object" ? money(p?.compensation) : null),
+    bonus: first(c.bonus, p?.bonus),
+    equity: first(c.equity, p?.equity),
+    target_base: first(money(c.target_base), money(p?.desired_salary), money(p?.target_salary)),
+  };
+}
+
+// A scorecard written by a person in Loxo (not by Weaver). Field names unconfirmed; fallbacks.
+export function mapHumanScorecard(raw) {
+  const s = unwrap(raw, "scorecard");
+  const attrs = s.scorecard_attributes ?? s.attributes ?? s.scorecard_items ?? [];
+  const criteria = attrs.map((a) => ({ label: first(a.name, a.label, a.title), score: Number.isFinite(Number(a.score)) && a.score !== null ? Number(a.score) : null, notes: stripHtml(first(a.notes, a.comment, a.description) ?? "") }))
+    .filter((c) => c.label);
+  const scored = criteria.filter((c) => c.score !== null);
+  return {
+    person_id: String(first(s.person_id, s.person?.id) ?? ""),
+    author: first(s.external_creator_name, s.created_by?.name, s.user?.name),
+    recommendation: first(s.scorecard_recommendation_type?.name, s.recommendation?.name, s.recommendation_name),
+    summary: stripHtml(first(s.summary, s.notes) ?? ""),
+    criteria,
+    average: scored.length ? Math.round((scored.reduce((t, c) => t + c.score, 0) / scored.length) * 10) / 10 : null,
   };
 }
 

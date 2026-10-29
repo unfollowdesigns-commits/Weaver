@@ -15,6 +15,22 @@ const people = JSON.parse(fs.readFileSync("samples/candidates.sample.json", "utf
 const byId = new Map(people.map((p, i) => [String(i + 1), p]));
 const idOf = (sampleId) => String(people.findIndex((p) => p.id === sampleId) + 1);
 
+// Sample pipeline stages, in the order candidates appear on each search.
+const STAGES = ["Submitted to client", "Second screen - cleared", "First screen", "First screen", "Responded", "Responded", "Outbound", "Outbound", "Outbound"];
+
+// One scorecard written by the sample team, for the cleared candidate on search 101.
+function teamScorecard(jobId) {
+  const j = jobs.find((x) => String(x.id) === String(jobId));
+  if (!j || !fs.existsSync(`samples/scorecards/job-${j.id}.v1.json`)) return [];
+  const sc = JSON.parse(fs.readFileSync(`samples/scorecards/job-${j.id}.v1.json`, "utf8"));
+  const scores = [5, 4, 3, 5, 4, 3, 5, 4, 4];
+  return [{
+    id: 900, person_id: Number(idOf(j.candidate_person_ids[1])), job_id: j.id, created_by: { name: "Sample recruiter" },
+    scorecard_recommendation_type: { name: "Yes" }, summary: "Sample team scorecard.",
+    scorecard_attributes: sc.criteria.map((c, i) => ({ name: c.label, score: scores[i % scores.length], notes: "Sample note from the team's screen." })),
+  }];
+}
+
 function route(path, query) {
   let m;
   if (path === "/jobs") return { jobs: jobs.map(({ candidate_person_ids, ...j }) => j) };
@@ -25,18 +41,18 @@ function route(path, query) {
   if ((m = /^\/jobs\/(\d+)\/candidates$/.exec(path))) {
     const j = jobs.find((x) => String(x.id) === m[1]);
     if (!j) return null;
-    let list = j.candidate_person_ids.map((sid, i) => ({ id: Number(m[1]) * 100 + i, person_id: Number(idOf(sid)) }));
+    let list = j.candidate_person_ids.map((sid, i) => ({ id: Number(m[1]) * 100 + i, person_id: Number(idOf(sid)), workflow_stage: { id: i + 1, name: STAGES[i] ?? "Outbound" } }));
     if (query.get("person_id")) list = list.filter((c) => String(c.person_id) === query.get("person_id"));
     return { candidates: list, total_count: list.length };
   }
   if ((m = /^\/people\/(\d+)$/.exec(path))) {
     const p = byId.get(m[1]);
     if (!p) return null;
-    return { person: { id: Number(m[1]), name: p.name, title: p.current_title, company: p.current_company, location: p.location, description: "" } };
+    return { person: { id: Number(m[1]), name: p.name, title: p.current_title, company: p.current_company, location: p.location, description: "", compensation: p.compensation ?? null } };
   }
   if ((m = /^\/people\/(\d+)\/job_profiles$/.exec(path))) {
     const p = byId.get(m[1]);
-    return { job_profiles: (p?.work_history ?? []).map((w, i) => ({ id: i + 1, title: w.title, company: { name: w.company }, year: Number(w.start) || null, description: w.summary })) };
+    return { job_profiles: (p?.work_history ?? []).map((w, i) => ({ id: i + 1, title: w.title, company: { name: w.company }, year: Number(w.start) || null, end_year: Number(w.end) || null, description: w.summary })) };
   }
   if ((m = /^\/people\/(\d+)\/resumes$/.exec(path))) {
     const p = byId.get(m[1]);
@@ -47,7 +63,11 @@ function route(path, query) {
     const p = byId.get(query.get("person_id") ?? "");
     return { person_events: (p?.notes ?? []).map((n, i) => ({ id: i + 1, notes: n.text, created_at: n.date })) };
   }
-  if (path === "/scorecards") return { scorecards: [] };
+  if (path === "/scorecards") {
+    let list = teamScorecard(query.get("job_id"));
+    if (query.get("person_id")) list = list.filter((s) => String(s.person_id) === query.get("person_id"));
+    return { scorecards: list };
+  }
   if (path === "/scorecards/scorecard_types") return { scorecard_types: [{ id: 1, name: "Interview" }] };
   if (path === "/scorecards/scorecard_recommendation_types") return { scorecard_recommendation_types: [{ id: 1, name: "Hire" }, { id: 2, name: "No hire" }] };
   if (path === "/activity_types") return { activity_types: [{ id: 1, name: "Note" }] };

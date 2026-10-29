@@ -1,5 +1,6 @@
 import { firstArray } from "./client.js";
-import { mapJob, mapCandidate, personIdOf, resumeTextOf, resumeTruncatedOf } from "./map.js";
+import { mapJob, mapCandidate, personIdOf, resumeTextOf, resumeTruncatedOf, mapHumanScorecard } from "./map.js";
+import { AI_AUTHOR } from "./write.js";
 
 // Read-only. Collects one job and everything needed to score its candidates.
 
@@ -61,4 +62,15 @@ export async function fetchJobForScoring(client, jobId, { limit, concurrency = 3
   if (limit) entries = entries.slice(0, limit);
   const { candidates, failures } = await loadCandidates(client, entries, { concurrency, onProgress });
   return { job, candidates, failures, pipelineCount: entries.length };
+}
+
+// Scorecards the firm's own team wrote on this job (Weaver's are left out), by person id.
+export async function teamScorecards(client, jobId) {
+  const out = new Map();
+  for (const raw of await client.list("/scorecards", { job_id: jobId })) {
+    const sc = mapHumanScorecard(raw);
+    if (!sc.person_id || sc.author === AI_AUTHOR || !sc.criteria.length) continue;
+    out.set(sc.person_id, sc);
+  }
+  return out;
 }

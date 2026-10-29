@@ -41,7 +41,13 @@ Four things. Nothing else.
 Do not build these in v1 even if they seem useful.
 
 - The client-facing pipeline report PDF. DP already produces these themselves.
-  Possible phase 2, only if they ask.
+  Possible phase 2, only if they ask. 29 Oct 2026 (Houssem): prepare it now as
+  phase 2, not switched on or sold in v1. Built: `npm run report:client`
+  (scripts/client-report.js, src/client-report/). Read-only; drafts DP's report
+  from Loxo, Weaver's first reads and the team's own Loxo scorecards; the AI
+  writes only the short narrative, with references (C1...) instead of names
+  and no pay; the team edits in the browser and prints to PDF. Stage mapping in
+  config/report/stages.v1.json, to confirm against their real Loxo stages.
 - A UI or dashboard. The output lives in Loxo.
 - Any rewrite of DP's existing Claude prompts or report format.
 - Anything touching the DP website project, which is separate work.

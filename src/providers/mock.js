@@ -4,6 +4,7 @@
 export function createMockProvider({ broken = false, batchPending = false } = {}) {
   async function complete({ user, schema }) {
     if (broken) return { answer: { criteria: [], recommendation: "maybe" }, model: "mock" };
+    if (schema.properties.focus_next) return narrativeAnswer(user);
     if (!schema.properties.criteria.items.properties.id?.enum) return draftAnswer(user);
     const ref = /"candidate_ref": "([^"]+)"/.exec(user)?.[1] ?? "x";
     const ids = schema.properties.criteria.items.properties.id.enum;
@@ -50,6 +51,22 @@ export function createMockProvider({ broken = false, batchPending = false } = {}
         return batches.get(id)?.results ?? [];
       },
     },
+  };
+}
+
+// Report narrative, written with references only, like the real one.
+function narrativeAnswer(user) {
+  const refs = [...user.matchAll(/"ref": "(C\d+)"/g)].map((m) => m[1]);
+  return {
+    answer: {
+      subtitle: `Where the search stands today, drawn from ${refs.length} sample leaders.`,
+      read_boxes: [
+        { title: "Industry-led profiles", text: `${refs[0] ?? "C1"} and ${refs[1] ?? "C2"} bring direct industry experience. Sample text produced offline.` },
+        { title: "Function-led profiles", text: `${refs[2] ?? "C3"} is stronger on the function than the industry. Sample text produced offline.` },
+      ],
+      focus_next: `${refs[0] ?? "C1"} remains our top candidate. Sample text produced offline.`,
+    },
+    model: "mock",
   };
 }
 
