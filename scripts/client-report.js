@@ -33,7 +33,7 @@ const { values: args } = parseArgs({
     provider: { type: "string", default: process.env.SCORING_PROVIDER || "mock" },
     firm: { type: "string", default: process.env.REPORT_FIRM_NAME || "" },
     client: { type: "string", default: "" },
-    stages: { type: "string", default: "config/report/stages.v1.json" },
+    stages: { type: "string", default: "config/report/stages.v2.json" },
     "scorecards-dir": { type: "string", default: process.env.SCORECARD_JOBS_DIR || JOB_SCORECARD_DIR },
     go: { type: "boolean", default: false },
   },

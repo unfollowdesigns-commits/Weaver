@@ -7,7 +7,7 @@ import { narrativeRequest, applyNarrative, narrativeSchema } from "../src/client
 import { renderReport, money } from "../src/client-report/render.js";
 import { AI_AUTHOR } from "../src/loxo/write.js";
 
-const stages = loadStages();
+const stages = loadStages("config/report/stages.v1.json"); // generic stage names; their real ones are tested below
 
 test("Loxo stage names land in the firm's report stages", () => {
   const b = (n) => bucketOf(n, stages);
@@ -71,4 +71,15 @@ test("report renders, escapes text and keeps the toolbar out of print", () => {
   assert.equal(money(225000), "$225k");
   assert.equal(money(25), "25%");
   assert.equal(money(null), "TBD");
+});
+
+test("their real Loxo stages map to their report stages", () => {
+  const s2 = loadStages("config/report/stages.v2.json");
+  const b = (n) => bucketOf(n, s2);
+  assert.deepEqual(["Applied", "Longlist", "Shortlist", "Outbound"].map(b), ["outbound", "outbound", "outbound", "outbound"]);
+  assert.equal(b("Responded"), "responded");
+  assert.equal(b("Screened"), "first");
+  assert.equal(b("Submitted to Account Manager"), "second");
+  assert.deepEqual(["Submitted to Client", "Client Interview", "Offer", "Placed"].map(b), ["submitted", "submitted", "submitted", "submitted"]);
+  assert.deepEqual(["No Longer in Process", "FFO"].map(b), ["out", "out"]);
 });

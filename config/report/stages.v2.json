@@ -1,0 +1,13 @@
+{
+  "note": "Their real Loxo stages (read 29 Oct 2026): Applied, Longlist, Shortlist, Outbound, Responded, Screened, Submitted to Account Manager, Submitted to Client, Client Interview, Offer, No Longer in Process, Placed, FFO. Mapped to the five stages of their client reports. FFO: meaning unconfirmed, treated as no longer in process until Josh says otherwise. Patterns are matched against the Loxo stage name, case-insensitive, first match wins.",
+  "buckets": [
+    { "id": "out", "label": "No longer in process", "short": "No longer in process", "patterns": ["no longer", "ffo", "withdr", "declin", "reject"] },
+    { "id": "submitted", "label": "Submitted to client", "short": "Submitted", "patterns": ["submitted to client", "client interview", "offer", "placed"] },
+    { "id": "second", "label": "Second layer screen & cleared", "short": "Cleared", "patterns": ["submitted to account manager"] },
+    { "id": "first", "label": "First layer screen", "short": "First screen", "patterns": ["screened"] },
+    { "id": "responded", "label": "Responded & initial conversation", "short": "Initial conversation", "patterns": ["responded"] },
+    { "id": "outbound", "label": "Outbound", "short": "Outbound", "patterns": ["outbound", "longlist", "shortlist", "applied"] }
+  ],
+  "unknown": "outbound",
+  "funnel": ["outbound", "responded", "first", "second", "submitted"]
+}

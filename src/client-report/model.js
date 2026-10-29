@@ -5,7 +5,7 @@ import fs from "node:fs";
 // Client-facing numbers (screen scores) come only from the team's own scorecards,
 // never from Weaver's first read.
 
-export function loadStages(file = "config/report/stages.v1.json") {
+export function loadStages(file = "config/report/stages.v2.json") {
   return JSON.parse(fs.readFileSync(file, "utf8"));
 }
 
