@@ -79,3 +79,18 @@ test("the report explains the bar and the below-bar flag", () => {
   const html = toHtml([r], { jobTitle: "Sample", when: "today" });
   assert.ok(html.includes("an average under 3.5") && html.includes("Below bar") && html.includes("misses a must-have"));
 });
+
+test("the bar can be re-applied to a saved run without calling the AI", async () => {
+  const { rebar } = await import("../src/rebar.js");
+  const mk = (id, avg, rec, nulls = 0, extra = {}) => ({ status: "scored", candidate_id: id, average: avg, recommendation: rec,
+    criteria: Array.from({ length: 9 }, (_, i) => ({ id: `c${i}`, score: i < nulls ? null : 4, evidence: "She owned the close." })),
+    flags: rec === "yes" && avg < 3 ? ["check: recommended yes with an average below 3"] : [],
+    assessment: "Her record is strong.", strongest_signal: "s", watch_item: "w", where_they_fit: [], where_to_probe: [], ...extra });
+  const out = rebar([mk("low", 3.0, "yes"), mk("miss", 4.2, "no"), mk("top", 4.1, "yes"), mk("thin", 4.0, "yes", 3), mk("empty", null, "no", 9), { status: "skipped", candidate_id: "bare" }]);
+  assert.deepEqual(out.map((r) => [r.candidate_id, r.status, r.recommendation ?? null]),
+    [["top", "scored", "yes"], ["thin", "scored", "no"], ["low", "scored", "no"], ["miss", "scored", "no"], ["empty", "skipped", null], ["bare", "skipped", null]]);
+  const low = out.find((r) => r.candidate_id === "low");
+  assert.ok(low.flags.some((f) => f.startsWith("below_bar")) && !low.flags.some((f) => f.startsWith("check: recommended yes")));
+  assert.equal(low.assessment, "The candidate's record is strong.");
+  assert.equal(low.criteria[0].evidence, "The candidate owned the close.");
+});
