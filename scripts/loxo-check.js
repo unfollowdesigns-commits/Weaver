@@ -48,7 +48,11 @@ try {
       const pid = personIdOf(entries[0]);
       const dir = path.join("data", "probe", `job-${args.job}`);
       fs.mkdirSync(dir, { recursive: true });
-      const save = (name, data) => fs.writeFileSync(path.join(dir, `${name}.json`), JSON.stringify(data, null, 2));
+      const fields = [];
+      const save = (name, data) => {
+        fs.writeFileSync(path.join(dir, `${name}.json`), JSON.stringify(data, null, 2));
+        fields.push(`# ${name}`, ...fieldList(data));
+      };
       save("job", job);
       save("candidate-entry", entries[0]);
       if (pid) {
@@ -61,11 +65,26 @@ try {
         save("person-events", await client.get("/person_events", { person_id: pid, notes_format: "plain", per_page: 10 }));
         save("scorecards", await client.get("/scorecards", { person_id: pid }));
       }
-      console.log(`Raw responses saved to ${dir}/ for checking field names.`);
+      fs.writeFileSync(path.join(dir, "fields.txt"), fields.join("\n") + "\n");
+      console.log(`Raw responses saved to ${dir}/ (real data: keep them there).`);
+      console.log(`Field names only, no values, safe to share: ${path.join(dir, "fields.txt")}`);
     }
   }
   console.log("\nConnection OK. Nothing was written to Loxo.");
 } catch (err) {
   console.error(`\n${err.message}`);
   process.exitCode = 1;
+}
+
+// Every field path with its type and no value, e.g. "person.job_profiles[].company.name: string".
+function fieldList(data, prefix = "", out = new Set()) {
+  if (Array.isArray(data)) {
+    if (!data.length) out.add(`${prefix}[]: empty list`);
+    for (const item of data.slice(0, 3)) fieldList(item, `${prefix}[]`, out);
+  } else if (data && typeof data === "object") {
+    for (const [k, v] of Object.entries(data)) fieldList(v, prefix ? `${prefix}.${k}` : k, out);
+  } else {
+    out.add(`${prefix}: ${data === null ? "null" : typeof data}`);
+  }
+  return [...out];
 }
