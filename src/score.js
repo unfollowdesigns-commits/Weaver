@@ -40,6 +40,9 @@ export function resultFromAnswer({ base, answer, model, usage, scorecard, flagCo
   const check = validateAnswer(answer, scorecard);
   if (!check.ok) return { ...base, status: "error", error: `invalid answer: ${check.errors.join("; ")}` };
   const result = { ...base, status: "scored", model, usage: usage ?? null, ...finalize(answer, scorecard) };
+  // Read, but no criterion had any evidence (30 Oct 2026: one record came back "– / 5, No").
+  // Nothing to rank or write to Loxo: listed with the records that have too little to score.
+  if (result.scored_count === 0) return { ...base, status: "skipped", reason: "no_evidence", model, usage: usage ?? null };
   // No resume file: evidence cannot come "from the resume" (30 Oct 2026 review). Point it at
   // the profile instead, so the flag and the evidence agree.
   if (flagCodes.includes("no_resume")) {
@@ -75,7 +78,7 @@ export async function scoreCandidate({ candidate, job, scorecard, template, prov
     try {
       const { answer, model, usage } = await provider.complete({ system, user, schema });
       const result = resultFromAnswer({ base, answer, model, usage, scorecard, flagCodes });
-      if (result.status === "scored") return result;
+      if (result.status !== "error") return result;
       lastError = result.error;
     } catch (err) {
       lastError = err.message;
@@ -105,16 +108,16 @@ export async function scoreJob({ candidates, concurrency = 3, onResult, skipThin
   return rankResults(results);
 }
 
-// Who to call first: recommended candidates before the rest, then by average, highest
-// first; then errors, then candidates with nothing to score. (29 Oct 2026: by average alone, a "no" at 3.9 outranked a "yes"
-// at 3.9 that the firm's own team ranked first.)
+// Who to call first: recommended candidates first; then the near misses the AI called "yes"
+// but that fall under the bar; then the other "no"s; within each, by average, highest first;
+// then errors, then candidates with nothing to score. (29 Oct 2026: by average alone, a "no"
+// at 3.9 outranked a "yes" at 3.9 that the firm's own team ranked first.)
+const tier = (r) => (r.recommendation === "yes" ? 2 : r.ai_recommendation === "yes" ? 1 : 0);
 export function rankResults(results) {
   return [...results].sort((a, b) => {
     const order = { scored: 0, error: 1, skipped: 2 };
     if (a.status !== b.status) return (order[a.status] ?? 1) - (order[b.status] ?? 1);
-    const ya = a.recommendation === "yes" ? 1 : 0;
-    const yb = b.recommendation === "yes" ? 1 : 0;
-    if (ya !== yb) return yb - ya;
+    if (tier(a) !== tier(b)) return tier(b) - tier(a);
     return (b.average ?? -1) - (a.average ?? -1);
   });
 }

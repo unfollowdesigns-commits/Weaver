@@ -91,10 +91,13 @@ test("average is computed by the code and skips criteria with no evidence", () =
   assert.ok(r.flags.some((f) => f.startsWith("partial_record")));
 });
 
-test("flags a recommendation that disagrees with the scores", () => {
+test("a yes below the bar is listed as no and flagged (replaces the old 'yes below 3' check)", () => {
   const a = goodAnswer();
   a.criteria.forEach((c) => (c.score = 2));
-  assert.ok(finalize(a, scorecard).flags.some((f) => f.includes("below 3")));
+  const r = finalize(a, scorecard);
+  assert.equal(r.recommendation, "no");
+  assert.equal(r.ai_recommendation, "yes");
+  assert.ok(r.flags.some((f) => f.startsWith("below_bar:")));
 });
 
 test("a broken model answer becomes an error result, not a crash", async () => {

@@ -334,6 +334,18 @@ First probe, job 3688816 (Head of Finance and Accounting, 194 candidates), 29 Oc
   (PUT /scorecards/{id}: documented by Loxo, to test on "Accounting - Test"
   with the write test). Not available with LOXO_WRITE_TARGET=note yet. Manual
   on purpose: a criteria change never triggers AI cost by itself.
+- First full-search run (30 Oct 2026, Imperium search 3688816, all 194, gpt-4.1, scorecard
+  v2, prompt v3): 180 read, 14 not enough in Loxo, 0 errors, all verify checks passed. But 129
+  of 180 "yes" (72%), down to averages of 3.0: a pass mark, not a short list. Also: he/she
+  guessed in places; the pay guard wiped two whole summaries for one sentence; one record with
+  no evidence on any criterion came back "- / 5, No"; one evidence line quoted the scorecard's
+  rule. Fixed the same day: prompt v4 ("yes" is the short list, "they", no quoting rules, no
+  "likely"); code bar for "yes" (average 3.5 or more and evidence on 7 of 9, else listed No with
+  a below_bar flag, ranked above other Nos; a scorecard can set recommendation.yes_min_average);
+  pay guard drops only the pay sentence; he/she rewritten to "the candidate"; a read with no
+  evidence is "not enough to score"; verify checks pronouns, quoted rules, empty reads and warns
+  above 50% yes. Claude skill v3 says the same. On that run the 3.5 bar alone would leave about
+  65 yes (36%). Josh's top candidate's rank in this run not yet checked. Re-run to confirm.
 - Rate limit: 429 after a burst of roughly 12 requests a second. Client now
   paces to LOXO_MAX_PER_SECOND (default 4) and retries 429 with 2-30 s waits.
 - Pipeline entry: { id, position, person: {...}, workflow_stage_id,

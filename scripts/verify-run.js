@@ -54,13 +54,25 @@ line(nameHits === 0, "No candidate's name in what the AI wrote (it never saw nam
 const resumeHits = scored.filter((r) => (r.flags ?? []).some((f) => f.startsWith("no_resume")) && written(r).some((t) => /\bresume\b/i.test(String(t)))).length;
 line(resumeHits === 0, "No 'resume' cited for candidates without a resume", `${resumeHits} candidates`);
 
+const pronounHits = scored.filter((r) => written(r).some((t) => /\b(he|she|him|her|his|hers|himself|herself)\b/i.test(String(t)))).length;
+line(pronounHits === 0, "No he/she in what the AI wrote (gender is never guessed)", `${pronounHits} candidates`);
+
+const rulesHits = scored.filter((r) => written(r).some((t) => /\bscorecard:|\brequires? (a )?[1-5]\b|\bscores? (a )?[1-5] (if|when|requires)\b/i.test(String(t)))).length;
+line(rulesHits === 0, "No scorecard rules quoted back in what the AI wrote", `${rulesHits} candidates`);
+
+const empty = scored.filter((r) => !r.scored_count).length;
+line(empty === 0, "No candidate scored without any evidence", `${empty} candidates`);
+
 const guessHits = scored.reduce((n, r) => n + (r.criteria ?? []).filter((c) => /\b(likely|probably|presumably|would require|suggests? (that )?(they|he|she))\b/i.test(c.evidence)).length, 0);
 line(guessHits <= Math.max(2, scored.length), "Few evidence lines that guess ('likely'...)", `${guessHits} lines; review them if high`);
 
 const stars = { direct: 0, adjacent: 0, other: 0 };
 for (const r of scored) stars[r.industry] = (stars[r.industry] ?? 0) + 1;
 console.log(`INFO  Stars: ★ ${stars.direct} direct · ☆ ${stars.adjacent} adjacent · ${stars.other} none  (compare with the client's own report)`);
-console.log(`INFO  Yes ${scored.filter((r) => r.recommendation === "yes").length} · No ${scored.filter((r) => r.recommendation === "no").length}`);
+const yesCount = scored.filter((r) => r.recommendation === "yes").length;
+const belowBar = scored.filter((r) => r.recommendation === "no" && r.ai_recommendation === "yes").length;
+console.log(`INFO  Yes ${yesCount} of ${scored.length} (${scored.length ? Math.round((yesCount / scored.length) * 100) : 0}%) · No ${scored.length - yesCount}${belowBar ? `, of which ${belowBar} the AI called yes but fall under the bar` : ""}`);
+if (scored.length >= 20 && yesCount / scored.length > 0.5) console.log("WARN  More than half are Yes: that is a pass mark, not a short list. Check the scorecard before sending.");
 
 if (payloads.length) {
   const bodies = payloads.filter((p) => p.body);

@@ -129,7 +129,7 @@ export function toHtml(results, meta) {
   const scored = results.filter((r) => r.status === "scored");
   const showPay = results.some((r) => fieldPay(r));
   const rows = results.map((r, i) => {
-    if (r.status === "skipped") return `<tr class="skip"><td class="rank">–</td><td class="name">${esc(who(r))}</td><td>Not scored</td><td colspan="${showPay ? 3 : 2}">Not enough in Loxo to score: no resume, work history or notes yet.</td></tr>`;
+    if (r.status === "skipped") return `<tr class="skip"><td class="rank">–</td><td class="name">${esc(who(r))}</td><td>Not scored</td><td colspan="${showPay ? 3 : 2}">${r.reason === "no_evidence" ? "Read, but nothing in the record speaks to any criterion yet." : "Not enough in Loxo to score: no resume, work history or notes yet."}</td></tr>`;
     if (r.status !== "scored") return `<tr><td class="rank">${i + 1}</td><td class="name">${esc(who(r))}</td><td class="err">Error</td><td colspan="${showPay ? 3 : 2}">${esc(r.error)}</td></tr>`;
     const flags = r.flags.map((f) => `<span class="flag">${esc(f.split(":")[0].replaceAll("_", " "))}</span>`).join("");
     return `<tr><td class="rank">${i + 1}</td><td><span class="name">${esc(who(r))}</span>${STAR[r.industry] ? `<span class="star" title="${r.industry} industry">${STAR[r.industry]}</span>` : ""}${flags}</td><td>${scoreCell(r)}</td>${showPay ? `<td class="pay ${esc(fieldPay(r)?.check?.kind ?? "")}">${esc(payShort(r))}</td>` : ""}<td>${esc(r.strongest_signal)}</td><td>${esc(r.watch_item)}</td></tr>`;
@@ -154,8 +154,8 @@ ${meta.criteria_auto ? '<p class="note warn"><b>Criteria drafted automatically f
 <h2>Ranked</h2>
 <div class="table"><table><thead><tr><th>#</th><th>Candidate</th><th>Score</th>${showPay ? "<th>Pay</th>" : ""}<th>Strongest signal</th><th>Watch item</th></tr></thead><tbody>${rows}</tbody></table></div>
 <div class="legend"><p>★ Direct industry experience · ☆ Adjacent industry · 1 Does not meet · 2 Weak · 3 Meets · 4 Strong · 5 Exceptional</p>
-<p><b>Yes / No.</b> Recommended candidates are listed first. "No" means the record misses a must-have for this search, such as industry experience, whatever the average.</p>
-<p><b>Flags.</b> Partial record: one or two criteria had no evidence. Thin record: three or more had none. No resume: no resume file in Loxo; read from the profile, work history and notes. Notes trimmed: only the most recent notes were read. Resume trimmed: a very long resume, only the first part was read. Check: the recommendation and the average point different ways; read the reasons.</p></div>
+<p><b>Yes / No.</b> Recommended candidates are listed first. "Yes" is the short list: every must-have met and strong on most criteria. "No" means the record misses a must-have for this search, such as industry experience, whatever the average, or the read is below the bar for a call: an average under ${esc(scored.find((r) => r.yes_bar)?.yes_bar ?? 3.5)}, or three or more criteria with no evidence.</p>
+<p><b>Flags.</b> Partial record: one or two criteria had no evidence. Thin record: three or more had none. No resume: no resume file in Loxo; read from the profile, work history and notes. Notes trimmed: only the most recent notes were read. Resume trimmed: a very long resume, only the first part was read. Below bar: the AI said yes, but the average or the evidence is under the bar, so it is listed as No; worth a look if the reasons fit. Check: a No with an average of 4 or more; read the reasons.</p></div>
 <h2>Candidates</h2>
 ${cards}`);
 }

@@ -12,3 +12,8 @@ The prompt Claude uses to give a first read of one candidate against one search'
 
 Versioning: never overwrite. Add `scoring-prompt.v3.md` beside the others and point
 `DEFAULT_PROMPT` in `src/prompt.js` at it.
+
+- `scoring-prompt.v4.md` (in use since 30 Oct 2026): as v3, and after the first full-search run
+  (180 read, 72% "yes" with gpt-4.1): "yes" means the short list (every must-have met, strong on
+  most of what matters), not a pass mark; "they", never he or she; no quoting the scorecard's rules
+  back; no "likely" guesses. The code also holds a minimum bar for "yes" (see src/validate.js).

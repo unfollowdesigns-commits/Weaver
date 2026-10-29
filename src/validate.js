@@ -3,6 +3,37 @@ import { isAboutPay } from "./candidate.js";
 
 const clean = (list) => list.map((t) => t.trim()).filter(Boolean).slice(0, 5);
 
+// The lowest average that can stand as "yes" when the scorecard sets no bar of its own
+// (recommendation.yes_min_average). 30 Oct 2026, first full search: with no bar, 129 of 180
+// came out "yes", down to averages of 3.0, which is a pass mark, not a short list.
+export const YES_MIN_AVERAGE = 3.5;
+const PAY_REMOVED = "[removed: mentioned pay]";
+
+// Drops only the sentences about pay, so one bad sentence does not wipe a whole write-up.
+// Returns null when nothing is left.
+function withoutPay(text) {
+  const parts = String(text ?? "").split(/(?<=[.!?;])\s+/);
+  const kept = parts.filter((p) => !isAboutPay(p));
+  if (kept.length === parts.length) return { text, dropped: false };
+  return { text: kept.join(" ").trim() || null, dropped: true };
+}
+
+// The candidate's gender is unknown and must not be guessed. The prompt says "they"; this
+// catches the slips. "she lacks" -> "the candidate lacks", "her role" -> "the candidate's role".
+const OBJECT_AFTER_HER = /^(?:[.,;:!?)]|$|\s+(?:to|for|with|as|in|on|at|about|and|or|but|if|that|than|from|into|over|up|out|back|again)\b)/i;
+export function neutralPronouns(text) {
+  const out = String(text ?? "").replace(/\b(he|she|him|his|hers|himself|herself|her)\b/gi, (word, _w, offset, whole) => {
+    const w = word.toLowerCase();
+    let rep;
+    if (w === "his" || w === "hers") rep = "the candidate's";
+    else if (w === "himself" || w === "herself") rep = "themselves";
+    else if (w === "her") rep = OBJECT_AFTER_HER.test(whole.slice(offset + word.length)) ? "the candidate" : "the candidate's";
+    else rep = "the candidate";
+    return word[0] === word[0].toUpperCase() ? rep[0].toUpperCase() + rep.slice(1) : rep;
+  });
+  return out;
+}
+
 // Checks a model answer against the scorecard. Never trusts the model's shape.
 export function validateAnswer(answer, scorecard) {
   const errors = [];
@@ -62,32 +93,54 @@ export function finalize(answer, scorecard) {
     : null;
 
   const flags = [];
-  // Last guard: nothing the recruiter reads may talk about pay.
+  // Last guard: nothing the recruiter reads may talk about pay. Only the sentences about pay
+  // go; a line that is all pay is dropped (lists) or replaced by a marker (single fields).
   let payDropped = 0;
-  const noPay = (list) => list.filter((t) => (isAboutPay(t) ? (payDropped++, false) : true));
+  const strip = (t) => {
+    const r = withoutPay(t);
+    if (r.dropped) payDropped++;
+    return r.text;
+  };
+  const noPay = (list) => list.map(strip).filter((t) => t);
   answer = { ...answer, where_they_fit: noPay(answer.where_they_fit), where_to_probe: noPay(answer.where_to_probe) };
-  for (const k of ["strongest_signal", "watch_item", "assessment"]) if (isAboutPay(answer[k])) { payDropped++; answer[k] = "[removed: mentioned pay]"; }
+  for (const k of ["strongest_signal", "watch_item", "assessment"]) answer[k] = strip(answer[k]) ?? PAY_REMOVED;
   for (let i = 0; i < criteria.length; i++) {
-    if (isAboutPay(criteria[i].evidence)) { payDropped++; criteria[i] = { ...criteria[i], evidence: "[removed: mentioned pay]" }; }
+    const evidence = strip(criteria[i].evidence);
+    if (evidence !== criteria[i].evidence) criteria[i] = { ...criteria[i], evidence: evidence ?? PAY_REMOVED };
   }
   const missing = criteria.length - scored.length;
   if (missing >= 3) flags.push(`thin_record: ${missing} of ${criteria.length} criteria had no evidence`);
   else if (missing > 0) flags.push(`partial_record: ${missing} criteria had no evidence`);
-  if (average !== null && answer.recommendation === "yes" && average < 3) flags.push("check: recommended yes with an average below 3");
-  if (average !== null && answer.recommendation === "no" && average >= 4) flags.push("check: recommended no with an average of 4 or more");
+
+  // "yes" is the short list. The model's "yes" stands only above the bar and with evidence on
+  // most criteria; below it the result is listed as "no", flagged, for the recruiter to judge.
+  const bar = scorecard.recommendation?.yes_min_average ?? YES_MIN_AVERAGE;
+  let recommendation = answer.recommendation;
+  if (recommendation === "yes" && (average === null || average < bar || missing >= 3)) {
+    recommendation = "no";
+    flags.push(missing >= 3
+      ? `below_bar: the AI said yes, but ${missing} criteria had no evidence; listed as No for the recruiter to judge`
+      : `below_bar: the AI said yes, but the average is under ${bar}; listed as No for the recruiter to judge`);
+  }
+  if (average !== null && recommendation === "no" && average >= 4) flags.push("check: recommended no with an average of 4 or more");
   if (payDropped) flags.push(`pay_removed: ${payDropped} line(s) mentioned pay and were removed`);
+
+  const words = (t) => neutralPronouns(String(t).trim());
+  for (let i = 0; i < criteria.length; i++) criteria[i] = { ...criteria[i], evidence: words(criteria[i].evidence) };
 
   return {
     criteria,
     average,
     scored_count: scored.length,
-    recommendation: answer.recommendation,
-    assessment: answer.assessment.trim(),
+    recommendation,
+    ai_recommendation: answer.recommendation,
+    yes_bar: bar,
+    assessment: words(answer.assessment),
     industry: answer.industry,
-    strongest_signal: answer.strongest_signal.trim(),
-    watch_item: answer.watch_item.trim(),
-    where_they_fit: clean(answer.where_they_fit),
-    where_to_probe: clean(answer.where_to_probe),
+    strongest_signal: words(answer.strongest_signal),
+    watch_item: words(answer.watch_item),
+    where_they_fit: clean(answer.where_they_fit).map(words),
+    where_to_probe: clean(answer.where_to_probe).map(words),
     flags,
   };
 }
