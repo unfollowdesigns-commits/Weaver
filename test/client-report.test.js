@@ -83,3 +83,10 @@ test("their real Loxo stages map to their report stages", () => {
   assert.deepEqual(["Submitted to Client", "Client Interview", "Offer", "Placed"].map(b), ["submitted", "submitted", "submitted", "submitted"]);
   assert.deepEqual(["No Longer in Process", "FFO"].map(b), ["out", "out"]);
 });
+
+test("the top ten holds only people with a read; the others stay in the stage lists", () => {
+  const few = results.slice(0, 3);
+  const m = buildReportModel({ job: { id: "7", title: "CFO", description: "" }, candidates, results: few, stages });
+  assert.equal(m.top.length, 3);
+  assert.ok(m.outbound.length > 0);
+});

@@ -66,6 +66,9 @@ export function buildReportModel({ job, candidates, results = [], teamCards = ne
   const score = (p) => p.team?.average ?? p.first_read?.average ?? 0;
   const active = people.filter((p) => p.stage !== "out");
   const ranked = [...active].sort((a, b) => score(b) - score(a) || b.stage_rank - a.stage_rank);
+  // The top ten only holds people someone has read: Weaver or the team. Unread people stay
+  // in the stage lists further down.
+  const read = ranked.filter((p) => p.first_read || p.team?.average != null);
 
   const funnel = order.map((id) => {
     const b = stages.buckets.find((x) => x.id === id);
@@ -81,7 +84,7 @@ export function buildReportModel({ job, candidates, results = [], teamCards = ne
     date: date.toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" }),
     funnel,
     people,
-    top: ranked.slice(0, 10),
+    top: read.slice(0, 10),
     stands: ranked.filter((p) => order.indexOf(p.stage) >= order.indexOf("first")),
     profiles: ranked.filter((p) => p.stage === "second" || p.stage === "submitted"),
     firstScreen: ranked.filter((p) => p.stage === "first"),
