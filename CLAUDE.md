@@ -14,6 +14,14 @@ They want the data plumbing and the scoring automated.
 
 Their ATS is Loxo. Plan tier to confirm, must be professional or above.
 
+## Why they came to us
+
+30 Oct 2026 (Houssem): Josh first asked Loxo to build this for them and Loxo never
+got back to him. Speed matters more than polish; positioning: "you asked Loxo, we
+built it on top of Loxo". Keep it on Loxo's official, documented access only, write
+only into Loxo's own scorecards or notes, so it works alongside anything Loxo ships
+later and never puts their Loxo support at risk.
+
 ## What the client asked for
 
 Josh's exact four questions:
