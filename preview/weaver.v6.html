@@ -1,0 +1,579 @@
+<title>Weaver Preview</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700&family=Public+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+  /* Layout: a short, calm page for a busy founder. One live demo (his pipeline board),
+     then the scorecard, the safeguards and the one step to start. */
+  :root {
+    --paper: #f4f6fa; --sheet: #ffffff; --ink: #121a2b; --ink-2: #535e72; --rule: #dce1ea;
+    --pine: #2f6fcf; --pine-soft: #e6eefb; --on-pine: #ffffff;
+    --navy: #0d1526; --on-navy: #ffffff; --navy-2: #aab6cb;
+    --yes: #2f6fcf; --no: #8a93a3; --wait: #9a6a1a;
+    --display: "Archivo", -apple-system, "Segoe UI", Helvetica, Arial, sans-serif;
+    --body: "Public Sans", -apple-system, "Segoe UI", Helvetica, Arial, sans-serif;
+    --mono: "IBM Plex Mono", ui-monospace, Menlo, Consolas, monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --paper: #0b1120; --sheet: #121a2c; --ink: #e6ebf3; --ink-2: #9ca8bc; --rule: #26314a;
+      --pine: #7fb0f2; --pine-soft: #1a2742; --on-pine: #0b1120;
+      --navy: #16213a; --on-navy: #ffffff; --navy-2: #aab6cb;
+      --yes: #7fb0f2; --no: #8a93a3; --wait: #e0b46a; color-scheme: dark;
+    }
+  }
+  :root[data-theme="dark"] {
+    --paper: #0b1120; --sheet: #121a2c; --ink: #e6ebf3; --ink-2: #9ca8bc; --rule: #26314a;
+    --pine: #7fb0f2; --pine-soft: #1a2742; --on-pine: #0b1120;
+    --navy: #16213a; --on-navy: #ffffff; --navy-2: #aab6cb;
+    --yes: #7fb0f2; --no: #8a93a3; --wait: #e0b46a; color-scheme: dark;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--paper); color: var(--ink); font: 400 16px/1.6 var(--body); -webkit-font-smoothing: antialiased; }
+  .wrap { max-width: 1000px; margin: 0 auto; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+  h1, h2 { font-family: var(--display); font-weight: 600; line-height: 1.1; letter-spacing: -.015em; margin: 0; text-wrap: balance; }
+  h1 { font-weight: 700; }
+  h1 { font-size: clamp(36px, 6.4vw, 60px); max-width: 15ch; }
+  h2 { font-size: clamp(26px, 4vw, 36px); }
+  p { margin: 0; }
+  .label { font: 500 11.5px/1.3 var(--body); letter-spacing: .12em; text-transform: uppercase; color: var(--ink-2); }
+  button { font: inherit; color: inherit; }
+  :focus-visible { outline: 2px solid var(--pine); outline-offset: 2px; }
+
+  .top { background: var(--navy); color: var(--on-navy); }
+  .top .label { color: var(--navy-2); }
+  .top .wrap { display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; padding-block: 16px; }
+  .brand { font: 700 20px/1 var(--display); }
+  .hero .wrap { padding-block: clamp(44px, 8vw, 88px) 36px; display: grid; gap: 20px; }
+  .lede { font-size: 19px; color: var(--ink-2); max-width: 54ch; }
+
+  .steps { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0; border-top: 1px solid var(--rule); border-bottom: 1px solid var(--rule); }
+  .step { padding: 20px 20px 22px 0; display: grid; gap: 6px; }
+  .step + .step { padding-left: 20px; border-left: 1px solid var(--rule); }
+  .step .n { font: 400 13px/1 var(--mono); color: var(--pine); }
+  .step b { font-weight: 600; }
+  .step span { color: var(--ink-2); font-size: 15px; }
+
+  section.block .wrap { padding-block: 64px 0; display: grid; gap: 22px; }
+  .intro { display: grid; gap: 8px; max-width: 62ch; }
+  .intro p { color: var(--ink-2); }
+
+  /* Demo */
+  .demo { background: var(--sheet); border: 1px solid var(--rule); min-width: 0; }
+  .demo-head { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; padding: 14px 18px; border-bottom: 1px solid var(--rule); }
+  .demo-head .t { font: 600 20px/1.2 var(--display); }
+  .demo-head .s { font-size: 13px; color: var(--ink-2); }
+  .add { background: var(--pine); color: var(--on-pine); border: 0; padding: 10px 14px; font-weight: 600; font-size: 14px; cursor: pointer; }
+  .add[disabled] { opacity: .6; cursor: default; }
+  .demo-body { display: grid; grid-template-columns: minmax(0, 1fr) 340px; }
+  .board-scroll { overflow-x: auto; border-right: 1px solid var(--rule); }
+  .board { display: grid; grid-template-columns: repeat(3, minmax(190px, 1fr)); gap: 14px; padding: 16px; min-width: 610px; }
+  .col { display: grid; gap: 10px; align-content: start; }
+  .col-name { padding-bottom: 6px; border-bottom: 1px solid var(--rule); }
+  .card { text-align: left; border: 1px solid var(--rule); background: var(--paper); padding: 10px 12px; display: grid; gap: 3px; cursor: pointer; width: 100%; }
+  .card:hover { border-color: var(--pine); }
+  .card[aria-pressed="true"] { border-color: var(--pine); box-shadow: inset 3px 0 0 var(--pine); }
+  .card b { font-weight: 600; font-size: 14px; }
+  .card .r { font-size: 13px; color: var(--ink-2); }
+  .card .ai { font: 600 12.5px/1.3 var(--body); font-variant-numeric: tabular-nums; display: flex; align-items: center; gap: 6px; margin-top: 5px; padding-top: 6px; border-top: 1px dashed var(--rule); }
+  .card .ai::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: var(--no); flex: none; }
+  .card .ai.yes::before { background: var(--yes); }
+  .card .ai.wait { color: var(--wait); }
+  .card .ai.wait::before { background: var(--wait); animation: pulse 1s ease-in-out infinite; }
+  .card.fresh { animation: land 2.4s ease-out; }
+  @keyframes pulse { 50% { opacity: .25; } }
+  @keyframes land { from { background: var(--pine-soft); } to { background: var(--paper); } }
+
+  .detail { padding: 18px; display: grid; gap: 14px; align-content: start; min-width: 0; }
+  .detail h3 { margin: 0; font: 600 22px/1.2 var(--display); }
+  .detail .r { color: var(--ink-2); font-size: 14px; margin-top: 2px; }
+  .sum { display: flex; gap: 16px; align-items: baseline; flex-wrap: wrap; }
+  .sum .avg { font: 700 30px/1 var(--display); font-variant-numeric: tabular-nums; }
+  .rec { font-weight: 600; font-size: 14px; }
+  .rec.yes { color: var(--yes); } .rec.no { color: var(--no); }
+  .crit { display: grid; gap: 6px; }
+  .crit-row { display: grid; grid-template-columns: minmax(0, 1fr) auto 14px; gap: 10px; align-items: center; font-size: 13.5px; }
+  .dots { display: inline-flex; gap: 3px; }
+  .dots i { width: 9px; height: 9px; border-radius: 50%; border: 1px solid var(--pine); }
+  .dots i.on { background: var(--pine); }
+  .crit-row .v { font: 400 12.5px/1 var(--mono); text-align: right; }
+  .note { font-size: 14.5px; }
+  .ask { font-size: 13.5px; color: var(--ink-2); }
+  .review { justify-self: start; background: none; border: 1px solid var(--pine); color: var(--pine); padding: 8px 12px; font-weight: 600; font-size: 14px; cursor: pointer; }
+  .review[aria-pressed="true"] { background: var(--pine); color: var(--on-pine); }
+  .hint { color: var(--ink-2); font-size: 14px; }
+  .star { color: var(--pine); font-weight: 400; }
+  .sum .avg small { font-size: 15px; color: var(--ink-2); }
+  .sw { display: grid; gap: 8px; border-left: 3px solid var(--pine); padding: 2px 0 2px 12px; }
+  .sw p { font-size: 14px; }
+  .sw b { display: block; font: 500 10.5px/1.4 var(--body); letter-spacing: .12em; text-transform: uppercase; color: var(--ink-2); }
+  .legend { font-size: 12px; color: var(--ink-2); margin-top: 4px; }
+  .lists { display: grid; gap: 12px; }
+  .lists b { display: block; font: 600 10.5px/1.4 var(--body); letter-spacing: .12em; text-transform: uppercase; padding-bottom: 5px; border-bottom: 1px solid var(--ink); margin-bottom: 6px; }
+  .lists .probe b { color: var(--pine); border-color: var(--pine); }
+  .lists ul { margin: 0; padding-left: 16px; display: grid; gap: 4px; font-size: 13.5px; }
+  .card .ai { white-space: nowrap; }
+
+  /* Asked */
+  .asked { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0; border-top: 1px solid var(--rule); }
+  .qa { padding: 20px 24px 22px 0; border-bottom: 1px solid var(--rule); display: grid; gap: 8px; align-content: start; }
+  .qa:nth-child(even) { padding-left: 24px; border-left: 1px solid var(--rule); }
+  .qa .q { font: 500 18px/1.35 var(--display); color: var(--ink-2); }
+  .qa .a { display: flex; gap: 10px; align-items: baseline; }
+  .qa .yes { font: 600 12px/1 var(--body); letter-spacing: .1em; text-transform: uppercase; color: var(--on-pine); background: var(--pine); padding: 4px 7px; flex: none; }
+  .qa .a span { font-size: 15.5px; }
+
+  /* Pipeline */
+  .flow { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 0; align-items: stretch; }
+  .node { background: var(--sheet); border: 1px solid var(--rule); padding: 16px; display: grid; gap: 6px; align-content: start; position: relative; }
+  .node + .node { border-left: 0; }
+  .node .k { font: 500 11px/1.3 var(--body); letter-spacing: .12em; text-transform: uppercase; color: var(--pine); }
+  .node b { font: 600 17px/1.25 var(--display); }
+  .node span { color: var(--ink-2); font-size: 14px; }
+  .node.hub { background: var(--navy); border-color: var(--navy); color: var(--on-navy); }
+  .node.hub .k, .node.hub span { color: var(--navy-2); }
+  .node.hub + .node.hub { box-shadow: inset 1px 0 0 rgba(255,255,255,.18); }
+  .node:not(:last-child)::after { content: "\2192"; position: absolute; right: -9px; top: 18px; width: 18px; height: 18px; display: grid; place-items: center; background: var(--paper); border: 1px solid var(--rule); border-radius: 50%; font-size: 11px; color: var(--pine); z-index: 1; }
+  .side { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 2fr); gap: 12px; margin-top: 12px; }
+  .side .node { border-left: 1px solid var(--rule); }
+  .side .node::after { display: none; }
+  .dataline { font-size: 14px; color: var(--ink-2); }
+  .dataline b { color: var(--ink); }
+
+  /* Improving */
+  .better { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
+  .better div { background: var(--sheet); border: 1px solid var(--rule); padding: 16px; display: grid; gap: 6px; align-content: start; }
+  .better b { font: 600 17px/1.25 var(--display); }
+  .better span { color: var(--ink-2); font-size: 14px; }
+  .next { display: flex; flex-wrap: wrap; gap: 8px; }
+  .next span { border: 1px dashed var(--pine); color: var(--pine); padding: 6px 10px; font-size: 14px; }
+
+  /* Costs */
+  table.t { width: 100%; border-collapse: collapse; background: var(--sheet); border: 1px solid var(--rule); font-size: 15px; }
+  table.t th, table.t td { text-align: left; padding: 12px 14px; border-top: 1px solid var(--rule); vertical-align: top; }
+  table.t th { font: 500 11px/1.3 var(--body); letter-spacing: .12em; text-transform: uppercase; color: var(--ink-2); background: var(--paper); }
+  table.t td.n { white-space: nowrap; text-align: right; font-variant-numeric: tabular-nums; }
+  table.t tr.total td { font-weight: 600; background: var(--pine-soft); }
+  .tscroll { overflow-x: auto; }
+  .fine { font-size: 13.5px; color: var(--ink-2); max-width: 70ch; }
+
+  /* Package */
+  .pkg { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 12px; }
+  .pkg .tile { grid-column: span 2; }
+  .pkg .tile.main { grid-column: span 3; padding: 22px; }
+  .pkg .tile.main b { font-size: 24px; }
+  .pkg .tile.main span { font-size: 15px; }
+  .tile { background: var(--sheet); border: 1px solid var(--rule); padding: 16px; display: grid; gap: 8px; align-content: start; }
+  .tile.main { border-color: var(--pine); box-shadow: inset 0 3px 0 var(--pine); }
+  .tile .k { font: 500 11px/1.3 var(--body); letter-spacing: .12em; text-transform: uppercase; color: var(--pine); }
+  .tile b { font: 600 17px/1.25 var(--display); }
+  .tile span { color: var(--ink-2); font-size: 14px; }
+  .tile a { color: var(--pine); font-size: 13.5px; font-weight: 600; text-decoration: none; }
+  .tile a:hover { text-decoration: underline; }
+
+  /* Ask */
+  .claude { background: var(--sheet); border: 1px solid var(--rule); min-width: 0; }
+  .claude-head { display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; padding: 14px 18px; border-bottom: 1px solid var(--rule); font-size: 13px; color: var(--ink-2); }
+  .claude-head b { color: var(--ink); font-weight: 600; }
+  .tabs { display: flex; gap: 8px; flex-wrap: wrap; padding: 14px 18px 0; }
+  .tab { border: 1px solid var(--rule); background: var(--paper); padding: 8px 12px; font-size: 14px; cursor: pointer; }
+  .tab[aria-selected="true"] { background: var(--pine); color: var(--on-pine); border-color: var(--pine); }
+  .claude .chat { border: 0; background: none; }
+  .chat { background: var(--sheet); border: 1px solid var(--rule); padding: 18px; display: grid; gap: 12px; }
+  .bubble { max-width: 62ch; padding: 10px 14px; font-size: 15px; }
+  .bubble.me { justify-self: end; background: var(--pine); color: var(--on-pine); }
+  .bubble.ai { background: var(--paper); border: 1px solid var(--rule); }
+  .bubble ol { margin: 6px 0 4px; padding-left: 20px; display: grid; gap: 6px; }
+
+  /* First read vs your screen, phase 2 */
+  .two { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+  .two div { background: var(--sheet); border: 1px solid var(--rule); padding: 18px; display: grid; gap: 6px; align-content: start; }
+  .two div:first-child { border-color: var(--pine); box-shadow: inset 0 3px 0 var(--pine); }
+  .two .k, .phase2 .k { font: 500 11px/1.3 var(--body); letter-spacing: .12em; text-transform: uppercase; color: var(--pine); }
+  .two b { font: 600 19px/1.25 var(--display); }
+  .two span:last-child { color: var(--ink-2); font-size: 15px; }
+  .phase2 { background: var(--navy); color: var(--on-navy); padding: 22px; display: grid; gap: 8px; margin-top: 6px; }
+  .phase2 .k { color: var(--navy-2); }
+  .phase2 b { font: 600 22px/1.2 var(--display); }
+  .phase2 span:last-child { color: var(--navy-2); max-width: 70ch; }
+
+  /* Scorecard */
+  .sc { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); border-top: 1px solid var(--rule); }
+  .sc div { padding: 16px 18px 18px 0; border-bottom: 1px solid var(--rule); display: grid; gap: 4px; align-content: start; }
+  .sc b { font-weight: 600; }
+  .sc span { color: var(--ink-2); font-size: 14.5px; }
+  .scale { display: flex; flex-wrap: wrap; gap: 6px 18px; font-size: 14px; color: var(--ink-2); }
+  .scale b { font-family: var(--mono); color: var(--ink); margin-right: 4px; font-weight: 500; }
+
+  ul.safe { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 24px; }
+  ul.safe li { display: grid; gap: 6px; padding-top: 14px; border-top: 2px solid var(--pine); }
+  ul.safe b { font-weight: 600; }
+  ul.safe span { color: var(--ink-2); font-size: 15px; }
+
+  .start { background: var(--navy); color: var(--on-navy); margin-top: 72px; }
+  .start .wrap { padding-block: 56px; display: grid; gap: 20px; }
+  .start h2 { color: var(--on-navy); }
+  .start ol { margin: 0; padding-left: 22px; display: grid; gap: 10px; max-width: 62ch; font-size: 17px; }
+  .start p { max-width: 62ch; opacity: .85; }
+  footer .wrap { padding-block: 22px 44px; font-size: 13px; color: var(--ink-2); display: flex; justify-content: space-between; flex-wrap: wrap; gap: 8px; }
+
+  @media (max-width: 960px) { .pkg { grid-template-columns: repeat(2, minmax(0, 1fr)); } .pkg .tile { grid-column: auto; } .pkg .tile.main { grid-column: 1 / -1; } }
+  @media (max-width: 860px) {
+    .asked, .better { grid-template-columns: 1fr; }
+    .qa:nth-child(even) { padding-left: 0; border-left: 0; }
+    .flow, .side { grid-template-columns: 1fr; }
+    .node + .node { border-left: 1px solid var(--rule); border-top: 0; }
+    .node:not(:last-child)::after { content: "\2193"; right: auto; left: 16px; top: auto; bottom: -9px; }
+    .node.hub + .node.hub { box-shadow: inset 0 1px 0 rgba(255,255,255,.18); }
+    .side { gap: 12px; }
+    .demo-body { grid-template-columns: 1fr; }
+    .board-scroll { border-right: 0; border-bottom: 1px solid var(--rule); }
+    .steps, .sc, ul.safe, .two { grid-template-columns: 1fr; }
+    .step + .step { padding-left: 0; border-left: 0; border-top: 1px solid var(--rule); }
+    .sc div { padding-right: 0; }
+  }
+  @media (max-width: 640px) {
+    .pkg { grid-template-columns: 1fr; }
+    .pkg .tile, .pkg .tile.main { grid-column: auto; }
+    .board { grid-template-columns: 1fr; min-width: 0; }
+  }
+  @media (prefers-reduced-motion: reduce) { .card.fresh, .card .ai.wait::before { animation: none; } }
+</style>
+
+<div class="top"><div class="wrap">
+  <span class="brand">Weaver</span>
+  <span class="label">AI scoring pipeline for your Loxo · preview</span>
+</div></div>
+
+<section class="hero"><div class="wrap">
+  <span class="label">For executive search teams in Washington, DC</span>
+  <h1>Know who to call first, on every search.</h1>
+  <p class="lede">Two things, working together inside the tools you already use. <b>Weaver</b> gives every candidate on your searches a first read against that search's own scorecard, and puts the score, the strongest signal and the watch item right on the candidate in Loxo. <b>Your Claude, connected to Loxo,</b> answers any question about your candidates in seconds. Your team decides.</p>
+  <div class="steps">
+    <div class="step"><span class="n">1</span><b>Add candidates as usual</b><span>Nothing changes in how your team works in Loxo.</span></div>
+    <div class="step"><span class="n">2</span><b>Weaver scores them</b><span>Work history, resume and notes, read in about a minute.</span></div>
+    <div class="step"><span class="n">3</span><b>You see who to call first</b><span>4.1 / 5 · Yes, the rank, and where to probe. You decide who moves on.</span></div>
+  </div>
+</div></section>
+
+<section class="block" id="asked"><div class="wrap">
+  <div class="intro">
+    <span class="label">You asked</span>
+    <h2>Your questions, answered</h2>
+    <p>Everything you asked for is in. Here is how.</p>
+  </div>
+  <div class="asked">
+    <div class="qa"><p class="q">"Can we connect Loxo to ChatGPT or Claude?"</p><p class="a"><span class="yes">Yes</span><span>We set up Loxo's official connection in your Claude (it works with ChatGPT too). Your team asks in plain English and gets answers from your own Loxo.</span></p></div>
+    <div class="qa"><p class="q">"Does it see full work histories, notes and resumes?"</p><p class="a"><span class="yes">Yes</span><span>Weaver reads each candidate's work history, your team's notes and the resume text held in Loxo. We confirm it on your account during the full test.</span></p></div>
+    <div class="qa"><p class="q">"Can we pull every candidate on a search at once?"</p><p class="a"><span class="yes">Yes</span><span>Weaver reads the whole pipeline of a search, whether it holds 20 candidates or 100, and ranks them all.</span></p></div>
+    <div class="qa"><p class="q">"Can the AI's scores go back into Loxo?"</p><p class="a"><span class="yes">Yes</span><span>Every first read lands on the candidate in Loxo as a scorecard in your own format: nine criteria scored 1 to 5, the average, Yes or No, where they fit and where to probe. Marked for your team's review.</span></p></div>
+    <div class="qa"><p class="q">"We want to rank 20 to 100 candidates at a time."</p><p class="a"><span class="yes">Done</span><span>Every card shows its score and its rank on the search, so the order is visible at a glance.</span></p></div>
+    <div class="qa"><p class="q">"New candidates should be scored automatically."</p><p class="a"><span class="yes">Done</span><span>When someone is added to a chosen search, Weaver scores them within about a minute. Nobody has to ask.</span></p></div>
+  </div>
+</div></section>
+
+<section class="block" id="package"><div class="wrap">
+  <div class="intro">
+    <span class="label">The package</span>
+    <h2>Everything you get</h2>
+    <p>Set up for you, tested on your real searches, and looked after every month.</p>
+  </div>
+  <div class="pkg">
+    <div class="tile main"><span class="k">Automatic</span><b>Weaver scoring</b><span>Every candidate on your chosen searches is scored against the scorecard, ranked, and saved on the card in Loxo. New candidates too, by themselves.</span><a href="#try">See it below</a></div>
+    <div class="tile main"><span class="k">On demand</span><b>Claude, connected to Loxo</b><span>Your team asks Claude about any candidate or search and gets the answer from your own Loxo: shortlists, call prep, client updates.</span><a href="#ask">See it below</a></div>
+    <div class="tile"><span class="k">Before launch</span><b>Full test on your searches</b><span>Every candidate on your open searches scored, with a summary and one report per search, before anything appears in Loxo.</span></div>
+    <div class="tile"><span class="k">Launch day</span><b>Team walkthrough</b><span>30 minutes with your team, plus a one-page guide to reading the scores.</span></div>
+    <div class="tile"><span class="k">Every month</span><b>Care and tuning</b><span>We watch costs and errors, adjust the scoring to how your team judges, and add searches when you ask.</span></div>
+  </div>
+</div></section>
+
+<section class="block" id="how"><div class="wrap">
+  <div class="intro">
+    <span class="label">How it works</span>
+    <h2>One pipeline, from your data to a decision</h2>
+    <p>Your candidates never leave your own systems except to be read by Claude, under your firm's own account.</p>
+  </div>
+  <div class="flow">
+    <div class="node"><span class="k">Your Loxo</span><b>Candidates</b><span>Work history, resume text and notes, on the searches you choose.</span></div>
+    <div class="node hub"><span class="k">Weaver</span><b>Prepares</b><span>Removes names, contact details and pay. Keeps only what matters for the role.</span></div>
+    <div class="node hub"><span class="k">Claude</span><b>Scores</b><span>Reads each candidate against that search's scorecard and explains every point.</span></div>
+    <div class="node hub"><span class="k">Weaver</span><b>Checks and ranks</b><span>Rejects incomplete answers, computes the average and the rank.</span></div>
+    <div class="node"><span class="k">Your Loxo</span><b>Scorecard on the card</b><span>Score, strongest signal, watch item and where to probe.</span></div>
+  </div>
+  <div class="side">
+    <div class="node"><span class="k">Your team</span><b>Decides</b><span>Reviews the score, agrees or not, moves candidates on.</span></div>
+    <div class="node"><span class="k">Your Claude, connected to Loxo</span><b>Answers on demand</b><span>Shortlists, call prep, client updates and database searches, using the same data and the scores Weaver wrote.</span></div>
+  </div>
+  <p class="dataline"><b>Your data stays yours:</b> it runs in accounts your firm owns, your candidates' details are not used to train AI models, and you can switch any part off at any time.</p>
+</div></section>
+
+<section class="block" id="try"><div class="wrap">
+  <div class="intro">
+    <span class="label">Part 1 · Weaver scoring</span>
+    <h2>Your pipeline, with one extra line on each card</h2>
+    <p>Tap a candidate to see their first read: the score on your nine criteria, the strongest signal, the watch item and where to probe. Then add a new candidate and watch it get read.</p>
+  </div>
+  <div class="demo">
+    <div class="demo-head">
+      <div><div class="t">VP Sales · GovTech software, PE-backed · sample</div><div class="s"><span id="count">8</span> candidates · ranked by score · ★ direct industry · ☆ adjacent</div></div>
+      <button class="add" id="add" type="button">Add a candidate</button>
+    </div>
+    <div class="demo-body">
+      <div class="board-scroll"><div class="board" id="board"></div></div>
+      <div class="detail" id="detail"></div>
+    </div>
+  </div>
+</div></section>
+
+<section class="block" id="ask"><div class="wrap">
+  <div class="intro">
+    <span class="label">Part 2 · Claude, connected to Loxo</span>
+    <h2>Ask anything about your candidates</h2>
+    <p>We connect the Claude your team already uses to your Loxo, using Loxo's own official connection. Then anyone on the team can ask in plain English and get answers from your real data, including Weaver's scores. Pick a question:</p>
+  </div>
+  <div class="claude">
+    <div class="claude-head"><span><b>Claude</b> · connected to your Loxo</span><span>sample answers</span></div>
+    <div class="tabs" role="tablist" id="tabs"></div>
+    <div class="chat" id="chat" role="tabpanel"></div>
+  </div>
+</div></section>
+
+<section class="block" id="scorecard"><div class="wrap">
+  <div class="intro">
+    <span class="label">The scorecard</span>
+    <h2>Your scorecard, on every search</h2>
+    <p>You already score candidates on nine criteria written for each search, 1 to 5, critically. Weaver works the same way. For each search it drafts the nine criteria from the job description; you approve or change them in a minute; from then on every candidate gets a first read in those terms.</p>
+  </div>
+  <div class="two">
+    <div><span class="k">Weaver · first read</span><b>Before anyone calls</b><span>From the Loxo record and the resume, the minute a candidate is added. Tells your team who to call first and what to ask.</span></div>
+    <div><span class="k">Your team · your screen</span><b>After your screens</b><span>Your own scorecard, with what only a conversation shows. Still yours, still what your clients see.</span></div>
+  </div>
+  <p class="label" style="margin-top:8px">Example · VP Sales, GovTech software, PE-backed</p>
+  <div class="scale"><span><b>1</b>Does not meet</span><span><b>2</b>Weak</span><span><b>3</b>Meets</span><span><b>4</b>Strong</span><span><b>5</b>Exceptional</span><span>No score when the record has no evidence, instead of a guess.</span></div>
+  <div class="sc">
+    <div><b>Relevant industry experience and insight</b><span>Has sold software into government or regulated buyers.</span></div>
+    <div><b>Building and leading a sales team</b><span>Has hired and led 15 to 25 sellers.</span></div>
+    <div><b>Owning the revenue plan</b><span>Has owned the number, with figures to show for it.</span></div>
+    <div><b>Scaling and growth experience</b><span>Has grown revenue through a funding round or a growth plan.</span></div>
+    <div><b>PE-backed or growth-stage context</b><span>Has worked to a sponsor's plan and pace.</span></div>
+    <div><b>Public sector buyers and contracting</b><span>Knows how agencies and primes buy.</span></div>
+    <div><b>CEO partnership and commercial acumen</b><span>A trusted partner to the CEO and the board.</span></div>
+    <div><b>Ability to be the face in the market</b><span>Credible with customers, partners and at events.</span></div>
+    <div><b>Location or commuting</b><span>In the DC area or open to it, travel fine.</span></div>
+  </div>
+  <p class="fine">Searches without their own scorecard use our standard executive scorecard, on the same scale.</p>
+</div></section>
+
+<section class="block" id="costs"><div class="wrap">
+  <div class="intro">
+    <span class="label">Running costs</span>
+    <h2>What it costs to run, and who pays</h2>
+    <p>Weaver runs in accounts your firm owns, so you pay the providers directly at their own prices, with no mark-up. Our fee for setup and monthly care is quoted separately.</p>
+  </div>
+  <div class="tscroll"><table class="t">
+    <thead><tr><th>Item</th><th>What it is</th><th>Paid to</th><th class="n">Per month</th></tr></thead>
+    <tbody>
+      <tr><td><b>AI scoring</b></td><td>One Claude reading per candidate, about $0.05 to $0.14 each. Non-urgent runs at half price.</td><td>Anthropic</td><td class="n">$30–80</td></tr>
+      <tr><td><b>Hosting</b></td><td>The always-on service that runs Weaver, in a US East data center, with the provider's SOC 2 security report.</td><td>Render</td><td class="n">$27–33</td></tr>
+      <tr><td><b>Loxo</b></td><td>Your current plan. Professional or above includes the access Weaver and Claude need.</td><td>Loxo</td><td class="n">no change</td></tr>
+      <tr><td><b>Claude for your team</b></td><td>The Claude your team already uses. The Loxo connection is free.</td><td>Anthropic</td><td class="n">no change</td></tr>
+      <tr class="total"><td colspan="3">Typical total at about 600 candidates a month</td><td class="n">$60 to $110</td></tr>
+    </tbody>
+  </table></div>
+  <p class="fine">Spending limit on your account, a daily cap, no candidate ever paid for twice, and large runs show their cost before they start. The full test (for example 10 searches of 50 candidates, about $25–70) measures your real figure first. Estimates from the providers' published prices, October 2026.</p>
+</div></section>
+
+<section class="block" id="better"><div class="wrap">
+  <div class="intro">
+    <span class="label">Always improving</span>
+    <h2>It gets sharper every month</h2>
+    <p>We keep tuning Weaver until it scores the way your best recruiter would.</p>
+  </div>
+  <div class="better">
+    <div><b>Learns your judgment</b><span>When your team disagrees with a score, we look at why and adjust the scoring.</span></div>
+    <div><b>Writes like your team</b><span>Strongest signal, watch item, where to probe: the words you already use with clients.</span></div>
+    <div><b>Newest Claude, tested first</b><span>New Claude models are compared on your searches before we switch.</span></div>
+    <div><b>A monthly note</b><span>What was scored, the time saved, the cost, and what we changed.</span></div>
+  </div>
+  <div class="phase2">
+    <span class="k">Next, when you want it</span>
+    <b>Your pipeline reports, drafted for you</b>
+    <span>The report you send each client (top ten ranked, where the search stands, a profile for each finalist) built from the work Weaver already holds, in your format, for your team to finish and send.</span>
+  </div>
+  <div class="next"><span>Past candidates matched to new searches</span><span>A morning email with the day's best new candidates</span></div>
+</div></section>
+
+<section class="block"><div class="wrap">
+  <div class="intro"><span class="label">Peace of mind</span><h2>Built to be safe</h2></div>
+  <ul class="safe">
+    <li><b>Your team decides</b><span>Every score is a recommendation with its reasons. Nobody is moved or rejected automatically.</span></li>
+    <li><b>You approve first</b><span>We test it on your real searches and show you the results before anything appears in Loxo.</span></li>
+    <li><b>Private</b><span>Runs in your firm's own accounts. Names, contact details and pay are never sent to the AI. Pay stays a conversation for your team, never part of the score.</span></li>
+  </ul>
+</div></section>
+
+<section class="start"><div class="wrap">
+  <span class="label" style="color:var(--navy-2)">To start</span>
+  <h2>Two things from you, the rest is on us</h2>
+  <ol>
+    <li>Access to your Loxo. We'll show you where to create it; it takes two minutes.</li>
+    <li>Which searches to test: all your open ones, or a few you pick.</li>
+  </ol>
+  <p>We run the full test and send you the results. When you say yes, we switch on Weaver, connect your Claude to Loxo, and walk your team through both. Nothing changes in Loxo before that.</p>
+</div></section>
+
+<footer><div class="wrap"><span>Weaver, an AI scoring pipeline for Loxo · prepared by Houssem Gabsi</span><span>Sample candidates only</span></div></footer>
+
+<script>
+(function () {
+  var criteria = ["Relevant industry experience and insight", "Building and leading a sales team", "Owning the revenue plan",
+    "Scaling and growth experience", "PE-backed or growth-stage context", "Public sector buyers and contracting",
+    "CEO partnership and commercial acumen", "Ability to be the face in the market", "Location or commuting"];
+  var people = [
+    { id: "a", name: "Candidate A", role: "VP Sales, Series C GovTech, Reston", col: 2, ind: "d", s: [4,5,5,4,4,5,4,4,3], rec: "Yes",
+      sig: "Took revenue from $14M to $41M in three years selling to state agencies.", watch: "Venture-backed so far; a sponsor's plan and pace would be new.",
+      fit: ["VP Sales at a Series C GovTech company selling to state and local agencies.", "Grew revenue from $14M to $41M in three years.", "Hired and leads 24 sellers across new business and renewals."],
+      probe: ["How they would work to a sponsor's first-year plan.", "Appetite for about 30 percent travel."] },
+    { id: "b", name: "Candidate B", role: "Head of Revenue, PE-backed, Arlington", col: 1, ind: "a", s: [4,4,4,4,5,4,4,5,5], rec: "Yes",
+      sig: "Head of Revenue at a PE-backed firm; grew revenue 2.3x in four years.", watch: "Sells services, not software; ask how they would ramp on the product.",
+      fit: ["Has delivered a sponsor's growth plan as Head of Revenue.", "Team of 22 across new business and account growth.", "Sells to agency and prime contractor buyers today."],
+      probe: ["Depth in software sales cycles and pricing.", "Notice period and timing."] },
+    { id: "c", name: "Candidate C", role: "Regional Director, public software co., DC", col: 2, ind: "d", s: [4,4,4,5,3,4,3,3,4], rec: "Yes",
+      sig: "Leads 40 sellers in the public sector region of a listed software company.", watch: "Has always had a large company's support; less process here.",
+      fit: ["Runs the public sector region of a listed software company.", "Beat plan in each of the last three years.", "Built the region's team from 12 to 40."],
+      probe: ["How they would build process from a small base.", "Comfort reporting to the CEO and the board."] },
+    { id: "d", name: "Candidate D", role: "Director of Sales, Series A", col: 1, ind: "a", s: [3,3,4,3,5,3,4,4,5], rec: "No",
+      sig: "First sales leader at a Series A; right stage and clearly motivated.", watch: "Team of six; this role needs 15 to 25.",
+      fit: ["Built the first sales team at a Series A company.", "Close to the CEO on the plan."],
+      probe: ["A strong prospect for a similar search in two years."] },
+    { id: "e", name: "Candidate E", role: "Sales Lead, regional agency", col: 1, ind: "", s: [3,3,3,3,3,3,3,4,4], rec: "No",
+      sig: "Steady seller with long client relationships in the region.", watch: "Little evidence of results in the record.",
+      fit: ["Ten years with regional public sector clients."], probe: ["A short call would settle it."] },
+    { id: "f", name: "Candidate F", role: "Senior Account Executive", col: 0, ind: "d", s: [3,2,3,2,3,3,4,4,5], rec: "No",
+      sig: "Top seller into federal civilian agencies three years running.", watch: "Has not managed people or a budget; the role needs both.",
+      fit: ["Knows federal civilian buyers well."], probe: ["Keep for a more junior search."] },
+    { id: "g", name: "Candidate G", role: "CCO, seed-stage company", col: 0, ind: "", s: [3,3,3,3,4,2,2,3,3], rec: "No",
+      sig: "Has run commercial at an early-stage company.", watch: "Different sector; notes say not looking this year.",
+      fit: ["Early-stage commercial leadership."], probe: ["Not a fit for this search."] },
+    { id: "h", name: "Candidate H", role: "Business Development Manager", col: 0, ind: "", s: [2,2,3,2,2,2,3,3,4], rec: "No",
+      sig: "Strong pipeline builder for a regional firm.", watch: "Early in their career for a role at this level.",
+      fit: ["Builds pipeline well."], probe: ["Keep for a more junior search."] }
+  ];
+  var newcomer = { id: "i", name: "Candidate I", role: "VP Commercial, Series B fintech", col: 0, ind: "a", s: [4,4,4,5,5,3,4,4,4], rec: "Yes",
+    sig: "Doubled revenue at a Series B fintech and grew the team from 9 to 26.", watch: "Public sector buyers would be new.",
+    fit: ["Has run sales at a company of this size and stage.", "Grew the team from 9 to 26 in two years."],
+    probe: ["How they would learn agency buying.", "Worth an early call."] };
+  var cols = ["Outbound", "Responded", "First screen"];
+  var star = function (p) { return p.ind === "d" ? ' <span class="star" title="Direct industry experience">★</span>' : p.ind === "a" ? ' <span class="star" title="Adjacent industry">☆</span>' : ""; };
+  var reviewed = {};
+  var selected = "b";
+  var scoring = false;
+
+  var avg = function (p) { return p.s.reduce(function (a, b) { return a + b; }, 0) / p.s.length; };
+  var board = document.getElementById("board");
+  var detail = document.getElementById("detail");
+
+  function ranks() {
+    var r = {};
+    people.slice().sort(function (x, y) { return avg(y) - avg(x); }).forEach(function (p, i) { r[p.id] = i + 1; });
+    return r;
+  }
+
+  function render(freshId) {
+    var r = ranks();
+    var html = "";
+    cols.forEach(function (name, ci) {
+      html += '<div class="col"><div class="col-name label">' + name + "</div>";
+      if (ci === 0 && scoring) {
+        html += '<div class="card"><b>' + newcomer.name + '</b><span class="r">' + newcomer.role + '</span><span class="ai wait">Reading…</span></div>';
+      }
+      people.filter(function (p) { return p.col === ci; })
+        .sort(function (x, y) { return r[x.id] - r[y.id]; })
+        .forEach(function (p) {
+          html += '<button type="button" class="card' + (p.id === freshId ? " fresh" : "") + '" data-id="' + p.id + '" aria-pressed="' + (p.id === selected) + '">' +
+            "<b>" + p.name + star(p) + '</b><span class="r">' + p.role + "</span>" +
+            '<span class="ai' + (p.rec === "Yes" ? " yes" : "") + '">' + avg(p).toFixed(1) + " / 5 · " + p.rec + " · #" + r[p.id] + "</span></button>";
+        });
+      html += "</div>";
+    });
+    board.innerHTML = html;
+    document.getElementById("count").textContent = people.length;
+    showDetail();
+  }
+
+  function showDetail() {
+    var p = people.find(function (x) { return x.id === selected; });
+    if (!p) { detail.innerHTML = '<p class="hint">Tap a candidate to see their scorecard.</p>'; return; }
+    var r = ranks();
+    var rows = criteria.map(function (c, k) {
+      var dots = "";
+      for (var i = 1; i <= 5; i++) dots += '<i class="' + (i <= p.s[k] ? "on" : "") + '"></i>';
+      return '<div class="crit-row"><span>' + c + '</span><span class="dots" aria-hidden="true">' + dots + '</span><span class="v">' + p.s[k] + "</span></div>";
+    }).join("");
+    var done = !!reviewed[p.id];
+    var li = function (xs) { return xs.map(function (x) { return "<li>" + x + "</li>"; }).join(""); };
+    detail.innerHTML =
+      '<div><span class="label">First read · rank ' + r[p.id] + " of " + people.length + "</span><h3>" + p.name + star(p) + '</h3><div class="r">' + p.role + "</div></div>" +
+      '<div class="sum"><span class="avg">' + avg(p).toFixed(1) + ' <small>/ 5</small></span><span class="rec ' + (p.rec === "Yes" ? "yes" : "no") + '">' + (p.rec === "Yes" ? "Yes · worth a call" : "No · not for this search") + "</span></div>" +
+      '<div class="sw"><p><b>Strongest signal</b>' + p.sig + '</p><p><b>Watch item</b>' + p.watch + "</p></div>" +
+      '<div class="crit">' + rows + '<p class="legend">1 Does not meet · 3 Meets · 5 Exceptional</p></div>' +
+      '<div class="lists"><div><b>Where they fit</b><ul>' + li(p.fit) + '</ul></div><div class="probe"><b>Where to probe</b><ul>' + li(p.probe) + "</ul></div></div>" +
+      '<button type="button" class="review" id="rv" aria-pressed="' + done + '">' + (done ? "Reviewed" : "Mark as reviewed") + "</button>";
+  }
+
+  board.addEventListener("click", function (e) {
+    var c = e.target.closest(".card[data-id]");
+    if (!c) return;
+    selected = c.getAttribute("data-id");
+    render();
+  });
+  detail.addEventListener("click", function (e) {
+    if (!e.target.closest("#rv")) return;
+    reviewed[selected] = !reviewed[selected];
+    showDetail();
+  });
+
+  var add = document.getElementById("add");
+  add.addEventListener("click", function () {
+    if (scoring || people.some(function (p) { return p.id === newcomer.id; })) return;
+    scoring = true;
+    add.disabled = true;
+    add.textContent = "Reading…";
+    render();
+    var reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    setTimeout(function () {
+      scoring = false;
+      people.push(newcomer);
+      selected = newcomer.id;
+      add.textContent = "Added and read";
+      render(newcomer.id);
+    }, reduce ? 300 : 1800);
+  });
+
+  var qa = [
+    { q: "Top 3 on the GovTech VP Sales search, and why?", a: "From Weaver's first reads on this search:<ol><li><b>Candidate B</b> ☆ 4.3 / 5 · Yes: grew revenue 2.3x at a PE-backed firm. Watch: services, not software.</li><li><b>Candidate A</b> ★ 4.2 / 5 · Yes: $14M to $41M selling to state agencies. Watch: a sponsor's pace would be new.</li><li><b>Candidate C</b> ★ 3.8 / 5 · Yes: leads 40 public sector sellers. Watch: less process here.</li></ol>Want call prep for Candidate B?" },
+    { q: "Prep my call with Candidate B in 5 lines.", a: "<ol><li>Head of Revenue at a PE-backed services firm; team of 22.</li><li>Grew revenue 2.3x in four years, selling to finance leaders.</li><li>First read 4.3 / 5 · Yes: strongest on PE-backed context and being the face in the market.</li><li>Probe: services, not software; ask how they would ramp on the product.</li><li>Notes: wants to move back into software, 60 days' notice.</li></ol>" },
+    { q: "Draft this week's update for the client on the GovTech VP Sales search.", a: "Here is a draft you can edit:<br><br><i>Where the search stands: 9 leaders worked this week, 3 moving to first screens. Two have GovTech experience: a VP Sales who took revenue from $14M to $41M selling to state agencies, and a regional director leading 40 public sector sellers. The third runs revenue at a PE-backed firm and would need to ramp on software. Short profiles with where each fits and where we will probe by Friday.</i>" },
+    { q: "Who in our database could fit a CRO search for a PE-backed government services firm?", a: "Searching your Loxo for revenue leaders in the DC area:<ol><li><b>Candidate B</b>: Head of Revenue, Arlington. Already on your VP Sales search.</li><li><b>Candidate C</b>: Regional Sales Director, Washington DC.</li></ol>Want me to add them to the CRO search so Weaver scores them?" }
+  ];
+  var tabs = document.getElementById("tabs");
+  var chat = document.getElementById("chat");
+  var current = 0;
+  function showQA() {
+    tabs.innerHTML = qa.map(function (x, i) {
+      return '<button type="button" class="tab" role="tab" aria-selected="' + (i === current) + '" data-i="' + i + '">' + ["Top 3", "Call prep", "Client update", "Search the database"][i] + "</button>";
+    }).join("");
+    chat.innerHTML = '<div class="bubble me">' + qa[current].q + '</div><div class="bubble ai">' + qa[current].a + "</div>";
+  }
+  tabs.addEventListener("click", function (e) {
+    var t = e.target.closest(".tab");
+    if (!t) return;
+    current = Number(t.getAttribute("data-i"));
+    showQA();
+  });
+  showQA();
+
+  render();
+})();
+</script>

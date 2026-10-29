@@ -180,7 +180,7 @@ this build. This system runs on the REST API.
   deploys automatically from this branch. Delete it at go-live.
 - Client preview (sample data, no client name):
   https://claude.ai/artifact/AUCwjDSusArDCtc5Lrhoqm, built from
-  `preview/weaver.v5.html` since 29 Oct 2026 (plain-language client version with the full package: Weaver scoring and Claude connected to Loxo; v2 before it;
+  `preview/weaver.v6.html` since 29 Oct 2026 (DP navy and blue, their scorecard wording and stages; v5 before it: plain-language client version with the full package: Weaver scoring and Claude connected to Loxo; v2 before it;
   `preview/shortlist.html` is the earlier one). Client-facing pages use no
   technical terms: no API, MCP, webhook, server, Render.
 
