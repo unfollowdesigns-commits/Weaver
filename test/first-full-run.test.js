@@ -71,7 +71,7 @@ test("5. the prompt forbids quoting the scorecard back and guessing", () => {
   const t = loadTemplate().text;
   assert.match(t, /never quote the scale or the scorecard's rules/);
   assert.match(t, /Do not write "likely"/);
-  assert.match(t, /short list/);
+  assert.match(t, /miss a must-have/);
 });
 
 test("the report explains the bar and the below-bar flag", () => {

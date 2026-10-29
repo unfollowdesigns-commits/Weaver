@@ -4,7 +4,7 @@ import { fileURLToPath } from "node:url";
 import { toPromptRecord, scrubPay } from "./candidate.js";
 
 const here = path.dirname(fileURLToPath(import.meta.url));
-export const DEFAULT_PROMPT = path.join(here, "..", "prompts", "scoring", "scoring-prompt.v4.md");
+export const DEFAULT_PROMPT = path.join(here, "..", "prompts", "scoring", "scoring-prompt.v5.md");
 
 export function loadTemplate(file = DEFAULT_PROMPT) {
   return { file: path.basename(file), text: fs.readFileSync(file, "utf8") };

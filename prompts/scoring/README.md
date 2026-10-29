@@ -17,3 +17,8 @@ Versioning: never overwrite. Add `scoring-prompt.v3.md` beside the others and po
   (180 read, 72% "yes" with gpt-4.1): "yes" means the short list (every must-have met, strong on
   most of what matters), not a pass mark; "they", never he or she; no quoting the scorecard's rules
   back; no "likely" guesses. The code also holds a minimum bar for "yes" (see src/validate.js).
+
+- `scoring-prompt.v5.md` (in use since 30 Oct 2026): v4 overshot: on the re-run the AI itself said
+  "no" to 172 of 179 (4% yes). v5 keeps v4's writing rules but gives the AI one narrow job for the
+  recommendation: "no" only when a must-have is missed. The short-list bar (average 3.5, evidence
+  on 7 of 9) is applied in code from the scores, the same way every run.

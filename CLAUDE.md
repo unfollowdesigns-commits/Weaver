@@ -346,6 +346,10 @@ First probe, job 3688816 (Head of Finance and Accounting, 194 candidates), 29 Oc
   evidence is "not enough to score"; verify checks pronouns, quoted rules, empty reads and warns
   above 50% yes. Claude skill v3 says the same. On that run the 3.5 bar alone would leave about
   65 yes (36%). Josh's top candidate's rank in this run not yet checked. Re-run to confirm.
+  Re-run with prompt v4 (same day): 179 read, 15 not enough, 0 errors, all checks passed, but
+  only 7 yes (4%): the AI itself said no to 172, the prompt overshot. Prompt v5: the AI's yes/no
+  only answers "is a must-have missed"; the short-list bar is applied in code from the scores.
+  Expected near the ~65 estimate above. Re-run to confirm.
 - Rate limit: 429 after a burst of roughly 12 requests a second. Client now
   paces to LOXO_MAX_PER_SECOND (default 4) and retries 429 with 2-30 s waits.
 - Pipeline entry: { id, position, person: {...}, workflow_stage_id,
