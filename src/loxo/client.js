@@ -16,7 +16,9 @@ export function firstArray(data) {
 export function createLoxoClient({ domain, slug, apiKey, writeEnabled = false, fetchImpl = fetch, sleep = defaultSleep }) {
   if (!slug?.trim()) throw new Error("LOXO_AGENCY_SLUG is not set in .env");
   if (!apiKey?.trim()) throw new Error("LOXO_API_KEY is not set in .env");
-  const base = `https://${(domain || "app.loxo.co").trim()}/api/${slug.trim()}`;
+  const host = (domain || "app.loxo.co").trim();
+  // A full URL (http://localhost:...) is accepted for local testing against a fake Loxo.
+  const base = `${host.startsWith("http") ? host.replace(/\/$/, "") : `https://${host}`}/api/${slug.trim()}`;
 
   async function request(method, path, { query, body } = {}) {
     if (method !== "GET" && !writeEnabled) {

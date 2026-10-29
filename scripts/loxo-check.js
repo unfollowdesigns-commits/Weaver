@@ -2,6 +2,7 @@
 // Day-one check against the real Loxo account. Read-only.
 //
 //   node scripts/loxo-check.js                 connection test + the IDs to put in .env
+//   node scripts/loxo-check.js --jobs          also: every job with its ID and status
 //   node scripts/loxo-check.js --job 123       also: job title and how many candidates are on it
 //   node scripts/loxo-check.js --job 123 --probe
 //        also saves the raw Loxo responses for the first candidate to data/probe/
@@ -13,10 +14,10 @@ import { parseArgs } from "node:util";
 import { loadEnv } from "../src/env.js";
 import { loxoClientFromEnv } from "../src/loxo/index.js";
 import { firstArray } from "../src/loxo/client.js";
-import { personIdOf } from "../src/loxo/map.js";
+import { personIdOf, jobStatusOf } from "../src/loxo/map.js";
 
 loadEnv();
-const { values: args } = parseArgs({ options: { job: { type: "string" }, probe: { type: "boolean", default: false } } });
+const { values: args } = parseArgs({ options: { job: { type: "string" }, jobs: { type: "boolean", default: false }, probe: { type: "boolean", default: false } } });
 const client = loxoClientFromEnv();
 
 const show = (title, items) => {
@@ -31,6 +32,11 @@ try {
   show("Scorecard recommendation types  -> LOXO_RECOMMENDATION_YES_ID / LOXO_RECOMMENDATION_NO_ID", firstArray(await client.get("/scorecards/scorecard_recommendation_types")));
   show("Activity types  -> LOXO_NOTE_ACTIVITY_TYPE_ID (only if scores go in a note)", firstArray(await client.get("/activity_types")));
   show("Webhooks already set up", firstArray(await client.get("/webhooks")).map((w) => ({ id: w.id, name: `${w.item_type} ${w.action} -> ${w.endpoint_url}` })));
+
+  if (args.jobs) {
+    const jobs = await client.list("/jobs");
+    show(`Jobs (${jobs.length})  -> for score-jobs --loxo-jobs`, jobs.map((j) => ({ id: (j.job ?? j).id, name: `[${jobStatusOf(j) ?? "status?"}] ${(j.job ?? j).title ?? ""}` })));
+  }
 
   if (args.job) {
     const job = await client.get(`/jobs/${args.job}`);

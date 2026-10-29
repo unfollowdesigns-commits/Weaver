@@ -70,6 +70,20 @@ exactly what would be written. After Josh approves: set `LOXO_WRITE_ENABLED=true
 and `DRY_RUN=false`, then add `--write`. A candidate who already has an AI
 scorecard on that job is skipped, so a re-run does not create duplicates.
 
+## Full test across several searches
+
+```
+npm run loxo:check -- --jobs                                  # every job with its ID and status
+npm run score:jobs -- --provider claude --open-jobs           # count + estimated cost, scores nothing
+npm run score:jobs -- --provider claude --open-jobs --go      # scores, writes nothing to Loxo
+npm run score:jobs -- --provider claude --loxo-jobs 12,34 --go
+```
+
+Output: `data/runs/<date>-<provider>-jobs/index.html` (summary) and one report
+per search. To try it now on sample data: `npm run fake-loxo` in one Terminal
+window, then in another
+`LOXO_DOMAIN=http://localhost:8790 LOXO_AGENCY_SLUG=demo LOXO_API_KEY=demo npm run score:jobs -- --provider mock --open-jobs --go`.
+
 ## Automatic scoring
 
 Two pieces, both on Render (see `docs/RUNBOOK.v2.md`):

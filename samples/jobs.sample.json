@@ -1,0 +1,26 @@
+[
+  {
+    "id": 101,
+    "title": "VP Sales",
+    "status": { "name": "Active" },
+    "company": { "name": "Growth stage B2B software company (sample)" },
+    "description": "Build and lead a sales team of 15 to 25 across new business and account management, own the revenue plan, report to the CEO. Sells to mid-market finance teams. Washington, DC, about 30 percent travel. Made-up job for testing.",
+    "candidate_person_ids": ["sample-a", "sample-b", "sample-c", "sample-d", "sample-e", "sample-f", "sample-g", "sample-h"]
+  },
+  {
+    "id": 102,
+    "title": "Chief Revenue Officer",
+    "status": { "name": "Active" },
+    "company": { "name": "Private equity backed services firm (sample)" },
+    "description": "Own all revenue across sales, account management and marketing for a PE-backed services firm of 400 people, preparing for a sale in three years. Northern Virginia, hybrid. Made-up job for testing.",
+    "candidate_person_ids": ["sample-b", "sample-c", "sample-a", "sample-g"]
+  },
+  {
+    "id": 103,
+    "title": "Head of Sales, East",
+    "status": { "name": "Closed" },
+    "company": { "name": "Public software company (sample)" },
+    "description": "Closed search, used to check that only open searches are picked up. Made-up job for testing.",
+    "candidate_person_ids": ["sample-c", "sample-f"]
+  }
+]

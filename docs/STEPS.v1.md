@@ -19,9 +19,9 @@ Tick each box before moving on.
 
 ## Phase 2 · Josh sends two things
 
-- [ ] **Josh** — Loxo API key and one job ID.
+- [ ] **Josh** — Loxo API key, and which searches to test (all open ones, or a list).
 - [ ] **Houssem** — Put the key, the agency slug and the job ID in `.env` on the
-  Mac (`LOXO_API_KEY`, `LOXO_AGENCY_SLUG`, `LOXO_TEST_JOB_ID`).
+  Mac (`LOXO_API_KEY`, `LOXO_AGENCY_SLUG`).
 - [ ] **Josh** — Looks at the standard scorecard (in the preview) and says yes
   or what to change. **Claude** makes any change as a new version.
 
@@ -39,12 +39,14 @@ Tick each box before moving on.
 
 ## Phase 4 · Trial run on his job (1 to 3 days)
 
-- [ ] **Houssem** — `npm run score:openai -- --loxo-job <ID> --limit 3`
-  (or `score:claude` once a Claude key exists). Nothing is written to Loxo.
+- [ ] **Houssem** — First a small check on one search:
+  `npm run score:openai -- --loxo-job <ID> --limit 3`. Nothing is written to Loxo.
 - [ ] **Houssem** — Open the report (`data/runs/.../report.html`). Check it reads
   like a recruiter's judgement. Tell Claude what feels wrong, in general terms.
 - [ ] **Claude** — Adjusts the prompt as a new version; repeat until it reads right.
-- [ ] **Houssem** — Run the whole job; send Josh the report.
+- [ ] **Houssem** — Full test: `npm run score:jobs -- --provider claude --open-jobs`
+  (shows count and estimated cost), then the same with `--go`. Send Josh the
+  summary page and the per-search reports from `data/runs/...-jobs/`.
 - [ ] **Josh** — A recruiter scores about 10 of the same candidates; compare.
 - [ ] **Josh** — Approves, or says what to change.
 

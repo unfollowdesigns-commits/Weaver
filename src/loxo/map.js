@@ -33,6 +33,17 @@ export function mapJob(raw) {
   };
 }
 
+// Status name of a job from Loxo's job list. Field name unconfirmed; fallbacks.
+export function jobStatusOf(raw) {
+  const j = unwrap(raw, "job");
+  const s = first(j.status?.name, j.job_status?.name, j.status_name, typeof j.status === "string" ? j.status : null);
+  return s ? String(s) : null;
+}
+
+export function isOpenStatus(status) {
+  return /\b(open|active)\b/i.test(String(status ?? ""));
+}
+
 export function personIdOf(entry) {
   return first(entry?.person_id, entry?.person?.id);
 }

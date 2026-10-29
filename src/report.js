@@ -26,6 +26,28 @@ export function toMarkdown(results, meta) {
   return lines.join("\n") + "\n";
 }
 
+// Summary page for a run across several jobs, linking to each job's report.
+export function toIndexHtml(rows, meta) {
+  const body = rows.map((r) => `<tr><td><a href="${esc(r.file)}">${esc(r.title)}</a></td><td class="n">${r.candidates}</td><td class="n">${r.scored}</td><td class="n">${r.yes}</td><td class="n">${r.errors}</td></tr>`).join("\n");
+  const total = rows.reduce((t, r) => ({ c: t.c + r.candidates, s: t.s + r.scored, y: t.y + r.yes, e: t.e + r.errors }), { c: 0, s: 0, y: 0, e: 0 });
+  return `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Dry run: ${rows.length} searches</title>
+<style>
+body{font:15px/1.55 -apple-system,"Segoe UI",Helvetica,Arial,sans-serif;color:#17201d;background:#f5f6f3;margin:0;padding:32px 16px}
+main{max-width:980px;margin:0 auto}h1{font:300 30px/1.2 Georgia,serif;margin:0 0 6px}.m{color:#4d5753;margin:0 0 20px}
+table{width:100%;border-collapse:collapse;background:#fff;border:1px solid #d6dbd6}th,td{padding:10px 12px;border-top:1px solid #d6dbd6;text-align:left}
+th{font-size:12px;text-transform:uppercase;letter-spacing:.08em;color:#4d5753}.n{text-align:right;font-variant-numeric:tabular-nums}a{color:#1e4a3d}
+tfoot td{font-weight:600}
+</style></head><body><main>
+<h1>Dry run across ${rows.length} searches</h1>
+<p class="m">Scorecard ${esc(meta.scorecard)} · ${esc(meta.provider)} · ${esc(meta.when)}<br>Nothing has been written to Loxo. Open a search to see every candidate's scores and assessment.</p>
+<table><thead><tr><th>Search</th><th class="n">Candidates</th><th class="n">Scored</th><th class="n">Recommended</th><th class="n">Errors</th></tr></thead>
+<tbody>${body}</tbody>
+<tfoot><tr><td>Total</td><td class="n">${total.c}</td><td class="n">${total.s}</td><td class="n">${total.y}</td><td class="n">${total.e}</td></tr></tfoot></table>
+</main></body></html>
+`;
+}
+
 export function toHtml(results, meta) {
   const rows = results.map((r, i) => {
     const who = esc(r.candidate_name ?? r.candidate_id);

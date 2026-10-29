@@ -89,7 +89,12 @@ have to design one). Ask for two things only:
 1. Loxo API key, read access first. Write access added after a working demo.
    If "API Keys" is missing in Loxo Settings, Loxo support switches it on
    (paid feature, Professional plan or above).
-2. One job ID with real candidates on it.
+2. Which searches to test: all open searches, or the ones Josh picks.
+   29 Oct 2026: the client wants a full test across their searches, not
+   one job. `scripts/score-jobs.js` scores several jobs in one read-only run,
+   shows the candidate count and cost estimate first, and makes a summary page
+   plus one report per search. `scripts/fake-loxo.js` serves sample searches
+   locally so the full flow can be shown before the key arrives.
 
 Decided by us, shown to Josh for a yes or a change:
 - Scorecard: `config/scorecards/standard-executive.v1.json`, nine criteria

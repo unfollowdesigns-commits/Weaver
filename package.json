@@ -13,6 +13,8 @@
     "score:sample": "node scripts/score-job.js --provider mock",
     "score:openai": "node scripts/score-job.js --provider openai",
     "score:claude": "node scripts/score-job.js --provider claude",
+    "score:jobs": "node scripts/score-jobs.js",
+    "fake-loxo": "node scripts/fake-loxo.js",
     "loxo:check": "node scripts/loxo-check.js",
     "serve": "node scripts/serve.js",
     "sweep": "node scripts/sweep.js"
