@@ -120,6 +120,25 @@ Decided by us, shown to Josh for a yes or a change:
   what changed in the system, nothing else. No client names, no prices, no
   comments on vendors or decisions. Reasons go in this file, not in commits.
 
+## Standard for client deliverables
+
+Set 29 Oct 2026 after Houssem had to ask twice. Every proposal, preview or
+deck for the client covers all of these before it is shown to him:
+
+1. Their own words: what they asked, answered point by point.
+2. The package: everything included, and what is not included.
+3. How it works in plain words, plus an "under the hood" view (data flow,
+   which systems are called, what is removed before the AI).
+4. Running costs: every provider, who pays, monthly range, scaling with
+   volume, one-off test cost, and the cost guards. Our fee "quoted
+   separately" unless Houssem gives numbers.
+5. Their data: where it runs, who owns the accounts, training, revoking.
+6. Safety and human review; timeline; what we need from them; next steps.
+7. Their world: a Washington, DC executive search firm placing leaders in
+   PE- and VC-backed growth companies. Samples, wording and examples fit it.
+8. Plain language, no technical terms on client pages; US spelling.
+9. Checked as rendered (desktop, phone, PDF pages) before sending.
+
 ## Note on MCP
 
 Loxo MCP is a chat connector. It only runs while a person is typing. It is
@@ -138,7 +157,7 @@ this build. This system runs on the REST API.
   deploys automatically from this branch. Delete it at go-live.
 - Client preview (sample data, no client name):
   https://claude.ai/artifact/AUCwjDSusArDCtc5Lrhoqm, built from
-  `preview/weaver.v4.html` since 29 Oct 2026 (plain-language client version with the full package: Weaver scoring and Claude connected to Loxo; v2 before it;
+  `preview/weaver.v5.html` since 29 Oct 2026 (plain-language client version with the full package: Weaver scoring and Claude connected to Loxo; v2 before it;
   `preview/shortlist.html` is the earlier one). Client-facing pages use no
   technical terms: no API, MCP, webhook, server, Render.
 

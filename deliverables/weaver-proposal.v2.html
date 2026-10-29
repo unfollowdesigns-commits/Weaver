@@ -1,0 +1,400 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Weaver · AI scoring pipeline for Loxo</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Spectral:ital,wght@0,300;0,400;1,300&family=Public+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+  @page { size: Letter; margin: 0; }
+  :root {
+    --paper: #f5f6f3; --sheet: #ffffff; --ink: #17201d; --ink-2: #4d5753; --rule: #d6dbd6;
+    --pine: #1e4a3d; --pine-soft: #e3ece7; --on-pine: #f5f6f3; --yes: #1e6b4a; --no: #8a908c;
+    --display: "Spectral", Georgia, serif; --body: "Public Sans", Helvetica, Arial, sans-serif; --mono: "IBM Plex Mono", Menlo, monospace;
+  }
+  * { box-sizing: border-box; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  html, body { margin: 0; background: var(--paper); color: var(--ink); font: 400 10.5pt/1.55 var(--body); }
+  .page { width: 8.5in; height: 11in; padding: 0.7in 0.75in 0.6in; position: relative; page-break-after: always; overflow: hidden; display: flex; flex-direction: column; gap: 18px; }
+  .page:last-child { page-break-after: auto; }
+  .foot { position: absolute; left: 0.75in; right: 0.75in; bottom: 0.4in; display: flex; justify-content: space-between; font-size: 8pt; color: var(--ink-2); border-top: 1px solid var(--rule); padding-top: 8px; }
+  h1, h2, h3 { font-family: var(--display); font-weight: 300; margin: 0; line-height: 1.12; }
+  h1 { font-size: 44pt; }
+  h2 { font-size: 26pt; }
+  h3 { font-size: 14pt; font-weight: 400; }
+  p { margin: 0; }
+  .label { font: 500 7.5pt/1.3 var(--body); letter-spacing: .14em; text-transform: uppercase; color: var(--ink-2); }
+  .muted { color: var(--ink-2); }
+  .lede { font-size: 13pt; color: var(--ink-2); max-width: 5.6in; }
+
+  /* Costs + hood */
+  table.t { width: 100%; border-collapse: collapse; background: var(--sheet); border: 1px solid var(--rule); font-size: 9.5pt; }
+  table.t th, table.t td { text-align: left; padding: 8px 10px; border-top: 1px solid var(--rule); vertical-align: top; }
+  table.t th { font: 500 7pt/1.3 var(--body); letter-spacing: .12em; text-transform: uppercase; color: var(--ink-2); background: var(--paper); }
+  table.t td.n { font-family: var(--mono); white-space: nowrap; text-align: right; }
+  table.t tr.total td { font-weight: 600; background: var(--pine-soft); }
+  .small { font-size: 8.5pt; color: var(--ink-2); }
+  .hood { display: grid; gap: 0; border-top: 1px solid var(--rule); }
+  .hood div { display: grid; grid-template-columns: 0.35in 1.6in 1fr; gap: 10px; padding: 7px 0; border-bottom: 1px solid var(--rule); font-size: 9.5pt; }
+  .hood .n { font: 400 9pt/1.4 var(--mono); color: var(--pine); }
+  .hood b { font-weight: 600; }
+  .hood span { color: var(--ink-2); }
+  .inout { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .inout div { background: var(--sheet); border: 1px solid var(--rule); padding: 12px; }
+  .inout ul { margin: 6px 0 0; padding-left: 16px; display: grid; gap: 3px; font-size: 9.5pt; }
+  .inout .out { border-style: dashed; }
+
+  /* Cover */
+  .cover { background: var(--pine); color: var(--on-pine); justify-content: space-between; }
+  .cover .label, .cover .muted { color: var(--on-pine); opacity: .8; }
+  .cover h1 { font-size: 52pt; max-width: 6in; }
+  .cover .brand { font: 300 22pt/1 var(--display); }
+  .cover .lede { color: var(--on-pine); opacity: .9; }
+  .cover .two { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .cover .two div { border-top: 1px solid rgba(245,246,243,.4); padding-top: 10px; display: grid; gap: 4px; }
+  .cover .two b { font: 400 15pt/1.2 var(--display); }
+
+  /* Q&A */
+  .asked { display: grid; grid-template-columns: 1fr 1fr; border-top: 1px solid var(--rule); }
+  .qa { padding: 14px 16px 14px 0; border-bottom: 1px solid var(--rule); display: grid; gap: 6px; align-content: start; }
+  .qa:nth-child(even) { padding-left: 16px; border-left: 1px solid var(--rule); }
+  .qa .q { font: 300 italic 12.5pt/1.35 var(--display); color: var(--ink-2); }
+  .qa .a { display: flex; gap: 8px; align-items: baseline; }
+  .tag { font: 600 7pt/1 var(--body); letter-spacing: .1em; text-transform: uppercase; color: var(--on-pine); background: var(--pine); padding: 3px 5px; flex: none; }
+
+  /* Package */
+  .pkg { display: grid; grid-template-columns: repeat(6, 1fr); gap: 10px; }
+  .tile { background: var(--sheet); border: 1px solid var(--rule); padding: 14px; display: grid; gap: 6px; align-content: start; grid-column: span 2; }
+  .tile.main { grid-column: span 3; border-color: var(--pine); box-shadow: inset 0 3px 0 var(--pine); padding: 16px; }
+  .tile .k, .node .k { font: 500 7pt/1.3 var(--body); letter-spacing: .14em; text-transform: uppercase; color: var(--pine); }
+  .tile b { font: 400 13pt/1.2 var(--display); }
+  .tile.main b { font-size: 17pt; }
+  .tile span { color: var(--ink-2); font-size: 9.5pt; }
+
+  /* Pipeline */
+  .flow { display: grid; grid-template-columns: repeat(5, 1fr); }
+  .node { background: var(--sheet); border: 1px solid var(--rule); padding: 12px; display: grid; gap: 5px; align-content: start; position: relative; }
+  .node + .node { border-left: 0; }
+  .node b { font: 400 12.5pt/1.2 var(--display); }
+  .node span { color: var(--ink-2); font-size: 9pt; }
+  .node.hub { background: var(--pine); border-color: var(--pine); color: var(--on-pine); }
+  .node.hub .k, .node.hub span { color: var(--on-pine); opacity: .85; }
+  .node.hub + .node.hub { box-shadow: inset 1px 0 0 rgba(245,246,243,.35); }
+  .flow .node:not(:last-child)::after { content: "\2192"; position: absolute; right: -8px; top: 12px; width: 16px; height: 16px; display: grid; place-items: center; background: var(--paper); border: 1px solid var(--rule); border-radius: 50%; font-size: 8pt; color: var(--pine); z-index: 1; }
+  .side { display: grid; grid-template-columns: 1fr 2fr; gap: 10px; }
+  .callout { border-left: 3px solid var(--pine); padding: 4px 0 4px 12px; }
+
+  /* Board */
+  .panel { background: var(--sheet); border: 1px solid var(--rule); }
+  .panel-head { display: flex; justify-content: space-between; padding: 10px 14px; border-bottom: 1px solid var(--rule); font-size: 9pt; color: var(--ink-2); }
+  .panel-head b { font: 400 13pt/1.2 var(--display); color: var(--ink); }
+  .bd { display: grid; grid-template-columns: 1fr 2.3in; }
+  .board { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; padding: 12px; border-right: 1px solid var(--rule); }
+  .col { display: grid; gap: 7px; align-content: start; }
+  .col .label { padding-bottom: 4px; border-bottom: 1px solid var(--rule); }
+  .card { border: 1px solid var(--rule); background: var(--paper); padding: 7px 9px; display: grid; gap: 2px; }
+  .card.sel { border-color: var(--pine); box-shadow: inset 3px 0 0 var(--pine); }
+  .card b { font-size: 9pt; font-weight: 600; }
+  .card .r { font-size: 8pt; color: var(--ink-2); }
+  .card .ai { white-space: nowrap; font: 500 8pt/1.3 var(--mono); display: flex; gap: 5px; align-items: center; margin-top: 3px; padding-top: 4px; border-top: 1px dashed var(--rule); }
+  .card .ai::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: var(--no); }
+  .card .ai.yes::before { background: var(--yes); }
+  .detail { padding: 12px; display: grid; gap: 8px; align-content: start; }
+  .detail h3 { font-size: 15pt; }
+  .sum { display: flex; gap: 10px; align-items: baseline; }
+  .sum .avg { font: 500 18pt/1 var(--mono); }
+  .rec { font-weight: 600; font-size: 9pt; color: var(--yes); }
+  .crit-row { display: grid; grid-template-columns: 1fr auto 10px; gap: 6px; align-items: center; font-size: 8pt; }
+  .dots { display: inline-flex; gap: 2px; }
+  .dots i { width: 7px; height: 7px; border-radius: 50%; border: 1px solid var(--pine); }
+  .dots i.on { background: var(--pine); }
+  .crit-row .v { font: 400 8pt/1 var(--mono); text-align: right; }
+  .detail .note { font-size: 8.5pt; }
+
+  /* Claude */
+  .chats { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .chat { background: var(--sheet); border: 1px solid var(--rule); padding: 12px; display: grid; gap: 8px; align-content: start; }
+  .bubble { padding: 7px 10px; font-size: 9pt; }
+  .bubble.me { justify-self: end; background: var(--pine); color: var(--on-pine); max-width: 90%; }
+  .bubble.ai { background: var(--paper); border: 1px solid var(--rule); }
+  .bubble ol { margin: 4px 0 2px; padding-left: 16px; display: grid; gap: 3px; }
+
+  /* Scorecard + lists */
+  .scale { display: flex; flex-wrap: wrap; gap: 4px 14px; font-size: 9pt; color: var(--ink-2); }
+  .scale b { font-family: var(--mono); color: var(--ink); font-weight: 500; margin-right: 3px; }
+  .sc { display: grid; grid-template-columns: repeat(3, 1fr); border-top: 1px solid var(--rule); }
+  .sc div { padding: 10px 12px 10px 0; border-bottom: 1px solid var(--rule); display: grid; gap: 2px; }
+  .sc b { font-weight: 600; font-size: 10pt; }
+  .sc span { color: var(--ink-2); font-size: 9pt; }
+  .grid4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+  .grid3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+  .box { background: var(--sheet); border: 1px solid var(--rule); padding: 12px; display: grid; gap: 4px; align-content: start; }
+  .box b { font: 400 12.5pt/1.2 var(--display); }
+  .box span { color: var(--ink-2); font-size: 9pt; }
+  .safe div { border-top: 2px solid var(--pine); padding-top: 10px; display: grid; gap: 4px; }
+  .safe b { font-weight: 600; }
+  .safe span { color: var(--ink-2); font-size: 9.5pt; }
+  .next { display: flex; flex-wrap: wrap; gap: 6px; }
+  .next span { border: 1px dashed var(--pine); color: var(--pine); padding: 4px 8px; font-size: 9pt; }
+  .steps { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0; border-top: 1px solid var(--rule); border-bottom: 1px solid var(--rule); }
+  .steps div { padding: 12px 12px 12px 0; display: grid; gap: 4px; }
+  .steps div + div { padding-left: 12px; border-left: 1px solid var(--rule); }
+  .steps .n { font: 400 9pt/1 var(--mono); color: var(--pine); }
+  .steps b { font-weight: 600; font-size: 10pt; }
+  .steps span { color: var(--ink-2); font-size: 9pt; }
+  .start { background: var(--pine); color: var(--on-pine); padding: 22px; display: grid; gap: 10px; }
+  .start h2 { color: var(--on-pine); font-size: 22pt; }
+  .start ol { margin: 0; padding-left: 18px; display: grid; gap: 6px; font-size: 11pt; }
+  .start p { opacity: .85; }
+</style>
+</head>
+<body>
+
+<!-- 1. Cover -->
+<section class="page cover">
+  <div style="display:flex;justify-content:space-between;align-items:baseline">
+    <span class="brand">Weaver</span>
+    <span class="label">Proposal · October 2026</span>
+  </div>
+  <div style="display:grid;gap:22px">
+    <span class="label">AI scoring pipeline for executive search on Loxo</span>
+    <h1>Know who to call first, on every search.</h1>
+    <p class="lede">Built for a Washington, DC search practice placing leaders in growth companies. Every candidate on your searches, scored against one clear scorecard and ranked inside Loxo, automatically. And your Claude, connected to Loxo, answering any question about your candidates in seconds. Your team decides.</p>
+  </div>
+  <div class="two">
+    <div><span class="label">Part 1 · automatic</span><b>Weaver scoring</b><span class="muted">Scores, reasons and rank on every candidate card in Loxo.</span></div>
+    <div><span class="label">Part 2 · on demand</span><b>Claude, connected to Loxo</b><span class="muted">Shortlists, call prep, client updates and database searches.</span></div>
+  </div>
+  <div style="display:flex;justify-content:space-between" class="muted"><span>Prepared by Houssem Gabsi</span><span>Confidential</span></div>
+</section>
+
+<!-- 2. Your questions -->
+<section class="page">
+  <span class="label">You asked</span>
+  <h2>Your questions, answered</h2>
+  <p class="lede">Everything you asked for is in. Here is how.</p>
+  <div class="asked">
+    <div class="qa"><p class="q">"Can we connect Loxo to ChatGPT or Claude?"</p><p class="a"><span class="tag">Yes</span><span>We set up Loxo's official connection in your Claude (it works with ChatGPT too). Your team asks in plain English and gets answers from your own Loxo.</span></p></div>
+    <div class="qa"><p class="q">"Does it see full work histories, notes and resumes?"</p><p class="a"><span class="tag">Yes</span><span>Weaver reads each candidate's work history, your team's notes and the resume text held in Loxo. We confirm it on your account during the full test.</span></p></div>
+    <div class="qa"><p class="q">"Can we pull every candidate on a search at once?"</p><p class="a"><span class="tag">Yes</span><span>Weaver reads the whole pipeline of a search, whether it holds 20 candidates or 100, and ranks them all.</span></p></div>
+    <div class="qa"><p class="q">"Can the AI's scores go back into Loxo?"</p><p class="a"><span class="tag">Yes</span><span>Every score lands on the candidate in Loxo as a scorecard, with the reason for each point, marked for your team's review.</span></p></div>
+    <div class="qa"><p class="q">"We want to rank 20 to 100 candidates at a time."</p><p class="a"><span class="tag">Done</span><span>Every card shows its score and its rank on the search, so the order is visible at a glance.</span></p></div>
+    <div class="qa"><p class="q">"New candidates should be scored automatically."</p><p class="a"><span class="tag">Done</span><span>When someone is added to a chosen search, Weaver scores them within about a minute. Nobody has to ask.</span></p></div>
+  </div>
+  <div class="foot"><span>Weaver · AI scoring pipeline for Loxo</span><span>2</span></div>
+</section>
+
+<!-- 3. Package + pipeline -->
+<section class="page">
+  <span class="label">The package</span>
+  <h2>Everything you get</h2>
+  <div class="pkg">
+    <div class="tile main"><span class="k">Automatic</span><b>Weaver scoring</b><span>Every candidate on your chosen searches is scored against the scorecard, ranked, and saved on the card in Loxo. New candidates too, by themselves.</span></div>
+    <div class="tile main"><span class="k">On demand</span><b>Claude, connected to Loxo</b><span>Your team asks Claude about any candidate or search and gets the answer from your own Loxo: shortlists, call prep, client updates.</span></div>
+    <div class="tile"><span class="k">Before launch</span><b>Full test on your searches</b><span>Every candidate on your open searches scored, with a summary and one report per search, before anything appears in Loxo.</span></div>
+    <div class="tile"><span class="k">Launch day</span><b>Team walkthrough</b><span>30 minutes with your team, plus a one-page guide to reading the scores.</span></div>
+    <div class="tile"><span class="k">Every month</span><b>Care and tuning</b><span>We watch costs and errors, tune the scoring to how your team judges, and add searches when you ask.</span></div>
+  </div>
+
+  <span class="label" style="margin-top:10px">How it works</span>
+  <h2 style="font-size:20pt">One pipeline, from your data to a decision</h2>
+  <div class="flow">
+    <div class="node"><span class="k">Your Loxo</span><b>Candidates</b><span>Work history, resume text and notes, on the searches you choose.</span></div>
+    <div class="node hub"><span class="k">Weaver</span><b>Prepares</b><span>Removes names, contact details and pay.</span></div>
+    <div class="node hub"><span class="k">Claude</span><b>Scores</b><span>Reads each candidate against the scorecard and explains every point.</span></div>
+    <div class="node hub"><span class="k">Weaver</span><b>Checks and ranks</b><span>Rejects incomplete answers, computes the average and rank.</span></div>
+    <div class="node"><span class="k">Your Loxo</span><b>Scorecard on the card</b><span>Score, reasons, rank and questions for the call.</span></div>
+  </div>
+  <div class="side">
+    <div class="node"><span class="k">Your team</span><b>Decides</b><span>Reviews the score, agrees or not, moves candidates on.</span></div>
+    <div class="node"><span class="k">Your Claude, connected to Loxo</span><b>Answers on demand</b><span>Shortlists, call prep, client updates and database searches, using the same data and the scores Weaver wrote.</span></div>
+  </div>
+  <p class="callout"><b>Your data stays yours.</b> It runs in accounts your firm owns, your candidates' details are not used to train AI models, and you can switch any part off at any time.</p>
+  <div class="foot"><span>Weaver · AI scoring pipeline for Loxo</span><span>3</span></div>
+</section>
+
+<!-- 4. What your team sees -->
+<section class="page">
+  <span class="label">Part 1 · Weaver scoring</span>
+  <h2>Your pipeline, with one extra line on each card</h2>
+  <p class="lede">Nothing new to open. The score, the recommendation and the rank sit on every candidate, and each one opens into a full scorecard.</p>
+  <div class="panel">
+    <div class="panel-head"><b>VP Sales · GovTech software, PE-backed · sample search</b><span>8 candidates</span></div>
+    <div class="bd">
+      <div class="board">
+        <div class="col"><span class="label">New</span>
+          <div class="card"><b>Candidate F</b><span class="r">Senior Account Executive</span><span class="ai">3.2 · No · #6</span></div>
+          <div class="card"><b>Candidate G</b><span class="r">CCO, seed stage company</span><span class="ai">2.9 · No · #7</span></div>
+          <div class="card"><b>Candidate H</b><span class="r">Business Development Mgr</span><span class="ai">2.6 · No · #8</span></div>
+        </div>
+        <div class="col"><span class="label">Screening</span>
+          <div class="card sel"><b>Candidate B</b><span class="r">Head of Revenue, PE-backed, Arlington</span><span class="ai yes">4.3 · Yes · #1</span></div>
+          <div class="card"><b>Candidate D</b><span class="r">Director of Sales, Series A</span><span class="ai">3.9 · No · #3</span></div>
+          <div class="card"><b>Candidate E</b><span class="r">Sales Lead, regional agency</span><span class="ai">3.2 · No · #5</span></div>
+        </div>
+        <div class="col"><span class="label">Interview</span>
+          <div class="card"><b>Candidate A</b><span class="r">VP Sales, Series C, Reston</span><span class="ai yes">4.2 · Yes · #2</span></div>
+          <div class="card"><b>Candidate C</b><span class="r">Regional Director, public co., DC</span><span class="ai yes">3.8 · Yes · #4</span></div>
+        </div>
+      </div>
+      <div class="detail">
+        <span class="label">Rank 1 of 8</span>
+        <h3>Candidate B</h3>
+        <div class="sum"><span class="avg">4.3</span><span class="rec">Worth a call</span></div>
+        <div style="display:grid;gap:4px">
+          <div class="crit-row"><span>Functional expertise</span><span class="dots"><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i></i></span><span class="v">4</span></div>
+          <div class="crit-row"><span>Scale and scope</span><span class="dots"><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i></i></span><span class="v">4</span></div>
+          <div class="crit-row"><span>Track record</span><span class="dots"><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i></i></span><span class="v">4</span></div>
+          <div class="crit-row"><span>Leadership</span><span class="dots"><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i></i></span><span class="v">4</span></div>
+          <div class="crit-row"><span>Stage and context</span><span class="dots"><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i></span><span class="v">5</span></div>
+          <div class="crit-row"><span>Market knowledge</span><span class="dots"><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i></i></span><span class="v">4</span></div>
+          <div class="crit-row"><span>Strategic judgement</span><span class="dots"><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i></i></span><span class="v">4</span></div>
+          <div class="crit-row"><span>Executive presence</span><span class="dots"><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i></span><span class="v">5</span></div>
+          <div class="crit-row"><span>Motivation and timing</span><span class="dots"><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i></span><span class="v">5</span></div>
+        </div>
+        <p class="note">Strong fit for a backed company in a growth phase, across new business and account growth. Communicates clearly.</p>
+        <p class="note muted"><b>Check on the call:</b> sector is adjacent rather than identical.</p>
+      </div>
+    </div>
+  </div>
+  <div class="steps">
+    <div><span class="n">1</span><b>Add candidates as usual</b><span>Nothing changes in Loxo.</span></div>
+    <div><span class="n">2</span><b>Weaver scores them</b><span>In about a minute each.</span></div>
+    <div><span class="n">3</span><b>The ranking appears</b><span>On every card.</span></div>
+    <div><span class="n">4</span><b>Your team decides</b><span>Who to call, who moves on.</span></div>
+  </div>
+  <div class="foot"><span>Weaver · AI scoring pipeline for Loxo · sample candidates</span><span>4</span></div>
+</section>
+
+<!-- 5. Claude -->
+<section class="page">
+  <span class="label">Part 2 · Claude, connected to Loxo</span>
+  <h2>Ask anything about your candidates</h2>
+  <p class="lede">We connect the Claude your team already uses to your Loxo, using Loxo's own official connection. Anyone on the team asks in plain English and gets answers from your real data, including Weaver's scores.</p>
+  <div class="chats">
+    <div class="chat"><span class="label">Shortlist</span><div class="bubble me">Top 3 on the GovTech VP Sales search, and why?</div><div class="bubble ai">From the scores on this search:<ol><li><b>Candidate B</b> (4.3): fits a backed company in a growth phase. Check: sector is adjacent.</li><li><b>Candidate A</b> (4.2): built a team through two funding rounds. Check: relocation.</li><li><b>Candidate C</b> (3.8): large team, steady results. Check: comfort with less process.</li></ol></div></div>
+    <div class="chat"><span class="label">Call prep</span><div class="bubble me">Prep my call with Candidate B in 5 lines.</div><div class="bubble ai"><ol><li>Head of Revenue, PE-backed services firm; team of 22.</li><li>Grew revenue 2.3x in four years, selling to finance leaders.</li><li>Scored 4.3: strongest on stage fit and presence.</li><li>Open point: adjacent sector; ask how they would ramp.</li><li>Wants to move back into software, 60 days' notice.</li></ol></div></div>
+    <div class="chat"><span class="label">Client update</span><div class="bubble me">Draft this week's update for the client on the GovTech VP Sales search.</div><div class="bubble ai"><i>This week we reviewed 9 candidates against the agreed scorecard. Three stand out: a revenue leader from a PE-backed services firm in Arlington, a VP Sales who scaled a team through two funding rounds in Reston, and a regional director from a public software company in DC. First calls this week; short profiles by Friday.</i></div></div>
+    <div class="chat"><span class="label">Database search</span><div class="bubble me">Who in our database could fit a CRO search for a PE-backed government services firm?</div><div class="bubble ai">Searching your Loxo for revenue leaders in the DC region with PE-backed or public-sector experience:<ol><li><b>Candidate B</b>: Head of Revenue, Arlington.</li><li><b>Candidate C</b>: Regional Sales Director, Washington DC.</li></ol>Want me to add them to the CRO search so Weaver scores them?</div></div>
+  </div>
+  <div class="foot"><span>Weaver · AI scoring pipeline for Loxo · sample answers</span><span>5</span></div>
+</section>
+
+<!-- 6. Scorecard + improving -->
+<section class="page">
+  <span class="label">The scorecard</span>
+  <h2>Nine questions every executive search asks</h2>
+  <p class="lede">Ready to use. Change any of them and Weaver follows.</p>
+  <div class="scale"><span><b>1–2</b>below the bar</span><span><b>3</b>meets</span><span><b>4</b>strong</span><span><b>5</b>exceptional</span><span>No score when there is no evidence, instead of a guess.</span></div>
+  <div class="sc">
+    <div><b>Functional expertise</b><span>Has led this function at this level.</span></div>
+    <div><b>Scale and scope</b><span>Teams, budgets and revenue run, compared with the role.</span></div>
+    <div><b>Track record</b><span>Specific, recent results, not job titles.</span></div>
+    <div><b>Leadership</b><span>Built and developed strong teams.</span></div>
+    <div><b>Stage and context</b><span>Has worked in a company like this one.</span></div>
+    <div><b>Market knowledge</b><span>Knows the sector, customers and buyers.</span></div>
+    <div><b>Strategic judgement</b><span>Has set direction and owned the outcome.</span></div>
+    <div><b>Executive presence</b><span>Clear and credible with boards and CEOs.</span></div>
+    <div><b>Motivation and timing</b><span>A real reason to move now; fits the role's location.</span></div>
+  </div>
+
+  <span class="label" style="margin-top:8px">Always improving</span>
+  <h2 style="font-size:20pt">It gets sharper every month</h2>
+  <div class="grid4">
+    <div class="box"><b>Learns your judgement</b><span>When your team disagrees with a score, we look at why and adjust.</span></div>
+    <div class="box"><b>Fits each search</b><span>A sharper scorecard for a CFO or a government-facing role than for VP Sales, when you want it.</span></div>
+    <div class="box"><b>Newest Claude, tested first</b><span>New models are compared on your searches before we switch.</span></div>
+    <div class="box"><b>A monthly note</b><span>What was scored, time saved, cost, and what we changed.</span></div>
+  </div>
+  <p class="label">Next, whenever you want it</p>
+  <div class="next"><span>Client-ready pipeline reports</span><span>Past candidates matched to new searches</span><span>A morning email with the day's best new candidates</span></div>
+  <div class="foot"><span>Weaver · AI scoring pipeline for Loxo</span><span>6</span></div>
+</section>
+
+<!-- Running costs -->
+<section class="page">
+  <span class="label">Running costs</span>
+  <h2>What it costs to run, and who pays</h2>
+  <p class="lede">Weaver runs in accounts your firm owns, so you pay the providers directly at their own prices, with no mark-up. Our fee for setup and monthly care is quoted separately.</p>
+  <table class="t">
+    <thead><tr><th>Item</th><th>What it is</th><th>Paid to</th><th class="n">Per month</th></tr></thead>
+    <tbody>
+      <tr><td><b>AI scoring</b></td><td>One Claude reading per candidate: about $0.05 to $0.14 each with Claude's top model, about half that with the lighter one if its scores are as good on your searches. Non-urgent runs go at half price.</td><td>Anthropic (Claude)</td><td class="n">$30–80</td></tr>
+      <tr><td><b>Hosting</b></td><td>The small always-on service that runs Weaver, plus its hourly safety check, in a US East data center. The Pro plan lets us work in your account and comes with the provider's SOC 2 security report.</td><td>Render</td><td class="n">$27–33</td></tr>
+      <tr><td><b>Loxo</b></td><td>Your current Loxo plan. Professional or above includes API access and the official Claude connection.</td><td>Loxo</td><td class="n">no change</td></tr>
+      <tr><td><b>Claude for your team</b></td><td>The Claude your team already uses; the Loxo connection is free on your Loxo plan.</td><td>Anthropic</td><td class="n">no change</td></tr>
+      <tr class="total"><td colspan="3">Typical total at about 600 candidates a month</td><td style="text-align:right;white-space:nowrap">$60 to $110</td></tr>
+    </tbody>
+  </table>
+  <p class="small">AI cost scales with volume: about $10–25 for 200 candidates a month, $75–200 for 1,500. Estimates from the providers' published prices, October 2026; the full test measures your real figure before anything is switched on.</p>
+
+  <span class="label" style="margin-top:8px">One-off</span>
+  <table class="t">
+    <tbody>
+      <tr><td><b>Full test on your searches</b></td><td>Every candidate on the searches you choose, scored once. Example: 10 searches of 50 candidates.</td><td class="n">$25–70</td></tr>
+    </tbody>
+  </table>
+
+  <span class="label" style="margin-top:8px">No surprise bills</span>
+  <div class="grid4">
+    <div class="box"><b>Spending limit</b><span>Set on your Anthropic account. It cannot be exceeded.</span></div>
+    <div class="box"><b>Daily cap</b><span>Weaver stops for the day at a set number of candidates.</span></div>
+    <div class="box"><b>Never twice</b><span>A candidate already scored on a search is never paid for again.</span></div>
+    <div class="box"><b>Cost shown first</b><span>Large runs show the count and the estimate before they start.</span></div>
+  </div>
+  <div class="foot"><span>Weaver · AI scoring pipeline for Loxo</span><span>7</span></div>
+</section>
+
+<!-- Under the hood -->
+<section class="page">
+  <span class="label">Under the hood</span>
+  <h2>Exactly what happens to each candidate</h2>
+  <p class="lede">For you or anyone reviewing the setup. Every step uses the official connections of Loxo and Anthropic.</p>
+  <div class="hood">
+    <div><span class="n">1</span><b>Trigger</b><span>Loxo tells Weaver the moment a candidate is added to a chosen search. An hourly check catches anything missed.</span></div>
+    <div><span class="n">2</span><b>Read from Loxo</b><span>Weaver reads the candidate's profile, work history, latest resume text and notes through Loxo's API, about five requests per candidate. Read-only until you approve the test.</span></div>
+    <div><span class="n">3</span><b>Prepare</b><span>Name, email, phone, address, pay and graduation years are removed. Long notes or resumes are trimmed, and the scorecard says so.</span></div>
+    <div><span class="n">4</span><b>Score with Claude</b><span>One request to Claude per candidate, under your firm's Anthropic account. Claude must answer in a fixed format: a score and a reason per question, a recommendation, open questions.</span></div>
+    <div><span class="n">5</span><b>Check</b><span>Weaver rejects any incomplete or out-of-range answer and asks again once. The average and rank are calculated by Weaver, not guessed by the AI.</span></div>
+    <div><span class="n">6</span><b>Write to Loxo</b><span>One scorecard per candidate, marked as an AI assessment awaiting review. Nothing else in Loxo is changed.</span></div>
+    <div><span class="n">7</span><b>Your team</b><span>Reads, agrees or not, decides. Claude connected to Loxo can then answer questions using the same scores.</span></div>
+  </div>
+  <p class="callout"><b>Security.</b> Access keys live in the hosting provider's encrypted settings, never in documents or email. Anthropic does not train its models on data sent through its business API by default. Any access can be revoked at any time.</p>
+  <div class="inout">
+    <div><b>Included</b><ul><li>Weaver set up in your accounts</li><li>The standard scorecard, adjusted to your feedback</li><li>Full test on your searches with reports</li><li>Claude connected to your Loxo</li><li>Team walkthrough and one-page guide</li><li>Monthly care, tuning and a monthly note</li></ul></div>
+    <div class="out"><b>Not included, available later</b><ul><li>Client-ready pipeline reports</li><li>Matching past candidates to new searches</li><li>Morning email of the best new candidates</li><li>Changes to your existing Claude prompts or report format</li></ul></div>
+  </div>
+  <div class="foot"><span>Weaver · AI scoring pipeline for Loxo</span><span>8</span></div>
+</section>
+
+<!-- 7. Safety + start -->
+<section class="page">
+  <span class="label">Peace of mind</span>
+  <h2>Built to be safe</h2>
+  <div class="grid3 safe">
+    <div><b>Your team decides</b><span>Every score is a recommendation with its reasons. Nobody is moved or rejected automatically.</span></div>
+    <div><b>You approve first</b><span>We test on your real searches and show you the results before anything appears in Loxo.</span></div>
+    <div><b>Private</b><span>Runs in your firm's own accounts. Names, contact details and pay are never sent to the AI.</span></div>
+  </div>
+
+  <span class="label" style="margin-top:14px">From yes to live</span>
+  <h2 style="font-size:20pt">About two weeks, start to finish</h2>
+  <div class="steps">
+    <div><span class="n">Week 1</span><b>Connect and test</b><span>We connect to your Loxo, read-only, and score your open searches.</span></div>
+    <div><span class="n">Week 1</span><b>You review</b><span>A summary plus one report per search. Tell us what to adjust.</span></div>
+    <div><span class="n">Week 2</span><b>Switch on</b><span>Scores go into Loxo; new candidates are scored automatically.</span></div>
+    <div><span class="n">Week 2</span><b>Your team</b><span>Claude connected to Loxo, 30-minute walkthrough, one-page guide.</span></div>
+  </div>
+
+  <div class="start">
+    <span class="label" style="color:var(--on-pine);opacity:.75">To start</span>
+    <h2>Two things from you, the rest is on us</h2>
+    <ol>
+      <li>Access to your Loxo. We'll show you where to create it; it takes two minutes.</li>
+      <li>Which searches to test: all your open ones, or a few you pick.</li>
+    </ol>
+    <p>Nothing changes in Loxo until you have seen the results and said yes.</p>
+  </div>
+  <div class="foot"><span>Weaver · prepared by Houssem Gabsi</span><span>9</span></div>
+</section>
+
+</body>
+</html>
