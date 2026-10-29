@@ -64,7 +64,7 @@ export async function runSweep({ client, provider, jobIds, scorecard, template, 
         if (!ref || !allowed.has(ref.jobId)) continue;
         if (done.get(ref.jobId).has(ref.personId)) continue;
         const job = await getJob(ref.jobId);
-        const sc = scorecardFor(ref.jobId);
+        const sc = scorecardFor(ref.jobId, job);
         const base = resultBase({ candidateId: ref.personId, loxo: { person_id: Number(ref.personId) }, job, scorecard: sc, template, provider });
         const result = r.error
           ? { ...base, status: "error", error: r.error }
@@ -106,7 +106,7 @@ export async function runSweep({ client, provider, jobIds, scorecard, template, 
   const items = [];
   for (const jobId of new Set(todo.map((t) => t.jobId))) {
     const job = await getJob(jobId);
-    const sc = scorecardFor(jobId);
+    const sc = scorecardFor(jobId, job);
     const { candidates, failures: loadFailures } = await loadCandidates(client, todo.filter((t) => t.jobId === jobId).map((t) => t.entry));
     summary.failed += loadFailures.length;
     for (const candidate of candidates) {

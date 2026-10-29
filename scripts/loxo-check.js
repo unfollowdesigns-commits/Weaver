@@ -51,7 +51,6 @@ try {
     console.log(`\nJob ${args.job}: ${j?.title ?? "(no title field)"}. Candidates on the pipeline: ${entries.length}`);
 
     if (args.probe && entries[0]) {
-      const pid = personIdOf(entries[0]);
       const dir = path.join("data", "probe", `job-${args.job}`);
       fs.mkdirSync(dir, { recursive: true });
       const fields = [];
@@ -59,20 +58,58 @@ try {
         fs.writeFileSync(path.join(dir, `${name}.json`), JSON.stringify(data, null, 2));
         fields.push(`# ${name}`, ...fieldList(data));
       };
+      const tryGet = async (p, q) => { try { return await client.get(p, q); } catch (e) { return { error: e.status ?? e.message } } };
       save("job", job);
       save("candidate-entry", entries[0]);
+      save("workflow-stages", await tryGet("/workflow_stages"));
+      save("scorecard-templates", await tryGet("/scorecards/scorecard_templates", { job_id: args.job }));
+      const pid = personIdOf(entries[0]);
       if (pid) {
         save("person", await client.get(`/people/${pid}`));
-        save("job-profiles", await client.get(`/people/${pid}/job_profiles`));
-        const resumes = await client.get(`/people/${pid}/resumes`);
-        save("resumes", resumes);
-        const r0 = firstArray(resumes)[0];
-        if (r0?.id) save("resume-text", await client.get(`/people/${pid}/resumes/${r0.id}`));
+        save("person-row", await tryGet("/people", { include_ids: [pid], serialization_set: "api_row_person_with_job_and_edu_profiles", per_page: 1 }));
+        const jps = await client.get(`/people/${pid}/job_profiles`);
+        save("job-profiles", jps);
+        const jp0 = firstArray(jps)[0];
+        if (jp0?.id) save("job-profile-detail", await tryGet(`/people/${pid}/job_profiles/${jp0.id}`));
+        save("education-profiles", await tryGet(`/people/${pid}/education_profiles`));
         save("person-events", await client.get("/person_events", { person_id: pid, notes_format: "plain", per_page: 10 }));
         save("scorecards", await client.get("/scorecards", { person_id: pid }));
       }
+
+      // What the scorer will actually get, over the first 10 candidates. Counts only.
+      const { loadCandidates, workflowStageNames } = await import("../src/loxo/read.js");
+      const stageNames = await workflowStageNames(client);
+      const sample = entries.slice(0, 10);
+      const { candidates, failures } = await loadCandidates(client, sample, { stageNames });
+      let withResume = false;
+      for (const c of candidates) {
+        if (!withResume && c.resume_text) {
+          const r = await client.get(`/people/${c.loxo.person_id}/resumes`);
+          const r0 = firstArray(r)[0];
+          save("resumes", r);
+          if (r0?.id) save("resume-text", await client.get(`/people/${c.loxo.person_id}/resumes/${r0.id}`));
+          withResume = true;
+        }
+      }
+      const n = (f) => candidates.filter(f).length;
+      console.log(`\nWhat Weaver gets, first ${sample.length} candidates on this search (counts only):`);
+      console.log(`  read fine           ${candidates.length} of ${sample.length}${failures.length ? `  (${failures.length} failed: ${failures[0].error.slice(0, 90)})` : ""}`);
+      console.log(`  current title       ${n((c) => c.current_title)}`);
+      console.log(`  current company     ${n((c) => c.current_company)}`);
+      console.log(`  location            ${n((c) => c.location)}`);
+      console.log(`  work history        ${n((c) => c.work_history.some((w) => w.title || w.company))}`);
+      console.log(`  education           ${n((c) => c.education.length)}`);
+      console.log(`  resume text         ${n((c) => c.resume_text)}`);
+      console.log(`  notes               ${n((c) => c.notes.length)}`);
+      console.log(`  stage name known    ${n((c) => c.report.stage.name)}`);
+      console.log(`  pay on file         ${n((c) => c.report.compensation.base)}`);
+      console.log(`  stage names in Loxo ${stageNames.size ? [...stageNames.values()].join(", ") : "none returned"}`);
+      const { mapJob } = await import("../src/loxo/map.js");
+      const tpl = mapJob(job).scorecard_template;
+      console.log(`  scorecard template  ${tpl ? `"${tpl.name}": ${tpl.criteria.join(" | ")}` : "none on this search"}`);
+
       fs.writeFileSync(path.join(dir, "fields.txt"), fields.join("\n") + "\n");
-      console.log(`Raw responses saved to ${dir}/ (real data: keep them there).`);
+      console.log(`\nRaw responses saved to ${dir}/ (real data: keep them there).`);
       console.log(`Field names only, no values, safe to share: ${path.join(dir, "fields.txt")}`);
     }
   }

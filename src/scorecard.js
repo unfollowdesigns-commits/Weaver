@@ -52,11 +52,32 @@ export function jobScorecardFile(jobId, dir = JOB_SCORECARD_DIR) {
   return best ? path.join(dir, best.f) : null;
 }
 
-// Returns (jobId) => scorecard. Reads the folder on each call, so a newly approved
-// scorecard is used without a restart.
+const slug = (t) => t.toLowerCase().normalize("NFKD").replace(/[^\w\s-]/g, "").trim().replace(/[\s-]+/g, "_").slice(0, 40) || "criterion";
+
+// A scorecard from the firm's own template on the job in Loxo: their criteria, in their
+// order, on their 1 to 5 scale. Descriptions are generic until a drafted version is approved.
+export function scorecardFromTemplate(job, standard) {
+  const t = job?.scorecard_template;
+  if (!t?.criteria?.length || t.criteria.length < 3) return null;
+  const seen = new Set();
+  const criteria = t.criteria.map((label) => {
+    let id = slug(label);
+    while (seen.has(id)) id += "_2";
+    seen.add(id);
+    return { id, label, description: `${label}, as this search needs it. Judge only from the record against the job description. 3: meets the bar for this role. 5: clearly exceptional for this role.` };
+  });
+  const sc = { id: `loxo-template-${t.id ?? job.id}`, version: 1, name: t.name ?? `${job.title} scorecard`, source: "loxo", scale: standard.scale, criteria, recommendation: standard.recommendation, industry: null };
+  checkScorecard(sc);
+  return sc;
+}
+
+// Returns (jobId, job) => scorecard. Order: the search's approved file, then the firm's own
+// template on the job in Loxo, then the standard scorecard. Reads the folder on each call,
+// so a newly approved scorecard is used without a restart.
 export function scorecardResolver({ fallback, dir = JOB_SCORECARD_DIR }) {
-  return (jobId) => {
+  return (jobId, job = null) => {
     const file = jobId === undefined || jobId === null ? null : jobScorecardFile(jobId, dir);
-    return file ? loadScorecard(file) : fallback;
+    if (file) return loadScorecard(file);
+    return scorecardFromTemplate(job, fallback) ?? fallback;
   };
 }

@@ -68,7 +68,7 @@ if (args["loxo-job"] && args.write && writesAllowed()) {
 }
 
 // A search's own approved scorecard wins over the standard one.
-const scorecard = scorecardFor(job.id);
+const scorecard = scorecardFor(job.id, job);
 console.log(`Scoring ${candidates.length} candidates for "${job.title}" with ${provider.name} (${provider.model})`);
 const results = await scoreJob({
   candidates, job, scorecard, template, provider,

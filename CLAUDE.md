@@ -229,6 +229,24 @@ Confirmed on the real account, 29 Oct 2026 (npm run loxo:check):
   `list()` now follows page numbers too. Job statuses seen: Active, On Hold,
   Placement, "Opportunity Closed - ..." (several reasons).
 
+First probe, job 3688816 (Head of Finance and Accounting, 194 candidates), 29 Oct 2026:
+- GET /people/{id} came back thin: name, compensation fields (all null on that
+  person), types and custom fields only. No title, company, location or
+  description. Now also read: GET /people?include_ids[]=&serialization_set=
+  api_row_person_with_job_and_edu_profiles (documented), merged in.
+- GET /people/{id}/job_profiles returned ids only; each is now fetched from
+  /job_profiles/{id} (up to 10). Education from /education_profiles.
+- That person had no resume in Loxo. Resume coverage to measure.
+- Pipeline entry: { id, position, person: {...}, workflow_stage_id,
+  latest_person_event, candidate_rejection_reason }. Stage names from
+  GET /workflow_stages (documented), mapped by id.
+- The job carries DP's own scorecard template (scorecard_template with
+  scorecard_template_attributes[].name/position). Weaver now uses it when the
+  search has no approved file, before the standard scorecard.
+- Job: description_text (plain), company.name, status.name, salary fields,
+  counts[] (id, name, count). Scorecards list pages with current_page /
+  total_pages. Person events: notes text, activity_type.name, job_id.
+
 Not documented: response field names (schemas are empty), webhook body
 format, rate limits. `src/loxo/map.js` guesses with fallbacks; confirm with
 `npm run loxo:check -- --job <id> --probe` and the first saved webhook in

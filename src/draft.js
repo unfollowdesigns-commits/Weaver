@@ -28,7 +28,9 @@ export function draftSchema() {
 export function draftRequest(job, promptFile = DRAFT_PROMPT) {
   return {
     system: fs.readFileSync(promptFile, "utf8"),
-    user: `<job>\nTitle: ${job.title}\nCompany: ${job.company_summary ?? ""}\n\n${job.description ?? ""}\n</job>\n\nDraft the scorecard for this search.`,
+    user: `<job>\nTitle: ${job.title}\nCompany: ${job.company_summary ?? ""}\n\n${job.description ?? ""}\n</job>\n\n${job.scorecard_template?.criteria?.length
+      ? `The firm already has its own scorecard template on this search in Loxo. Keep exactly these criteria, as labels, in this order, and write the description for each:\n${job.scorecard_template.criteria.map((c, i) => `${i + 1}. ${c}`).join("\n")}\n\n`
+      : ""}Draft the scorecard for this search.`,
     schema: draftSchema(),
   };
 }
@@ -38,7 +40,8 @@ const slug = (t) => t.toLowerCase().normalize("NFKD").replace(/[^\w\s-]/g, "").t
 // Turns the model's draft into a scorecard file, with the firm's scale.
 export function scorecardFromDraft(answer, job, standard) {
   const crit = Array.isArray(answer?.criteria) ? answer.criteria : [];
-  if (crit.length < 6 || crit.length > 12) throw new Error(`draft has ${crit.length} criteria; expected about nine`);
+  // The firm's own Loxo templates can be shorter than nine; three is the floor.
+  if (crit.length < 3 || crit.length > 12) throw new Error(`draft has ${crit.length} criteria; expected three to twelve, usually nine`);
   const seen = new Set();
   const criteria = crit.map((c) => {
     if (!c?.label?.trim() || !c?.description?.trim()) throw new Error("a drafted criterion has no label or description");

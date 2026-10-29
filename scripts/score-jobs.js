@@ -90,7 +90,7 @@ const rows = [];
 
 for (const { job, entries } of plan) {
   console.log(`\n${job.title}`);
-  const scorecard = scorecardFor(job.id);
+  const scorecard = scorecardFor(job.id, job);
   console.log(`  scorecard ${scorecard.id}.v${scorecard.version}`);
   const { candidates, failures } = await loadCandidates(client, entries);
   for (const f of failures) console.log(`  could not read entry ${f.entry_id}: ${f.error}`);

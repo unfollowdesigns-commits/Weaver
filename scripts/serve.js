@@ -80,7 +80,7 @@ async function handle(body) {
   const job = jobCache.get(jobId).job;
   const entry = firstArray(await client.get(`/jobs/${jobId}/candidates`, { person_id: personId }))[0] ?? { person_id: personId };
   const candidate = await loadCandidate(client, entry);
-  const result = await scoreCandidate({ candidate, job, scorecard: scorecardFor(jobId), template, provider });
+  const result = await scoreCandidate({ candidate, job, scorecard: scorecardFor(jobId, job), template, provider });
   const tokens = result.usage ? ` tokens in ${result.usage.input_tokens ?? result.usage.prompt_tokens} out ${result.usage.output_tokens ?? result.usage.completion_tokens}` : "";
   log(`${tag}: ${result.status}${result.status === "scored" ? ` ${result.average} ${result.recommendation}${tokens}` : ` ${result.error}`}`);
   if (result.status !== "scored") return;

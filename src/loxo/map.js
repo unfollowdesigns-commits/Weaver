@@ -29,8 +29,17 @@ export function mapJob(raw) {
     id: String(j.id),
     title: first(j.title, j.name) ?? "Untitled job",
     company_summary: first(j.company?.name, j.raw_company_name, j.company_name),
-    description: stripHtml(first(j.description, j.public_description, j.internal_description) ?? ""),
+    description: first(j.description_text?.trim(), stripHtml(first(j.description, j.public_description, j.internal_description) ?? "")) ?? "",
+    // The firm's own scorecard template on this job in Loxo, when there is one.
+    scorecard_template: scorecardTemplateOf(j),
   };
+}
+
+export function scorecardTemplateOf(j) {
+  const t = j?.scorecard_template ?? (j?.scorecard_templates ?? []).find((x) => x?.default) ?? j?.scorecard_templates?.[0];
+  const attrs = (t?.scorecard_template_attributes ?? []).filter((a) => a?.name?.trim());
+  if (!t || !attrs.length) return null;
+  return { id: t.id ?? null, name: t.name ?? null, criteria: [...attrs].sort((a, b) => (a.position ?? 0) - (b.position ?? 0)).map((a) => a.name.trim()) };
 }
 
 // Status name of a job from Loxo's job list. Field name unconfirmed; fallbacks.
@@ -57,7 +66,7 @@ function yearMonth(y, m) {
 // Anything left out is recorded in `trimmed` and shown to the recruiter as a flag.
 export const LIMITS = { notes: 30, notesChars: 15000, resumeChars: 40000 };
 
-export function mapCandidate({ entry, person, jobProfiles = [], resumeText = "", resumeTruncated = false, events = [] }) {
+export function mapCandidate({ entry, person, jobProfiles = [], educationProfiles = [], resumeText = "", resumeTruncated = false, events = [], stageNames = null }) {
   const p = unwrap(person, "person");
   const name = first(p.name, [p.first_name, p.last_name].filter(Boolean).join(" "));
   const location = first(p.location, [p.city, p.state, p.country].filter(Boolean).join(", "));
@@ -101,7 +110,7 @@ export function mapCandidate({ entry, person, jobProfiles = [], resumeText = "",
       summary: stripHtml(jp.description ?? ""),
     })),
     // Degree and school only: graduation years are left out (age proxy).
-    education: (p.education_profiles ?? []).map((e) => ({ degree: first(e.degree), field: null, institution: first(e.school, e.institution) })),
+    education: (educationProfiles.length ? educationProfiles : p.education_profiles ?? []).map((e) => ({ degree: first(e.degree, e.education_type?.name), field: first(e.field_of_study, e.major), institution: first(e.school, e.school_name, e.institution) })).filter((e) => e.degree || e.institution),
     skills: skillList(p.skillsets),
     notes,
     resume_text: resume,
@@ -112,7 +121,7 @@ export function mapCandidate({ entry, person, jobProfiles = [], resumeText = "",
     },
     // For the client report only. Never sent to the AI: toPromptRecord is an allowlist.
     report: {
-      stage: stageOf(entry),
+      stage: stageOf(entry, stageNames),
       compensation: compensationOf(p),
       linkedin: first(p.linkedin_url, p.linkedin, p.linkedin_profile_url),
     },
@@ -120,11 +129,14 @@ export function mapCandidate({ entry, person, jobProfiles = [], resumeText = "",
 }
 
 // Pipeline stage of a candidate on a job. Field names unconfirmed; fallbacks.
-export function stageOf(entry) {
+// Loxo gives only workflow_stage_id on a pipeline entry (confirmed 29 Oct 2026); the names
+// come from GET /workflow_stages, passed in as a Map of id -> name.
+export function stageOf(entry, stageNames = null) {
   const st = entry?.workflow_stage ?? entry?.stage ?? null;
+  const id = first(entry?.workflow_stage_id, st?.id);
   return {
-    id: first(entry?.workflow_stage_id, st?.id),
-    name: first(st?.name, entry?.workflow_stage_name, entry?.stage_name, typeof st === "string" ? st : null),
+    id,
+    name: first(st?.name, entry?.workflow_stage_name, entry?.stage_name, typeof st === "string" ? st : null, id != null ? stageNames?.get(String(id)) : null),
   };
 }
 

@@ -59,7 +59,7 @@ test("a draft becomes a valid scorecard with the firm's scale and unique ids", a
   assert.equal(sc.status, "draft");
   assert.deepEqual(sc.scale, standard.scale);
   assert.ok(sc.industry.direct && sc.industry.adjacent);
-  assert.throws(() => scorecardFromDraft({ criteria: draft.criteria.slice(0, 3), industry: draft.industry }, job, standard), /expected about nine/);
+  assert.throws(() => scorecardFromDraft({ criteria: draft.criteria.slice(0, 2), industry: draft.industry }, job, standard), /expected three to twelve/);
 });
 
 test("draft schema is strict everywhere", () => {
@@ -87,4 +87,19 @@ test("Loxo summary and report read like the firm's reports", () => {
   const html = toHtml([result], { jobTitle: "VP <Sales>", scorecard: "s", provider: "mock", when: "now" });
   assert.ok(html.includes("VP &lt;Sales&gt;") && html.includes("Sample &lt;A&gt;"));
   assert.ok(html.includes("★") && html.includes("Where they fit"));
+});
+
+test("the firm's own Loxo template is used when the search has no approved file", async () => {
+  const { mapJob } = await import("../src/loxo/map.js");
+  const { scorecardFromTemplate } = await import("../src/scorecard.js");
+  const job = mapJob({ id: 9, title: "Head of Finance", description_text: "Lead finance.", description: "<p>x</p>",
+    scorecard_template: { id: 5, name: "Finance template", scorecard_template_attributes: [{ name: "Cash flow", position: 2 }, { name: "Industry insight", position: 1 }, { name: "Relocation", position: 3 }] } });
+  assert.equal(job.description, "Lead finance.");
+  assert.deepEqual(job.scorecard_template.criteria, ["Industry insight", "Cash flow", "Relocation"]);
+  const sc = scorecardResolver({ fallback: standard, dir: "/nonexistent" })(9, job);
+  assert.equal(sc.source, "loxo");
+  assert.deepEqual(sc.criteria.map((c) => c.label), ["Industry insight", "Cash flow", "Relocation"]);
+  assert.equal(scorecardResolver({ fallback: standard, dir: "/nonexistent" })(9, { id: 9 }), standard);
+  assert.equal(scorecardFromTemplate({ scorecard_template: { criteria: ["One"] } }, standard), null);
+  assert.ok(draftRequest(job).user.includes("1. Industry insight"));
 });

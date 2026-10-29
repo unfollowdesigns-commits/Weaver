@@ -63,7 +63,7 @@ if (!args.results && provider.name !== "mock" && !args.go) {
 const { candidates, failures } = await loadCandidates(client, entries);
 for (const f of failures) console.log(`  could not read entry ${f.entry_id}: ${f.error}`);
 if (!args.results) {
-  const scorecard = scorecardResolver({ fallback: loadScorecard(process.env.SCORECARD_FILE || "config/scorecards/standard-executive.v2.json"), dir: args["scorecards-dir"] })(job.id);
+  const scorecard = scorecardResolver({ fallback: loadScorecard(process.env.SCORECARD_FILE || "config/scorecards/standard-executive.v2.json"), dir: args["scorecards-dir"] })(job.id, job);
   results = await scoreJob({ candidates, job, scorecard, template: loadTemplate(), provider });
   console.log(`  scored ${results.filter((r) => r.status === "scored").length} with ${provider.name}`);
 }
