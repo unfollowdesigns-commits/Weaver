@@ -32,13 +32,13 @@ test("reads every page of jobs and the whole pipeline", async () => {
 });
 
 test("name list picks exactly the listed people and reports the ones not on the search", async () => {
-  const { candidates, unmatched } = await fetchJobForScoring(client, 900, { names: ["Sample Alpha", "sample bravo", "Sample Charlie", "Sample Delta", "Sample Foxtrot", "Nobody Here"] });
-  assert.deepEqual(candidates.map((c) => c.name).sort(), ["Sample Alpha, CPA", "Sample Bravo", "Sample Charlie", "Sample Delta", "Sample Foxtrot"]);
+  const { candidates, unmatched } = await fetchJobForScoring(client, 900, { names: ["Avery Quill", "blake norton", "Casey Moreau", "Dana Okafor", "Frankie Vale", "Nobody Here"] });
+  assert.deepEqual(candidates.map((c) => c.name).sort(), ["Avery Quill, CPA", "Blake Norton", "Casey Moreau", "Dana Okafor", "Frankie Vale"]);
   assert.deepEqual(unmatched, ["Nobody Here"]);
 });
 
 test("profiles come through despite thin records: title, company, history, education, stage names", async () => {
-  const { candidates } = await fetchJobForScoring(client, 900, { names: ["Sample Alpha"] });
+  const { candidates } = await fetchJobForScoring(client, 900, { names: ["Avery Quill"] });
   const c = candidates[0];
   assert.equal(c.current_title, "VP Finance");
   assert.equal(c.current_company, "Sample Solutions Provider");
@@ -66,7 +66,7 @@ test("scoring: bare records skipped, ranking Yes first, pay only from Loxo field
   const scorecard = scorecardResolver({ fallback: standard, dir: "/nonexistent" })(job.id, job);
   const results = await scoreJob({ candidates, job, scorecard, template, provider: createMockProvider() });
   const skipped = results.filter((r) => r.status === "skipped").map((r) => r.candidate_name);
-  assert.deepEqual(skipped.sort(), ["Sample Foxtrot", "Sample Golf"]);
+  assert.deepEqual(skipped.sort(), ["Frankie Vale", "Gray Holloway"]);
   const scored = results.filter((r) => r.status === "scored");
   const firstNo = scored.findIndex((r) => r.recommendation === "no");
   if (firstNo >= 0) assert.ok(scored.slice(firstNo).every((r) => r.recommendation === "no"));
@@ -79,7 +79,7 @@ test("scoring: bare records skipped, ranking Yes first, pay only from Loxo field
 });
 
 test("the Loxo write is prepared on the firm's template labels and stays blocked", async () => {
-  const { job, candidates } = await fetchJobForScoring(client, 900, { names: ["Sample Alpha"] });
+  const { job, candidates } = await fetchJobForScoring(client, 900, { names: ["Avery Quill"] });
   const scorecard = scorecardResolver({ fallback: standard, dir: "/nonexistent" })(job.id, job);
   const [r] = await scoreJob({ candidates, job, scorecard, template, provider: createMockProvider() });
   const payload = buildScorecardPayload(r, { ...writeConfigFromEnv({}), scorecardTypeId: "2", recommendationTypeIds: { yes: "3", no: "2" } });
@@ -100,7 +100,7 @@ test("client report: their stages, top list from reads only, AI narrative withou
   assert.deepEqual(model.funnel.map((f) => f.count), [9, 5, 4, 2, 1]);
   assert.ok(model.top.every((p) => p.first_read));
   const req = narrativeRequest(model);
-  assert.ok(!req.user.includes("Sample Alpha") && !req.user.includes("225k"));
+  assert.ok(!req.user.includes("Avery Quill") && !req.user.includes("225k"));
   const { answer } = await createMockProvider().complete(req);
   model = applyNarrative(model, answer);
   const html = renderReport(model, stages);
@@ -112,7 +112,7 @@ test("pacing stays under Loxo's rate limit, so nothing is refused", async () => 
   const limited = await startRealShapeLoxo({ rateLimit: 12 });
   try {
     const paced = createLoxoClient({ domain: limited.url, slug: "demo", apiKey: "k", maxPerSecond: 4 });
-    const { candidates, failures } = await fetchJobForScoring(paced, 900, { names: ["Sample Alpha"] });
+    const { candidates, failures } = await fetchJobForScoring(paced, 900, { names: ["Avery Quill"] });
     assert.equal(candidates.length, 1);
     assert.equal(failures.length, 0);
     assert.equal(limited.stats.limited, 0);
