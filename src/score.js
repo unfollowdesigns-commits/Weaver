@@ -78,10 +78,15 @@ export async function scoreJob({ candidates, concurrency = 3, onResult, ...rest 
   return rankResults(results);
 }
 
-// Scored candidates by average, highest first; errors at the end.
+// Who to call first: recommended candidates before the rest, then by average, highest
+// first; errors at the end. (29 Oct 2026: by average alone, a "no" at 3.9 outranked a "yes"
+// at 3.9 that the firm's own team ranked first.)
 export function rankResults(results) {
   return [...results].sort((a, b) => {
     if (a.status !== b.status) return a.status === "scored" ? -1 : 1;
+    const ya = a.recommendation === "yes" ? 1 : 0;
+    const yb = b.recommendation === "yes" ? 1 : 0;
+    if (ya !== yb) return yb - ya;
     return (b.average ?? -1) - (a.average ?? -1);
   });
 }

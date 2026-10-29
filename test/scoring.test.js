@@ -141,3 +141,14 @@ test("anything the model writes about pay is removed and flagged", () => {
   assert.equal(out.watch_item, "[removed: mentioned pay]");
   assert.ok(out.flags.some((f) => f.startsWith("pay_removed: 2")));
 });
+
+test("ranking puts recommended candidates first, then by average", async () => {
+  const { rankResults } = await import("../src/score.js");
+  const r = rankResults([
+    { status: "scored", candidate_id: "no-high", average: 3.9, recommendation: "no" },
+    { status: "error", candidate_id: "err" },
+    { status: "scored", candidate_id: "yes-low", average: 3.1, recommendation: "yes" },
+    { status: "scored", candidate_id: "yes-high", average: 3.9, recommendation: "yes" },
+  ]);
+  assert.deepEqual(r.map((x) => x.candidate_id), ["yes-high", "yes-low", "no-high", "err"]);
+});

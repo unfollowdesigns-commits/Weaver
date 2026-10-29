@@ -252,7 +252,11 @@ First probe, job 3688816 (Head of Finance and Accounting, 194 candidates), 29 Oc
   before the model, prompt v3 forbids pay, output guard removes and flags any
   pay mention. Their team's top candidate (4.1 / Yes in their report) scored
   3.4 and ranked 4th on the bare Loxo template; 7 of 8 Yes. Sharpened
-  scorecard job-3688816.v1 written from their report; re-run pending.
+  scorecard job-3688816.v1 written from their report. Re-run with it (same 8,
+  gpt-4.1): their top candidate 3.9 / Yes (tied first), 5 Yes / 3 No, industry
+  stars match their own report, order close to theirs. A "No" at 3.9 ranked
+  first by average: ranking now puts Yes before No, then average. gpt-4.1
+  still writes "likely ..." inferences from titles; check Claude on this.
 - Rate limit: 429 after a burst of roughly 12 requests a second. Client now
   paces to LOXO_MAX_PER_SECOND (default 4) and retries 429 with 2-30 s waits.
 - Pipeline entry: { id, position, person: {...}, workflow_stage_id,
