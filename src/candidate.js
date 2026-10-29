@@ -2,7 +2,7 @@
 // Allowlist: only job-related fields go out. Name, contact details, compensation,
 // photos and dates of birth never leave this function.
 
-const EMAIL = /[\w.+-]+@[\w-]+(\.[\w-]+)+/g;
+const EMAIL = /[\w.+-]{1,64}@[\w-]{1,63}(\.[\w-]{1,63})+/g;
 const PHONE = /(\+?\d[\d\s().-]{7,}\d)/g;
 // Links with or without a scheme (a resume often starts "linkedin.com/in/<name>").
 const URL = /\bhttps?:\/\/\S+|\bwww\.\S+|\b(?:linkedin|github)\b\s*:?\s*\S*|(?<=^|\s)\/?in\/\S+|(?<=^|\s)@\w{3,}/gi;
@@ -23,13 +23,16 @@ const URL = /\bhttps?:\/\/\S+|\bwww\.\S+|\b(?:linkedin|github)\b\s*:?\s*\S*|(?<=
 const PAY_WORD = /\b(salary|salaries|compensation|OTE|bonus(es)?|RSUs?|stock options?|pay (range|rate|band)|hourly rate|total package|desired pay|current pay|wages?|total comp|all[- ]in|target cash|comp)\b/i;
 const PAY_TOPIC = /\b(salary|salaries|compensation|bonus(es)?|comp|pay|wages?|incentive)\s+(plans?|programs?|structures?|benchmarking|philosoph(y|ies)|polic(y|ies)|strateg(y|ies)|committee|design|bands|reviews?|administration|surveys?|accruals?|expense)\b|\b(raised|cut|froze|frozen|reduced|increased|benchmarked|redesigned)\s+(base\s+)?(salaries|wages|pay|bonuses|compensation)\b|\b(salaries|wages|pay|bonuses)\s+by\s+\d+(\.\d+)?\s?%/i;
 const TC_NUMBER = /\bTC\b\s*(of\s*)?[:=]?\s*\$?\d/i;
-const BUSINESS = /\b(budgets?|revenues?|ARR|MRR|savings|saved|saving|costs?|raised?|raises|rounds?|funding|sales|deals?|contracts?|valuations?|EBITDA|portfolios?|loans?|facility|acquisitions?|AUM|spend|capex|opex|P&L|profits?|margins?|bookings|pipeline|invoices|transactions|run[- ]rate|GMV|AR|AP|debt|notes|interest|taxes|dividends|paid down|repaid|sq ft|square feet)\b/i;
-const CUE_BEFORE = /\b(wants|wanting|currently|making|earning|earns|paid|pays|move for|move at|north of|south of|floor( is)?|expect\w*|would take|will take|needs|need|asking( for)?|looking for|targeting|sits at|is at|now at|base( of| is| at)?|at least)\s*:?\s*(\w+\s+){0,2}$/i;
-const CUE_AFTER = /^\s*[kK]?\s*(base|variable|all[- ]in|ote|bonus|plus|total|to move|guaranteed)\b/i;
+const BUSINESS = /\b(business|company|companies|firm|settlement|org|organization|budgets?|revenues?|ARR|MRR|savings|saved|saving|costs?|raised?|raises|rounds?|funding|sales|deals?|contracts?|valuations?|EBITDA|portfolios?|loans?|facility|acquisitions?|AUM|spend|capex|opex|P&L|profits?|margins?|bookings|pipeline|invoices|transactions|run[- ]rate|GMV|AR|AP|debt|notes|interest|taxes|dividends|paid down|repaid|sq ft|square feet)\b/i;
+// Person cues are about the candidate's own pay: they win over business words.
+const CUE_PERSON = /(\b(wants|wanting|currently|current|making|earning|earns|paid|pays|move for|move at|north of|south of|floor( is)?|would take|will take|needs|need|asking( for)?|sits at|is at|now at|base( of| is| at)?|at least|doing|w-?2( was| of)?|in the)|'s at|^\s*at)\s*:?\s*(\w+\s+){0,2}$/i;
+// Soft cues ("targeting 500K in savings") count only when the sentence is not about the business.
+const CUE_SOFT = /\b(expect\w*|looking for|targeting|range)\s*:?\s*(\w+\s+){0,2}$/i;
+const CUE_AFTER = /^\s*([kK]?\s*(base|variable|all[- ]in|ote|bonus|plus|total|to move|guaranteed|range)\b|\+|\/\s*\d{2,3}\b)/i;
 // Words that may follow a pay figure without making it a count.
-const AFTER_OK = /^(base|salary|plus|with|and|or|total|all|target|bonus|range|to|per|a|an|the|today|now|currently|including|incl|guaranteed|variable|ote|cash|depending|but|if|max|min|minimum|maximum|floor|ceiling|year|yr|annually|annual|on|in|at|for|before|after|range)$/i;
+const AFTER_OK = /^(base|salary|plus|with|and|or|total|all|target|bonus|range|to|per|a|an|the|today|now|currently|including|incl|guaranteed|variable|ote|cash|depending|but|if|max|min|minimum|maximum|floor|ceiling|year|yr|annually|annual|on|in|at|for|before|after|last|this|next|prior|previous|k)$/i;
 const FIGURE = /\$?\d{2,3}\s?-\s?\$?\d{2,3}\s?[kK]\b\+?|\$?\d{2,3}(\.\d)?\s?[kK]\b\+?|\$?\d+(\.\d+)?\s?MM\b|\b(low|mid|high)[- ]\d{3}s\b|\b(one|two|three|four|five|six|seven|eight|nine) hundred( and \w+)? thousand\b|\$?\b\d{2,3}\b(?![,.]\d)/gi;
-const PAY_VERB = /\b(base|earns?|earning|making|wants|asking|currently at|package|paid|pays)\b/i;
+const PAY_VERB = /\b(earns?|earning|making|wants|asking|currently at|package|paid|pays|base salary)\b|\bbase\s*(of|is|at|[:=])?\s*\$?\d/i;
 const FULL_AMOUNT = /\$\s?\d{1,3}(,\d{3})+|\b\d{1,3}(,\d{3}){1,2}\b|\$?\d+(\.\d+)?\s?[mM]\b/;
 const EQUITY = /\bequity\b/i;
 const NOT_PAY_EQUITY = /\b(private equity|growth equity|equity[- ]backed|equity firm|equity partners|equity research|equity investment|equity raise|raise|round|funding)\b/i;
@@ -38,13 +41,16 @@ function payFigures(s) {
   const out = [];
   for (const m of s.matchAll(FIGURE)) {
     const before = s.slice(Math.max(0, m.index - 40), m.index);
-    const after = s.slice(m.index + m[0].length);
+    // Look past the second half of a range ("200-500 person") before reading the next word.
+    const after = s.slice(m.index + m[0].length).replace(/^\s?-\s?\$?\d+(\.\d+)?[kKmM]?\b/, "");
+    if (/^\s*(%|percent\b|pct\b)/i.test(after)) continue; // a percentage, not an amount
     const next = /^\+?\s+([A-Za-z][\w-]*)/.exec(after)?.[1] ?? null;
-    const count = next !== null && /^[a-z]/.test(next) && next.length >= 3 && !AFTER_OK.test(next);
+    const count = next !== null && next.length >= 2 && !AFTER_OK.test(next);
     const bare = /^\$?\d{2,3}$/.test(m[0].trim());
-    const cue = CUE_BEFORE.test(before) || CUE_AFTER.test(after) || /^\$/.test(m[0]) && bare && /\b(base|wants|currently)\b/i.test(before);
-    if (bare && !cue) continue; // a plain 2-3 digit number is only pay with a cue
-    out.push({ count, cue });
+    const person = CUE_PERSON.test(before) || CUE_AFTER.test(after);
+    const soft = !person && CUE_SOFT.test(before);
+    if (bare && !person && !soft) continue; // a plain 2-3 digit number is only pay with a cue
+    out.push({ count, person, soft });
   }
   return out;
 }
@@ -53,11 +59,12 @@ export function isAboutPay(sentence) {
   const s = String(sentence ?? "").replace(/\b40[13]\s?\(?[kKbB]\)?/g, "");
   const figures = payFigures(s);
   const anyCount = figures.some((f) => f.count);
-  const pay = figures.filter((f) => !f.count && (f.cue || !anyCount));
+  const business = BUSINESS.test(s);
+  const pay = figures.filter((f) => !f.count && (f.person || f.soft || !anyCount));
   if (PAY_WORD.test(s) && !(PAY_TOPIC.test(s) && !pay.length)) return true;
   if (TC_NUMBER.test(s)) return true;
-  if (pay.some((f) => f.cue)) return true;
-  const business = BUSINESS.test(s);
+  if (pay.some((f) => f.person)) return true;
+  if (pay.some((f) => f.soft) && !business) return true;
   if (pay.length && !business) return true;
   if (PAY_VERB.test(s) && FULL_AMOUNT.test(s) && !business && !anyCount) return true;
   return EQUITY.test(s) && !NOT_PAY_EQUITY.test(s) && /\$|%/.test(s) && !business;
@@ -75,7 +82,7 @@ export function scrubPay(text) {
 
 // The team's own scores and recommendations must not reach the model either, or Weaver
 // could echo them back (30 Oct 2026 review: a first read matched the team's 4.1 exactly).
-const TEAM_SCORE = /\b[1-5](\.\d)?\s?(\/|out of)\s?5\b|\b[1-5](\.\d)?\s+of\s+5\b(?!\s*[A-Za-z])|\b(screen|scorecard|overall|average)\s+(score|rating)\b|\bscored\s+(a\s+)?[1-5](\.\d)?\b|\brated\s+(a\s+)?[1-5](\.\d)?\b|\brecommend(ation|ed)?\b\s*:?\s*(strong\s+)?(yes|no)\b|\b(overall|team|screen|our read|panel)\b\s*:?\s*([1-5]\.\d\b|strong\s+(yes|no)\b)/i;
+const TEAM_SCORE = /\b[1-5](\.\d)?\s?(\/|out of)\s?5\b|\b[1-5](\.\d)?\s+of\s+5\b(?!\s*[A-Za-z])|\b(screen|scorecard|overall|average)\s+(score|rating)\b|\bscored\s+(a\s+)?[1-5](\.\d)?\b|\brated\s+(a\s+)?[1-5](\.\d)?\b|\brecommend(ation|ed)?\b\s*:?\s*(strong\s+)?(yes|no)\b|\b(overall|team|screen|our read|panel)\b\s*:?\s*([1-5]\.\d\b|strong\s+(yes|no)\b)|\b(avg|average)\b\s*:?\s*[1-5]\.\d\b|\b[1-5]\.\d\s*(avg|average)\b|\bstrong\s+(yes|no)\b|\b(rated|gave|scored)\s+(him|her|them)\s+(a\s+)?[1-5]\b/i;
 
 export function scrubScores(text) {
   if (typeof text !== "string" || !text) return "";
@@ -136,10 +143,12 @@ export function scrubName(text, name, protect = []) {
   };
   // Mask the protected phrases (only those holding at most one part of the name).
   const masks = [];
-  const namePartsIn = (phrase) => new Set(String(phrase).split(/[^\p{L}'’-]+/u).map(key).filter((k) => parts.has(k))).size;
   let work = text;
   for (const phrase of [...new Set(protect.filter((x) => typeof x === "string" && x.trim().length > 2))].sort((a, b) => b.length - a.length)) {
-    if (namePartsIn(phrase) > 1) continue;
+    // Protected only when every name part in it is an everyday word ("Wells Fargo" for
+    // Morgan Wells): a firm named after the candidate ("Roe Advisory") is scrubbed.
+    const inPhrase = String(phrase).split(/[^\p{L}'’-]+/u).map(key).filter((k) => parts.has(k));
+    if (new Set(inPhrase).size > 1 || inPhrase.some((k) => !COMMON.has(k))) continue;
     const re = new RegExp(phrase.trim().replace(/[.*+?^${}()|[\]\\]/g, "\\$&").replace(/\s+/g, "\\s+"), "gi");
     work = work.replace(re, (m) => { masks.push(m); return `\u0001${masks.length - 1}\u0002`; });
   }
@@ -149,8 +158,11 @@ export function scrubName(text, name, protect = []) {
   tokens.forEach((m, i) => {
     const tok = m[0];
     if (!isCap(tok) || !isPart(tok)) return;
-    const neighbor = (j) => tokens[j] && isCap(tokens[j][0]) && isPart(tokens[j][0]) && text.slice(tokens[Math.min(i, j)].index + tokens[Math.min(i, j)][0].length, tokens[Math.max(i, j)].index).trim().length <= 1;
-    const everyday = bare(tok).split(/[-']/).every((p) => COMMON.has(p));
+    const neighbor = (j) => tokens[j] && isCap(tokens[j][0]) && isPart(tokens[j][0]) && /^\s*-?\s*$/.test(text.slice(tokens[Math.min(i, j)].index + tokens[Math.min(i, j)][0].length, tokens[Math.max(i, j)].index));
+    const pieces = bare(tok).split(/[-']/).filter(Boolean);
+    // Two name parts joined in one word ("Mark-Young") is the name, even if both are everyday words.
+    const joined = new Set(pieces.filter((p) => parts.has(p))).size >= 2;
+    const everyday = !joined && pieces.every((p) => COMMON.has(p));
     // "Mr. Lake" or "Dr. Wells": a title right before counts as another part of the name.
     const titled = i > 0 && TITLE.test(fold(tokens[i - 1][0])) && text.slice(tokens[i - 1].index + tokens[i - 1][0].length, m.index).trim().length <= 1;
     if (!everyday || titled || neighbor(i - 1) || neighbor(i + 1)) hits.add(i);
@@ -199,7 +211,7 @@ export function toPromptRecord(candidate) {
     education: (candidate.education ?? []).map((e) => ({
       degree: e.degree ?? null,
       field: e.field ?? null,
-      institution: e.institution ?? null,
+      institution: nameOnly(e.institution),
     })),
     skills: candidate.skills ?? [],
     notes: (candidate.notes ?? []).filter((n) => !OWN_NOTE.test(n.text ?? "")).map((n) => ({ date: n.date ?? null, text: scrubAll(n.text ?? "") })),

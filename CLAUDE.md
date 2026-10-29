@@ -307,7 +307,13 @@ First probe, job 3688816 (Head of Finance and Accounting, 194 candidates), 29 Oc
   used alone ("Austin led FP&A") stays; nicknames not in Loxo stay; a firm named
   after the surname only ("Roe Advisory") keeps the surname; unusual pay phrasing
   can still slip through the cleaning, which is why the prompt forbids pay and the
-  output guard plus `npm run verify` check what the AI wrote.
+  output guard plus `npm run verify` check what the AI wrote. Final pass (same day):
+  a firm named after the candidate is scrubbed (protected employers only when the
+  name part is an everyday word), loosely written team scores removed ("avg 4.1",
+  "strong yes", "gave him a 4"), more pay shorthand caught ("he's at 240", "W2 was
+  410", "240 + 40"), percentages, counts and business amounts kept, school names
+  cleaned, hyphenated full names caught, name matches never cross a full stop.
+  102 tests. After every real run, `npm run verify` before anything is shown.
 - Re-scoring after criteria change (30 Oct 2026, Houssem's ask before go-live):
   `npm run rescore -- --loxo-job <id> [--go] [--write]`. Finds AI scorecards on
   the search whose summary names another scorecard version, shows count and

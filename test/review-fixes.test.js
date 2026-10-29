@@ -207,3 +207,37 @@ test("third review: hourly pay fields are not read as a salary", async () => {
   assert.equal(money("90 per hour"), null);
   assert.equal(money("$225,000"), 225000);
 });
+
+test("final review 1: a firm named after the candidate is scrubbed; everyday-word employers kept", () => {
+  const r = toPromptRecord({ ...base, name: "Jane Roe", current_company: "Roe Advisory LLC", work_history: [{ title: "Founder", company: "Roe Advisory LLC", summary: "" }], education: [{ institution: "Roe College" }], resume_text: "Jane Roe\nFounder, Roe Advisory LLC" });
+  assert.ok(!/Roe/.test(JSON.stringify(r)), JSON.stringify(r));
+});
+
+test("final review 2: team scores written loosely are removed", () => {
+  for (const s of ["Scorecard avg 4.1.", "Gave him a 4 on the screen.", "Strong yes from Josh.", "4.1 avg.", "Josh: strong yes.", "Rated him a 4."]) {
+    assert.ok(scrubScores(s).includes("[score removed]"), s);
+  }
+});
+
+test("final review 3: more recruiter pay shorthand is caught", () => {
+  for (const s of ["He's at 240.", "At 260 now.", "Current: 250 + 30%.", "Current 240/40.", "$240 + 20%", "Range: 220-260.", "W2 was 410 last year.", "Doing 275 today.", "She's in the 250 range.", "240 + 40 + equity."]) {
+    assert.equal(isAboutPay(s), true, s);
+  }
+});
+
+test("final review 4: finance evidence stays", () => {
+  for (const s of ["Currently at 120% of plan.", "Is at 95% retention.", "Currently manages 120 FTEs across 3 countries.", "Targeting 500K in annual savings.", "Base business grew 12% to $80M.", "Wants a CFO seat at a $100M+ PE-backed company.", "Looking for a 200-500 person company.", "Paid $2.1M settlement on time."]) {
+    assert.equal(isAboutPay(s), false, s);
+  }
+});
+
+test("final review 6: a name match never runs across a full stop or comma", () => {
+  assert.equal(scrubName("Ernst & Young. Mark the date.", "Mark Young"), "Ernst & Young. Mark the date.");
+  assert.equal(scrubName("Mark Young led it. Mark-Young too.", "Mark Young"), "[name] [name] led it. [name] too.");
+});
+
+test("final review 5: long unbroken text does not stall the email scrub", () => {
+  const t = Date.now();
+  toPromptRecord({ ...base, resume_text: "a".repeat(40000) + "@" });
+  assert.ok(Date.now() - t < 500, `${Date.now() - t} ms`);
+});
