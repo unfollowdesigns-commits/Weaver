@@ -12,7 +12,7 @@ support.claude.com articles 11175166, 12512180, 13119606; help.openai.com 125844
   slug; test it on the call).
 - Claude: who is the Owner of their Claude organization? Only an Owner can add the connector
   and the firm skill. Which plan: Team or Enterprise?
-- Have claude-skill/dp-recruiting zipped: right-click the folder > Compress. The zip must
+- Have claude-skill/v2/dp-recruiting zipped: right-click the folder > Compress. The zip must
   contain the folder named dp-recruiting with SKILL.md inside.
 
 ## Claude, part 1: the Owner adds Loxo once for the whole firm

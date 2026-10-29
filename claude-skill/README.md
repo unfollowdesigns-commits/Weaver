@@ -1,11 +1,12 @@
 # Claude skill for the firm's team
 
-`dp-recruiting/SKILL.md` teaches the firm's Claude how the firm works with candidates in
-Loxo: the 1 to 5 scale, report wording, stars, stages, Weaver's first reads already in
-Loxo, and the rules (no guessing, a human decides, pay as a fact only).
+Two versions, never overwritten:
+- `dp-recruiting/` (v1): uses Weaver's reads and the firm's language.
+- `v2/dp-recruiting/` (current, 30 Oct 2026): also scores on demand with Weaver's exact
+  method, writes the firm's client pipeline report, one-page profiles, outbound priority,
+  and Weaver-vs-team comparisons. Method in `references/`.
 
-Install at onboarding, together with Loxo's official connector in the firm's Claude:
-zip the `dp-recruiting` folder and upload it as a custom skill in Claude
-(Settings > Capabilities > Skills; confirm the exact place in the firm's plan at setup).
-Contains no candidate data. Version it like everything else: change by adding a new
-version, then re-upload.
+Install v2 at onboarding with Loxo's official connector (see docs/CLAUDE-LOXO-SETUP.v1.md):
+zip the `v2/dp-recruiting` folder (the zip must contain the folder named dp-recruiting with
+SKILL.md inside) and upload it under Organization settings > Plugins & skills.
+Contains no candidate data. Change by adding a new version, then re-upload.
