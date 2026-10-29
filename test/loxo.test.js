@@ -158,3 +158,22 @@ test("maps the field names used by the community Loxo MCP: month/year, string co
   assert.deepEqual(c.education, [{ degree: "MBA", field: null, institution: "Wharton" }]);
   assert.ok(!JSON.stringify(c.education).includes("2009"));
 });
+
+test("job status and open filter for the full test", async () => {
+  const { jobStatusOf, isOpenStatus } = await import("../src/loxo/map.js");
+  assert.equal(jobStatusOf({ status: { name: "Active" } }), "Active");
+  assert.equal(jobStatusOf({ job: { job_status: { name: "Open" } } }), "Open");
+  assert.equal(jobStatusOf({ status: "On hold" }), "On hold");
+  assert.equal(jobStatusOf({}), null);
+  assert.deepEqual(["Active", "Open", "Closed", "On hold", null].map(isOpenStatus), [true, true, false, false, false]);
+});
+
+test("summary page across searches adds up and escapes titles", async () => {
+  const { toIndexHtml } = await import("../src/report.js");
+  const html = toIndexHtml(
+    [{ title: "VP <Sales>", file: "job-1.html", candidates: 8, scored: 7, yes: 3, errors: 1 }, { title: "CRO", file: "job-2.html", candidates: 4, scored: 4, yes: 2, errors: 0 }],
+    { scorecard: "s.v1", provider: "mock", when: "now" },
+  );
+  assert.ok(html.includes("VP &lt;Sales&gt;"));
+  assert.ok(html.includes('<td class="n">12</td><td class="n">11</td><td class="n">5</td><td class="n">1</td>'));
+});

@@ -200,10 +200,23 @@ skips candidates that already have an AI scorecard), and a small webhook
 server for automatic scoring, limited to the jobs in LOXO_AUTO_SCORE_JOB_IDS.
 Tested against a simulated Loxo only.
 
-Open: run it on the real account (needs the five items), confirm field
-names, decide where the webhook server is hosted (n8n in front of it, or on
-its own; costs money, ask Houssem), compensation (left out of the model input
-on purpose; decide with the client), and the client's real scorecard.
+Open items (updated 29 Oct 2026):
+- Run on the real account: needs the Loxo key and the list of searches.
+- Confirm Loxo's real field names and webhook body on day one.
+- First real-model run: the answer schema uses only features Claude's
+  structured outputs support (checked 29 Oct), but no live call has been made
+  yet (no Claude key; OpenAI test pending on Houssem's Mac).
+- Ranking inside Loxo: scorecards sit on each candidate; whether Loxo's
+  pipeline view shows scores side by side is unknown. Until checked, the
+  ranked view is our report. Do not write into recruiters' pipeline comments
+  without Josh's agreement.
+- Compensation stays out of the scoring unless the client decides otherwise.
+- Webhook secret travels in the URL query (Loxo cannot send headers, as far
+  as documented); it can appear in the host's request logs. Only account
+  members see those logs. Rotate it if anyone leaves.
+- Render test service: auto-deploy on push did not fire (28-29 Oct); manual
+  deploys work. Check the GitHub connection in Render before go-live.
+- Hosting history below mentions Railway; the decision is Render.
 
 Decisions, 27 Oct 2026 (Houssem): production runs in the client's own
 accounts (their Anthropic account and server host, Houssem invited as admin);
