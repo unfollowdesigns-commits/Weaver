@@ -43,6 +43,14 @@ export function resultFromAnswer({ base, answer, model, usage, scorecard, flagCo
   return result;
 }
 
+// Nothing to read: no resume, no work history with a title, and under 200 characters of notes.
+// Seen on real searches (29 Oct 2026): outbound prospects added with a name only. They are
+// listed as "not enough in Loxo to score" and never sent to the AI, so nobody pays for them.
+export function isThin(candidate) {
+  const notes = (candidate.notes ?? []).reduce((t, n) => t + String(n.text ?? "").length, 0);
+  return !candidate.resume_text?.trim() && !(candidate.work_history ?? []).some((w) => w.title) && notes < 200;
+}
+
 // Scores one candidate. Never throws: a failure comes back as status "error"
 // so one bad record does not stop a 100-candidate run.
 export async function scoreCandidate({ candidate, job, scorecard, template, provider, attempts = 2 }) {
@@ -64,13 +72,16 @@ export async function scoreCandidate({ candidate, job, scorecard, template, prov
   return { ...base, status: "error", error: lastError };
 }
 
-export async function scoreJob({ candidates, concurrency = 3, onResult, ...rest }) {
+export async function scoreJob({ candidates, concurrency = 3, onResult, skipThin = true, ...rest }) {
   const results = new Array(candidates.length);
   let next = 0;
   async function worker() {
     while (next < candidates.length) {
       const i = next++;
-      results[i] = await scoreCandidate({ candidate: candidates[i], ...rest });
+      const c = candidates[i];
+      results[i] = skipThin && isThin(c)
+        ? { ...resultBase({ candidateId: c.id, candidateName: c.name ?? null, loxo: c.loxo ?? null, job: rest.job, scorecard: rest.scorecard, template: rest.template, provider: rest.provider }), status: "skipped", reason: "not enough in Loxo to score (no resume, work history or notes)" }
+        : await scoreCandidate({ candidate: c, ...rest });
       onResult?.(results[i], i);
     }
   }
@@ -79,11 +90,12 @@ export async function scoreJob({ candidates, concurrency = 3, onResult, ...rest 
 }
 
 // Who to call first: recommended candidates before the rest, then by average, highest
-// first; errors at the end. (29 Oct 2026: by average alone, a "no" at 3.9 outranked a "yes"
+// first; then errors, then candidates with nothing to score. (29 Oct 2026: by average alone, a "no" at 3.9 outranked a "yes"
 // at 3.9 that the firm's own team ranked first.)
 export function rankResults(results) {
   return [...results].sort((a, b) => {
-    if (a.status !== b.status) return a.status === "scored" ? -1 : 1;
+    const order = { scored: 0, error: 1, skipped: 2 };
+    if (a.status !== b.status) return (order[a.status] ?? 1) - (order[b.status] ?? 1);
     const ya = a.recommendation === "yes" ? 1 : 0;
     const yb = b.recommendation === "yes" ? 1 : 0;
     if (ya !== yb) return yb - ya;

@@ -52,7 +52,9 @@ if (args["loxo-job"]) {
   client = loxoClientFromEnv(process.env, { allowWrites: args.write });
   console.log(`Reading job ${args["loxo-job"]} from Loxo ...`);
   const stages = args.stages ? args.stages.split(",").filter((s) => s.trim()) : null;
-  const loaded = await fetchJobForScoring(client, args["loxo-job"], { limit, stages });
+  let read = 0;
+  const loaded = await fetchJobForScoring(client, args["loxo-job"], { limit, stages, onProgress: () => { if (++read % 10 === 0) process.stdout.write(`\r  read ${read} candidates from Loxo ...`); } });
+  if (read >= 10) process.stdout.write("\n");
   if (stages) console.log(`  only stages: ${stages.join(", ")}`);
   ({ job, candidates } = loaded);
   console.log(`  ${loaded.pipelineCount} on the pipeline, ${candidates.length} loaded${loaded.failures.length ? `, ${loaded.failures.length} could not be read` : ""}`);
@@ -74,10 +76,11 @@ if (args["loxo-job"] && args.write && writesAllowed()) {
 // A search's own approved scorecard wins over the standard one.
 const scorecard = scorecardFor(job.id, job);
 console.log(`Scoring ${candidates.length} candidates for "${job.title}" with ${provider.name} (${provider.model})`);
+let done = 0;
 const results = await scoreJob({
   candidates, job, scorecard, template, provider,
   concurrency: Number(args.concurrency),
-  onResult: (r) => console.log(`  ${r.status === "scored" ? "scored" : "ERROR "} ${r.candidate_name ?? r.candidate_id}${r.status === "scored" ? `  ${r.average?.toFixed(1)}  ${r.recommendation}` : `  ${r.error}`}`),
+  onResult: (r, i) => console.log(`  ${String(++done).padStart(4)}/${candidates.length} ${r.status === "scored" ? `scored   ${r.average?.toFixed(1)} ${r.recommendation}` : r.status === "skipped" ? "skipped  not enough in Loxo" : `ERROR    ${r.error}`}`),
 });
 
 const stamp = new Date().toISOString().replace(/[:.]/g, "-");
@@ -111,6 +114,7 @@ if (args["loxo-job"]) {
   }
 }
 
-const errors = results.filter((r) => r.status !== "scored").length;
-console.log(`\nDone. ${results.length - errors} scored, ${errors} errors. Report: ${path.join(dir, "report.html")}`);
+const errors = results.filter((r) => r.status === "error").length;
+const skippedCount = results.filter((r) => r.status === "skipped").length;
+console.log(`\nDone. ${results.length - errors - skippedCount} scored, ${skippedCount} not enough in Loxo, ${errors} errors. Report: ${path.join(dir, "report.html")}`);
 if (errors) process.exitCode = 1;

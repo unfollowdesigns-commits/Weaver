@@ -152,3 +152,17 @@ test("ranking puts recommended candidates first, then by average", async () => {
   ]);
   assert.deepEqual(r.map((x) => x.candidate_id), ["yes-high", "yes-low", "no-high", "err"]);
 });
+
+test("records with nothing to read are listed, not sent to the AI", async () => {
+  const { isThin } = await import("../src/score.js");
+  const bare = { id: "bare", name: "Bare", work_history: [{ title: null, company: null }], notes: [{ text: "Sent InMail." }], resume_text: "" };
+  assert.equal(isThin(bare), true);
+  assert.equal(isThin({ ...bare, resume_text: "Controller at ..." }), false);
+  let calls = 0;
+  const provider = { ...createMockProvider(), complete: async (x) => { calls++; return createMockProvider().complete(x); } };
+  const results = await scoreJob({ candidates: [bare, candidates[0]], job, scorecard, template, provider });
+  assert.equal(calls, 1);
+  assert.equal(results.at(-1).status, "skipped");
+  const { toHtml } = await import("../src/report.js");
+  assert.ok(toHtml(results, { jobTitle: "x", scorecard: "s", provider: "m", when: "now" }).includes("Not enough in Loxo"));
+});

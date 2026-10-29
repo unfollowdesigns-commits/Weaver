@@ -94,10 +94,11 @@ for (const { job, entries } of plan) {
   console.log(`  scorecard ${scorecard.id}.v${scorecard.version}`);
   const { candidates, failures } = await loadCandidates(client, entries);
   for (const f of failures) console.log(`  could not read entry ${f.entry_id}: ${f.error}`);
+  let done = 0;
   const results = await scoreJob({
     candidates, job, scorecard, template, provider,
     concurrency: Number(args.concurrency),
-    onResult: (r) => console.log(`  ${r.status === "scored" ? "scored" : "ERROR "} ${r.candidate_name ?? r.candidate_id}${r.status === "scored" ? `  ${r.average?.toFixed(1)}  ${r.recommendation}` : `  ${r.error}`}`),
+    onResult: (r, i) => console.log(`  ${String(++done).padStart(4)}/${candidates.length} ${r.status === "scored" ? `scored   ${r.average?.toFixed(1)} ${r.recommendation}` : r.status === "skipped" ? "skipped  not enough in Loxo" : `ERROR    ${r.error}`}`),
   });
   const file = `job-${job.id}.html`;
   const jobMeta = { ...meta, scorecard: `${scorecard.id}.v${scorecard.version}`, jobTitle: job.title };
@@ -108,7 +109,7 @@ for (const { job, entries } of plan) {
   fs.writeFileSync(path.join(dir, `job-${job.id}-loxo-payloads.json`), JSON.stringify(scored.map((r) => {
     try { return { candidate: r.candidate_name, ...buildPayload(r, cfg) }; } catch (err) { return { candidate: r.candidate_name, error: err.message }; }
   }), null, 2));
-  rows.push({ title: job.title, file, candidates: entries.length, scored: scored.length, yes: scored.filter((r) => r.recommendation === "yes").length, errors: results.length - scored.length + failures.length });
+  rows.push({ title: job.title, file, candidates: entries.length, scored: scored.length, yes: scored.filter((r) => r.recommendation === "yes").length, errors: results.filter((r) => r.status === "error").length + failures.length });
 }
 
 fs.writeFileSync(path.join(dir, "index.html"), toIndexHtml(rows, meta));

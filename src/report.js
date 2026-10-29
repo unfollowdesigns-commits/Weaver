@@ -19,7 +19,8 @@ export function toMarkdown(results, meta) {
     "|---|---|---|---|---|---|",
   ];
   results.forEach((r, i) => {
-    if (r.status !== "scored") lines.push(`| ${i + 1} | ${who(r)} | error | | | ${r.error} |`);
+    if (r.status === "skipped") lines.push(`| ${i + 1} | ${who(r)} | not scored | | | ${r.reason} |`);
+    else if (r.status !== "scored") lines.push(`| ${i + 1} | ${who(r)} | error | | | ${r.error} |`);
     else lines.push(`| ${i + 1} | ${who(r)} ${STAR[r.industry] ?? ""} | ${avg(r)} / 5 · ${rec(r)} | ${r.strongest_signal} | ${r.watch_item} | ${r.flags.join("; ")} |`);
   });
   for (const r of results.filter((x) => x.status === "scored")) {
@@ -76,6 +77,7 @@ tr:first-child td{border-top:0}
 .dots .none{font-size:12px;color:var(--muted);align-self:center}
 .legend{color:var(--muted);font-size:12px;margin-top:10px}
 a{color:var(--blue)}
+tr.skip td{color:var(--muted)}
 tfoot td{font-weight:700;border-top:1px solid var(--ink)}
 @media (max-width:700px){.cols{grid-template-columns:1fr}.crit div{grid-template-columns:1fr}.dots{grid-row:auto;grid-column:1}}
 @media print{body{background:#fff}.card{break-inside:avoid}}
@@ -109,6 +111,7 @@ export function toIndexHtml(rows, meta) {
 export function toHtml(results, meta) {
   const scored = results.filter((r) => r.status === "scored");
   const rows = results.map((r, i) => {
+    if (r.status === "skipped") return `<tr class="skip"><td class="rank">–</td><td class="name">${esc(who(r))}</td><td>Not scored</td><td colspan="2">Not enough in Loxo to score: no resume, work history or notes yet.</td></tr>`;
     if (r.status !== "scored") return `<tr><td class="rank">${i + 1}</td><td class="name">${esc(who(r))}</td><td class="err">Error</td><td colspan="2">${esc(r.error)}</td></tr>`;
     const flags = r.flags.map((f) => `<span class="flag">${esc(f.split(":")[0].replaceAll("_", " "))}</span>`).join("");
     return `<tr><td class="rank">${i + 1}</td><td><span class="name">${esc(who(r))}</span>${STAR[r.industry] ? `<span class="star" title="${r.industry} industry">${STAR[r.industry]}</span>` : ""}${flags}</td><td>${scoreCell(r)}</td><td>${esc(r.strongest_signal)}</td><td>${esc(r.watch_item)}</td></tr>`;
@@ -124,8 +127,9 @@ export function toHtml(results, meta) {
   }).join("\n");
 
   const yes = scored.filter((r) => r.recommendation === "yes").length;
+  const skipped = results.filter((r) => r.status === "skipped").length;
   const header = `<span class="eyebrow">First read · dry run</span><h1>${esc(meta.jobTitle)}</h1><p class="meta">Scorecard ${esc(meta.scorecard)} · ${esc(meta.provider)} · ${esc(meta.when)}</p>
-<div class="stats"><div><b>${results.length}</b><span>Candidates</span></div><div><b>${scored.length}</b><span>Read</span></div><div><b>${yes}</b><span>Worth a call</span></div></div>`;
+<div class="stats"><div><b>${results.length}</b><span>Candidates</span></div><div><b>${scored.length}</b><span>Scored</span></div><div><b>${yes}</b><span>Worth a call</span></div>${skipped ? `<div><b>${skipped}</b><span>Not enough in Loxo</span></div>` : ""}</div>`;
   return page(`Dry run: ${meta.jobTitle}`, header, `<p class="note">Nothing has been written to Loxo. Every result is a first read from the record, waiting for recruiter review.</p>
 <h2>Ranked</h2>
 <div class="table"><table><thead><tr><th>#</th><th>Candidate</th><th>Score</th><th>Strongest signal</th><th>Watch item</th></tr></thead><tbody>${rows}</tbody></table></div>
