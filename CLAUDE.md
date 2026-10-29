@@ -216,6 +216,19 @@ Also documented: candidates on a job `GET /{slug}/jobs/{job_id}/candidates`
 token, URL https://{domain}/api/{agency_slug}/..., default domain app.loxo.co.
 API keys: Settings > API Keys, account admins only. API is a paid feature.
 
+Confirmed on the real account, 29 Oct 2026 (npm run loxo:check):
+- Connection works with LOXO_DOMAIN=app.loxo.co and LOXO_AGENCY_SLUG=
+  district-partners (their web address is district-partners.app.loxo.co).
+  Bearer key format: `sk-loxoapi-...`. They also sent a second hex key whose
+  purpose is unknown; not used.
+- Scorecard types: 1 Interviewer, 2 Recruiter -> LOXO_SCORECARD_TYPE_ID=2.
+  Recommendation types: 1 Strong No, 2 No, 3 Yes, 4 Strong Yes ->
+  LOXO_RECOMMENDATION_YES_ID=3, LOXO_RECOMMENDATION_NO_ID=2.
+- No webhooks set up yet. Activity types include "Note" (2176068).
+- GET /jobs returned exactly 100 with no scroll_id: it pages by page number.
+  `list()` now follows page numbers too. Job statuses seen: Active, On Hold,
+  Placement, "Opportunity Closed - ..." (several reasons).
+
 Not documented: response field names (schemas are empty), webhook body
 format, rate limits. `src/loxo/map.js` guesses with fallbacks; confirm with
 `npm run loxo:check -- --job <id> --probe` and the first saved webhook in

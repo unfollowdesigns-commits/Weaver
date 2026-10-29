@@ -178,3 +178,16 @@ test("summary page across searches adds up and escapes titles", async () => {
   assert.ok(html.includes("VP &lt;Sales&gt;"));
   assert.ok(html.includes('<td class="n">12</td><td class="n">11</td><td class="n">5</td><td class="n">1</td>'));
 });
+
+test("pages through lists that use page numbers instead of a scroll_id", async () => {
+  const all = Array.from({ length: 230 }, (_, i) => ({ id: i + 1 }));
+  const { c } = client({ "GET /jobs": (u) => {
+    const page = Number(u.searchParams.get("page") ?? 1);
+    return { jobs: all.slice((page - 1) * 100, page * 100) };
+  } });
+  const jobs = await c.list("/jobs");
+  assert.equal(jobs.length, 230);
+  // A server that ignores the page number does not loop forever.
+  const { c: c2 } = client({ "GET /jobs": { jobs: all.slice(0, 100) } });
+  assert.equal((await c2.list("/jobs")).length, 100);
+});

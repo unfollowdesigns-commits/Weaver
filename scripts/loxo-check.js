@@ -14,10 +14,10 @@ import { parseArgs } from "node:util";
 import { loadEnv } from "../src/env.js";
 import { loxoClientFromEnv } from "../src/loxo/index.js";
 import { firstArray } from "../src/loxo/client.js";
-import { personIdOf, jobStatusOf } from "../src/loxo/map.js";
+import { personIdOf, jobStatusOf, isOpenStatus } from "../src/loxo/map.js";
 
 loadEnv();
-const { values: args } = parseArgs({ options: { job: { type: "string" }, jobs: { type: "boolean", default: false }, probe: { type: "boolean", default: false } } });
+const { values: args } = parseArgs({ options: { job: { type: "string" }, jobs: { type: "boolean", default: false }, all: { type: "boolean", default: false }, probe: { type: "boolean", default: false } } });
 const client = loxoClientFromEnv();
 
 const show = (title, items) => {
@@ -35,7 +35,13 @@ try {
 
   if (args.jobs) {
     const jobs = await client.list("/jobs");
-    show(`Jobs (${jobs.length})  -> for score-jobs --loxo-jobs`, jobs.map((j) => ({ id: (j.job ?? j).id, name: `[${jobStatusOf(j) ?? "status?"}] ${(j.job ?? j).title ?? ""}` })));
+    const byStatus = new Map();
+    for (const j of jobs) byStatus.set(jobStatusOf(j) ?? "no status", (byStatus.get(jobStatusOf(j) ?? "no status") ?? 0) + 1);
+    console.log(`\nJobs in Loxo: ${jobs.length}`);
+    for (const [st, n] of [...byStatus].sort((a, b) => b[1] - a[1])) console.log(`  ${String(n).padStart(5)}  ${st}`);
+    const shown = args.all ? jobs : jobs.filter((j) => isOpenStatus(jobStatusOf(j)));
+    show(`${args.all ? "All jobs" : "Open jobs (status open or active; --all to list every job)"} (${shown.length})  -> for score-jobs --loxo-jobs`,
+      shown.map((j) => ({ id: (j.job ?? j).id, name: `[${jobStatusOf(j) ?? "status?"}] ${(j.job ?? j).title ?? ""}` })));
   }
 
   if (args.job) {

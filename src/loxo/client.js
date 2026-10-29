@@ -57,19 +57,45 @@ export function createLoxoClient({ domain, slug, apiKey, writeEnabled = false, f
     }
   }
 
-  // Follows scroll_id cursors until the list ends.
-  async function list(path, query = {}, { maxPages = 100 } = {}) {
+  // Follows the list to its end. Some Loxo lists page with a scroll_id cursor, others
+  // (jobs, for one: confirmed 29 Oct 2026, stopped at 100) with page numbers.
+  async function list(path, query = {}, { maxPages = 100, perPage = 100 } = {}) {
     const out = [];
-    const seen = new Set();
+    const ids = new Set();
+    const seenCursors = new Set();
     let scrollId;
-    for (let page = 0; page < maxPages; page++) {
-      const data = await request("GET", path, { query: { per_page: 100, ...query, scroll_id: scrollId } });
+    let pageNo = 1;
+    let mode = null;
+    for (let i = 0; i < maxPages; i++) {
+      const q = { per_page: perPage, ...query };
+      if (mode === "scroll") q.scroll_id = scrollId;
+      if (mode === "page") q.page = pageNo;
+      const data = await request("GET", path, { query: q });
       const items = firstArray(data);
-      out.push(...items);
-      const next = data?.scroll_id;
-      if (!items.length || !next || seen.has(next)) break;
-      seen.add(next);
-      scrollId = next;
+      let added = 0;
+      for (const it of items) {
+        const id = it?.id ?? it?.job?.id ?? it?.person?.id;
+        const key = id === undefined ? null : String(id);
+        if (key !== null && ids.has(key)) continue;
+        if (key !== null) ids.add(key);
+        out.push(it);
+        added++;
+      }
+      if (!items.length || !added) break;
+      const total = Number(data?.total_count ?? data?.total ?? data?.meta?.total_count);
+      if (Number.isFinite(total) && total > 0 && out.length >= total) break;
+      const cursor = data?.scroll_id;
+      if (cursor && !seenCursors.has(cursor)) {
+        seenCursors.add(cursor);
+        scrollId = cursor;
+        mode = "scroll";
+        continue;
+      }
+      const pages = Number(data?.total_pages ?? data?.meta?.total_pages);
+      const more = Number.isFinite(pages) ? pageNo < pages : items.length >= perPage || (Number.isFinite(total) && out.length < total);
+      if (mode === "scroll" || !more) break;
+      mode = "page";
+      pageNo++;
     }
     return out;
   }
