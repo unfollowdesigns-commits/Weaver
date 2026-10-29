@@ -13,12 +13,24 @@ export function firstArray(data) {
   return [];
 }
 
-export function createLoxoClient({ domain, slug, apiKey, writeEnabled = false, fetchImpl = fetch, sleep = defaultSleep }) {
+// Loxo rate-limits (429 seen on 29 Oct 2026 at about 12 requests a second; the limit is not
+// documented). Every request waits its turn so the client stays under maxPerSecond, and a 429
+// is retried with growing waits, honoring Retry-After.
+export function createLoxoClient({ domain, slug, apiKey, writeEnabled = false, fetchImpl = fetch, sleep = defaultSleep, maxPerSecond = 4, maxAttempts = 7 }) {
   if (!slug?.trim()) throw new Error("LOXO_AGENCY_SLUG is not set in .env");
   if (!apiKey?.trim()) throw new Error("LOXO_API_KEY is not set in .env");
   const host = (domain || "app.loxo.co").trim();
   // A full URL (http://localhost:...) is accepted for local testing against a fake Loxo.
   const base = `${host.startsWith("http") ? host.replace(/\/$/, "") : `https://${host}`}/api/${slug.trim()}`;
+
+  let nextSlot = 0;
+  async function turn() {
+    if (!maxPerSecond) return;
+    const now = Date.now();
+    const at = Math.max(now, nextSlot);
+    nextSlot = at + 1000 / maxPerSecond;
+    if (at > now) await sleep(at - now);
+  }
 
   async function request(method, path, { query, body } = {}) {
     if (method !== "GET" && !writeEnabled) {
@@ -31,6 +43,7 @@ export function createLoxoClient({ domain, slug, apiKey, writeEnabled = false, f
       else url.searchParams.set(k, String(v));
     }
     for (let attempt = 1; ; attempt++) {
+      await turn();
       const res = await fetchImpl(url, {
         method,
         headers: {
@@ -40,9 +53,10 @@ export function createLoxoClient({ domain, slug, apiKey, writeEnabled = false, f
         },
         body: body ? JSON.stringify(body) : undefined,
       });
-      if ((res.status === 429 || res.status >= 500) && attempt < 4) {
+      if ((res.status === 429 || res.status >= 500) && attempt < maxAttempts) {
         const retryAfter = Number(res.headers?.get?.("retry-after"));
-        await sleep(retryAfter > 0 ? retryAfter * 1000 : 1500 * attempt);
+        // 2, 4, 8, 16, 30, 30 seconds unless Loxo says how long.
+        await sleep(retryAfter > 0 ? retryAfter * 1000 : Math.min(30000, 2000 * 2 ** (attempt - 1)));
         continue;
       }
       if (!res.ok) {
@@ -116,6 +130,7 @@ function explain(status, method, path, text) {
     403: "Loxo refused the request. Check LOXO_API_KEY, LOXO_AGENCY_SLUG (no spaces) and LOXO_DOMAIN, and that API access is on the account's plan",
     404: "not found. Check the ID, and LOXO_AGENCY_SLUG: a wrong slug also gives 404",
     422: "Loxo rejected the data sent",
+    429: "Loxo kept asking to slow down; wait a few minutes and run it again",
   }[status] ?? "request failed";
   return `Loxo ${method} ${path} -> ${status}: ${hint}. ${text.slice(0, 200)}`.trim();
 }

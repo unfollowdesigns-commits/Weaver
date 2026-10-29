@@ -237,6 +237,13 @@ First probe, job 3688816 (Head of Finance and Accounting, 194 candidates), 29 Oc
 - GET /people/{id}/job_profiles returned ids only; each is now fetched from
   /job_profiles/{id} (up to 10). Education from /education_profiles.
 - That person had no resume in Loxo. Resume coverage to measure.
+- Most records on that search are bare (name only: no title, history or
+  resume); 1 of the first 10 had a full profile. Loxo is not hiding fields:
+  those people are outbound prospects whose profile lives on LinkedIn.
+  Weaver can only score people whose Loxo record has a resume, history or
+  real notes. Tell Josh; measure per stage with loxo:check --probe --sample.
+- Rate limit: 429 after a burst of roughly 12 requests a second. Client now
+  paces to LOXO_MAX_PER_SECOND (default 4) and retries 429 with 2-30 s waits.
 - Pipeline entry: { id, position, person: {...}, workflow_stage_id,
   latest_person_event, candidate_rejection_reason }. Stage names from
   GET /workflow_stages (documented), mapped by id.

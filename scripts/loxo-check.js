@@ -126,7 +126,7 @@ try {
         }
       }
       console.log("");
-      await Promise.all(Array.from({ length: 4 }, worker));
+      await Promise.all(Array.from({ length: 3 }, worker));
       console.log(`\n\n  By stage: people / with resume / with work history / with notes / enough to score`);
       const line = (label, rs) => console.log(`    ${label.padEnd(34)} ${[rs.length, rs.filter((r) => r.resume).length, rs.filter((r) => r.history).length, rs.filter((r) => r.notes).length, rs.filter((r) => r.resume || r.history || r.notes).length].map((x) => String(x).padStart(4)).join("  ")}`);
       for (const b of stages.buckets) {

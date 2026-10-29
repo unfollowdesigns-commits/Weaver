@@ -191,3 +191,12 @@ test("pages through lists that use page numbers instead of a scroll_id", async (
   const { c: c2 } = client({ "GET /jobs": { jobs: all.slice(0, 100) } });
   assert.equal((await c2.list("/jobs")).length, 100);
 });
+
+test("paces requests and keeps retrying a rate limit with growing waits", async () => {
+  const waits = [];
+  let n = 0;
+  const f = fakeLoxo({ "GET /jobs/1": () => (++n <= 3 ? new Response("", { status: 429 }) : { id: 1 }) });
+  const c = createLoxoClient({ slug: "acme", apiKey: "k", fetchImpl: f.fetchImpl, sleep: async (ms) => waits.push(ms), maxPerSecond: 0 });
+  assert.deepEqual(await c.get("/jobs/1"), { id: 1 });
+  assert.deepEqual(waits, [2000, 4000, 8000]);
+});
