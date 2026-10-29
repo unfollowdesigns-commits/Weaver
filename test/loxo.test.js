@@ -200,3 +200,14 @@ test("paces requests and keeps retrying a rate limit with growing waits", async 
   assert.deepEqual(await c.get("/jobs/1"), { id: 1 });
   assert.deepEqual(waits, [2000, 4000, 8000]);
 });
+
+test("current title and company come from the open work history entry when the person has none", () => {
+  const c = mapCandidate({
+    entry: { id: 1, person: { id: 4 } },
+    person: { id: 4, name: "A B" },
+    jobProfiles: [{ title: "Controller", company: { name: "Old Co" }, year: 2015, end_year: 2019 }, { title: "VP Finance", company: { name: "New Co" }, year: 2020 }],
+  });
+  assert.equal(c.current_title, "VP Finance");
+  assert.equal(c.current_company, "New Co");
+  assert.equal(c.id, "4");
+});

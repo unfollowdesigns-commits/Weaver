@@ -94,21 +94,25 @@ export function mapCandidate({ entry, person, jobProfiles = [], educationProfile
   }
   if (resumeTruncated) trimmed.push("resume_truncated");
 
+  const history = (jobProfiles.length ? jobProfiles : p.job_profiles ?? []).map((jp) => ({
+    title: first(jp.title),
+    company: first(jp.company_name, jp.company?.name),
+    start: first(jp.start_date, yearMonth(jp.start_year ?? jp.year, jp.start_month ?? jp.month)),
+    end: first(jp.end_date, yearMonth(jp.end_year, jp.end_month)),
+    summary: stripHtml(jp.description ?? ""),
+  }));
+  // Loxo keeps no title on the person record (29 Oct 2026): the current role is the
+  // work history entry with no end date, else the most recent one.
+  const current = history.find((w) => !w.end && (w.title || w.company)) ?? [...history].filter((w) => w.title || w.company).sort((a, b) => String(b.start ?? "").localeCompare(String(a.start ?? "")))[0];
   return {
     id: String(first(p.id, personIdOf(entry))),
     name,
-    current_title: first(p.current_title, p.title),
-    current_company: first(p.current_company, typeof p.company === "string" ? p.company : p.company?.name, p.company_name),
+    current_title: first(p.current_title, p.title, current?.title),
+    current_company: first(p.current_company, typeof p.company === "string" ? p.company : p.company?.name, p.company_name, current?.company),
     location,
     // Field names cross-checked against tbensonwest/loxo-mcp-server (community code built on the same API):
     // job profiles use month/year and end_month/end_year; the person record may embed job_profiles.
-    work_history: (jobProfiles.length ? jobProfiles : p.job_profiles ?? []).map((jp) => ({
-      title: first(jp.title),
-      company: first(jp.company_name, jp.company?.name),
-      start: first(jp.start_date, yearMonth(jp.start_year ?? jp.year, jp.start_month ?? jp.month)),
-      end: first(jp.end_date, yearMonth(jp.end_year, jp.end_month)),
-      summary: stripHtml(jp.description ?? ""),
-    })),
+    work_history: history,
     // Degree and school only: graduation years are left out (age proxy).
     education: (educationProfiles.length ? educationProfiles : p.education_profiles ?? []).map((e) => ({ degree: first(e.degree, e.education_type?.name), field: first(e.field_of_study, e.major), institution: first(e.school, e.school_name, e.institution) })).filter((e) => e.degree || e.institution),
     skills: skillList(p.skillsets),
