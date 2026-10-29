@@ -12,13 +12,16 @@ const star = (p) => STAR[p.industry] ?? "";
 
 export function money(v) {
   if (v === null || v === undefined || v === "") return "TBD";
-  if (typeof v === "string") return esc(v);
+  // Plain text: escaped once where it is placed (ed() or esc()).
+  if (typeof v === "string") return v;
   if (v <= 100) return `${v}%`;
   return v >= 1000 ? `$${Math.round(v / 1000)}k` : `$${v}`;
 }
 
 const ed = (t, tag = "span") => `<${tag} class="ed" contenteditable="true">${esc(t)}</${tag}>`;
-const li = (p) => (p.linkedin ? `<a href="${esc(p.linkedin)}">LinkedIn</a>` : "");
+// Only web links: a value from Loxo like "javascript:..." never becomes a link.
+const safeUrl = (u) => (/^https?:\/\//i.test(String(u ?? "").trim()) ? String(u).trim() : null);
+const li = (p) => (safeUrl(p.linkedin) ? `<a href="${esc(safeUrl(p.linkedin))}">LinkedIn</a>` : "");
 
 // Stage as a short progress line: five steps, filled up to where the candidate is.
 function progress(p, stages) {
@@ -67,7 +70,7 @@ ${legend()}
   // 3. Where the search stands
   n++;
   const standsRows = model.stands.map((p) => `<tr><td><b class="nm">${esc(p.name)}</b>${star(p)}<small>${esc(p.company)}</small></td><td>${progress(p, stages)}</td>
-<td class="n">${money(p.pay.base)}</td><td class="n">${money(p.pay.bonus)}</td><td>${ed(p.signal)}</td><td class="watch">${ed(p.watch)}</td></tr>`).join("");
+<td class="n">${esc(money(p.pay.base))}</td><td class="n">${esc(money(p.pay.bonus))}</td><td>${ed(p.signal)}</td><td class="watch">${ed(p.watch)}</td></tr>`).join("");
   const payText = model.pay_range
     ? (model.pay_range.count === 1
       ? `One candidate has a current base on file: ${money(model.pay_range.low)}.`

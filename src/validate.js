@@ -67,6 +67,9 @@ export function finalize(answer, scorecard) {
   const noPay = (list) => list.filter((t) => (isAboutPay(t) ? (payDropped++, false) : true));
   answer = { ...answer, where_they_fit: noPay(answer.where_they_fit), where_to_probe: noPay(answer.where_to_probe) };
   for (const k of ["strongest_signal", "watch_item", "assessment"]) if (isAboutPay(answer[k])) { payDropped++; answer[k] = "[removed: mentioned pay]"; }
+  for (let i = 0; i < criteria.length; i++) {
+    if (isAboutPay(criteria[i].evidence)) { payDropped++; criteria[i] = { ...criteria[i], evidence: "[removed: mentioned pay]" }; }
+  }
   const missing = criteria.length - scored.length;
   if (missing >= 3) flags.push(`thin_record: ${missing} of ${criteria.length} criteria had no evidence`);
   else if (missing > 0) flags.push(`partial_record: ${missing} criteria had no evidence`);

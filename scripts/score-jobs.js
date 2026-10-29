@@ -17,7 +17,7 @@ import { getProvider } from "../src/providers/index.js";
 import { scoreJob } from "../src/score.js";
 import { toMarkdown, toHtml, toIndexHtml } from "../src/report.js";
 import { loxoClientFromEnv } from "../src/loxo/index.js";
-import { fetchJob, listJobCandidates, loadCandidates } from "../src/loxo/read.js";
+import { fetchJob, listJobCandidates, loadCandidates, workflowStageNames } from "../src/loxo/read.js";
 import { jobStatusOf, isOpenStatus } from "../src/loxo/map.js";
 import { buildPayload, writeConfigFromEnv } from "../src/loxo/write.js";
 
@@ -87,12 +87,13 @@ const dir = path.join("data", "runs", `${stamp}-${provider.name}-jobs`);
 fs.mkdirSync(dir, { recursive: true });
 const meta = { scorecard: `per search, else ${fallback.id}.v${fallback.version}`, provider: `${provider.name} (${provider.model})`, when: new Date().toLocaleString() };
 const rows = [];
+const stageNames = await workflowStageNames(client);
 
 for (const { job, entries } of plan) {
   console.log(`\n${job.title}`);
   const scorecard = scorecardFor(job.id, job);
   console.log(`  scorecard ${scorecard.id}.v${scorecard.version}`);
-  const { candidates, failures } = await loadCandidates(client, entries);
+  const { candidates, failures } = await loadCandidates(client, entries, { stageNames });
   for (const f of failures) console.log(`  could not read entry ${f.entry_id}: ${f.error}`);
   let done = 0;
   const results = await scoreJob({

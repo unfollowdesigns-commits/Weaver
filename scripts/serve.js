@@ -18,9 +18,10 @@ import { loadEnv } from "../src/env.js";
 import { loadScorecard, scorecardResolver, JOB_SCORECARD_DIR } from "../src/scorecard.js";
 import { loadTemplate } from "../src/prompt.js";
 import { getProvider } from "../src/providers/index.js";
-import { scoreCandidate } from "../src/score.js";
+import { scoreCandidate, isThin } from "../src/score.js";
 import { loxoClientFromEnv } from "../src/loxo/index.js";
 import { firstArray } from "../src/loxo/client.js";
+import { personIdOf } from "../src/loxo/map.js";
 import { fetchJob, loadCandidate } from "../src/loxo/read.js";
 import { buildPayload, writeResult, writeConfigFromEnv, writesAllowed, hasAiAssessment } from "../src/loxo/write.js";
 import { createDailyCap, createDeduper } from "../src/limits.js";
@@ -72,14 +73,18 @@ async function handle(body) {
   if (!allowedJobs.has(String(jobId))) return log(`${tag}: job not switched on, skipped`);
   if (deduper.seenRecently(`${jobId}:${personId}`)) return log(`${tag}: duplicate within 15 minutes, skipped`);
   if (await hasAiAssessment(client, jobId, personId, cfg)) return log(`${tag}: already assessed, skipped`);
-  if (!dailyCap.take()) return log(`${tag}: daily cap reached, left for the sweep tomorrow`);
 
   if (!jobCache.has(jobId) || Date.now() - jobCache.get(jobId).at > 10 * 60_000) {
     jobCache.set(jobId, { at: Date.now(), job: await fetchJob(client, jobId) });
   }
   const job = jobCache.get(jobId).job;
-  const entry = firstArray(await client.get(`/jobs/${jobId}/candidates`, { person_id: personId }))[0] ?? { person_id: personId };
+  // Match the person exactly: if Loxo ever ignores the filter, never score (and write to)
+  // whoever happens to be first on the pipeline.
+  const entry = firstArray(await client.get(`/jobs/${jobId}/candidates`, { person_id: personId })).find((e) => String(personIdOf(e)) === String(personId)) ?? { person_id: personId };
   const candidate = await loadCandidate(client, entry);
+  if (isThin(candidate)) return log(`${tag}: not enough in Loxo to score yet (no resume, work history or notes), skipped`);
+  // The daily cap counts AI readings only, so it is taken here, after the empty-record check.
+  if (!dailyCap.take()) return log(`${tag}: daily cap reached, left for the sweep tomorrow`);
   const result = await scoreCandidate({ candidate, job, scorecard: scorecardFor(jobId, job), template, provider });
   const tokens = result.usage ? ` tokens in ${result.usage.input_tokens ?? result.usage.prompt_tokens} out ${result.usage.output_tokens ?? result.usage.completion_tokens}` : "";
   log(`${tag}: ${result.status}${result.status === "scored" ? ` ${result.average} ${result.recommendation}${tokens}` : ` ${result.error}`}`);

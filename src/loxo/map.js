@@ -149,13 +149,17 @@ export function stageOf(entry, stageNames = null) {
   };
 }
 
-const money = (v) => {
-  if (typeof v === "number" && isFinite(v)) return v;
-  if (typeof v === "string" && /\d/.test(v)) {
-    const n = Number(v.replace(/[^\d.]/g, ""));
-    return isFinite(n) && n > 0 ? (/k\b/i.test(v) && n < 10000 ? n * 1000 : n) : null;
-  }
-  return null;
+// The first amount in a pay field: "$150,000 - $200,000" -> 150000, "150k-200k" -> 150000,
+// "1.2M" -> 1200000, "225" -> 225000. (30 Oct 2026 review: ranges were read as one number.)
+export const money = (v) => {
+  if (typeof v === "number" && isFinite(v)) return v > 0 ? v : null;
+  if (typeof v !== "string") return null;
+  const m = /(\d{1,3}(?:,\d{3})+|\d+(?:\.\d+)?)\s?([kKmM])?/.exec(v);
+  if (!m) return null;
+  let n = Number(m[1].replace(/,/g, ""));
+  if (/[mM]/.test(m[2] ?? "")) n *= 1e6;
+  else if (/[kK]/.test(m[2] ?? "") || n < 1000) n *= 1000;
+  return isFinite(n) && n > 0 ? n : null;
 };
 
 // Base, bonus and equity from the person record. Loxo may hold a number, text or an object.
@@ -173,7 +177,7 @@ export function compensationOf(p) {
 export function mapHumanScorecard(raw) {
   const s = unwrap(raw, "scorecard");
   const attrs = s.scorecard_attributes ?? s.attributes ?? s.scorecard_items ?? [];
-  const criteria = attrs.map((a) => ({ label: first(a.name, a.label, a.title), score: Number.isFinite(Number(a.score)) && a.score !== null ? Number(a.score) : null, notes: stripHtml(first(a.notes, a.comment, a.description) ?? "") }))
+  const criteria = attrs.map((a) => ({ label: first(a.name, a.label, a.title), score: a.score !== null && a.score !== undefined && String(a.score).trim() !== "" && Number.isFinite(Number(a.score)) ? Number(a.score) : null, notes: stripHtml(first(a.notes, a.comment, a.description) ?? "") }))
     .filter((c) => c.label);
   const scored = criteria.filter((c) => c.score !== null);
   return {

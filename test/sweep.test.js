@@ -37,7 +37,10 @@ function fakeLoxo() {
     if (path === "/people/9") return json({ person: { id: 9, name: "Jane Roe" } });
     if (path === "/people/9/job_profiles") return json({ job_profiles: [] });
     if (path === "/people/9/resumes") return json({ resumes: [] });
-    if (path === "/person_events") return json({ person_events: [] });
+    if (path === "/people/11") return json({ person: { id: 11, name: "Name Only" } });
+    if (path === "/people/11/job_profiles" || path === "/people/11/resumes") return json([]);
+    // Person 9: no resume, but real notes, so still worth scoring (and flagged no_resume).
+    if (path === "/person_events") return json({ person_events: u.searchParams.get("person_id") === "9" ? [{ notes: "Intro call. VP Sales at Acme for four years, grew the team from 9 to 31 and revenue from $14M to $41M. Sells to finance leaders. Open to a move this year, based in Arlington. Strong on forecasting and hiring; built the account management team from scratch." }] : [] });
     return new Response("not found", { status: 404 });
   };
   const client = createLoxoClient({ slug: "acme", apiKey: "k", fetchImpl, writeEnabled: true, sleep: async () => {} });
@@ -138,4 +141,15 @@ test("long inputs are trimmed and flagged, never silently cut", () => {
   assert.equal(c.notes.length, LIMITS.notes);
   assert.equal(c.resume_text.length, LIMITS.resumeChars);
   assert.deepEqual(inputFlagCodes(c), ["notes_trimmed", "resume_trimmed", "resume_truncated"]);
+});
+
+test("a name-only record is not sent to the AI and nothing is written for it", async () => {
+  const { client, posts } = fakeLoxo();
+  const base = client.get;
+  client.list = async (path, q) => (path === "/jobs/7/candidates" ? [{ id: 57, person_id: 11 }] : (await import("../src/loxo/client.js")).firstArray(await base(path, q)));
+  const provider = createMockProvider();
+  const out = await sweep(client, provider, { useBatch: false });
+  assert.equal(out.not_enough_in_loxo, 1);
+  assert.equal(out.scored_direct, 0);
+  assert.equal(posts.length, 0);
 });

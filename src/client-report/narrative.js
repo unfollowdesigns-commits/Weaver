@@ -1,4 +1,5 @@
 import fs from "node:fs";
+import { scrubPay } from "../candidate.js";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -35,7 +36,7 @@ export function narrativeRequest(model, promptFile = NARRATIVE_PROMPT) {
   }));
   return {
     system: fs.readFileSync(promptFile, "utf8"),
-    user: `<pipeline>\nSearch: ${model.job.title}\n${model.job.description.slice(0, 3000)}\n\nCandidates (${rows.length}):\n${JSON.stringify(rows, null, 1)}\n</pipeline>\n\nDraft the written parts of the report.`,
+    user: `<pipeline>\nSearch: ${model.job.title}\n${scrubPay(model.job.description ?? "").slice(0, 3000)}\n\nCandidates (${rows.length}):\n${JSON.stringify(rows, null, 1)}\n</pipeline>\n\nDraft the written parts of the report.`,
     schema: narrativeSchema(),
   };
 }

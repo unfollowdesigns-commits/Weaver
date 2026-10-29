@@ -46,6 +46,9 @@ export function resultFromAnswer({ base, answer, model, usage, scorecard, flagCo
     const fix = (t) => String(t).replace(/\bresumes?\b/gi, "profile");
     result.criteria = result.criteria.map((c) => ({ ...c, evidence: fix(c.evidence) }));
     result.where_they_fit = result.where_they_fit.map(fix);
+    result.where_to_probe = result.where_to_probe.map(fix);
+    result.strongest_signal = fix(result.strongest_signal);
+    result.watch_item = fix(result.watch_item);
     result.assessment = fix(result.assessment);
   }
   for (const code of flagCodes) if (INPUT_FLAGS[code]) result.flags.push(INPUT_FLAGS[code]);

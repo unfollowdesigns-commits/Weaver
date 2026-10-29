@@ -278,6 +278,25 @@ First probe, job 3688816 (Head of Finance and Accounting, 194 candidates), 29 Oc
   before the model (a first read had matched the team's 4.1 exactly); no
   resume means evidence never cites a resume; flag legend in the report.
   Scorecard job-3688816.v2. Location rule and range to confirm with Josh.
+- Independent code review, 30 Oct 2026 (20 findings, all fixed, each with a
+  test from the reviewer's own examples in test/review-fixes.test.js): names and
+  LinkedIn handles now scrubbed from resume, notes and history; graduation years
+  blanked on degree lines; pay detection widened (TC, all-in, earns, full dollar
+  amounts, M) and narrowed for business figures (raises, savings, Compensation
+  Committee); team recommendations and Weaver's own notes kept from the model;
+  stage names passed in report, full test and sweep; Loxo pay fields parsed as
+  the first amount; constant scroll cursors followed; writes never retried on
+  5xx (duplicates); empty records skipped in sweep and webhook (rotating window,
+  daily cap taken after the check); webhook matches the person exactly; Loxo
+  filters double-checked on our side (a record without a person id trusts the
+  filter); pay removed from criterion evidence; no model name in Loxo; accents
+  in names; only http(s) links; blank team scores are no score. Known and
+  accepted: in direct (non-batch) mode a candidate whose answers keep failing is
+  retried each hourly run (production uses batches, which count failures).
+- Rehearsal: test/support/real-shape-loxo.js reproduces the real account's
+  quirks; test/e2e-real-shape.test.js runs read, privacy, scoring, report, write
+  payload and client report end to end; scripts/fake-loxo-real.js serves it on
+  port 8792 for running the commands by hand.
 - Rate limit: 429 after a burst of roughly 12 requests a second. Client now
   paces to LOXO_MAX_PER_SECOND (default 4) and retries 429 with 2-30 s waits.
 - Pipeline entry: { id, position, person: {...}, workflow_stage_id,
@@ -318,7 +337,7 @@ Claude / OpenAI / offline providers, answer checks, average and recruiter
 flags computed in code, ranked dry-run report. See README.
 
 The candidate record sent to the model leaves out name, contact details,
-pay and graduation years. Candidate text is fenced as data, so instructions
+pay and graduation years (since 30 Oct 2026 also inside resume and note text). Candidate text is fenced as data, so instructions
 hidden in a resume are ignored and flagged.
 
 Same day, also built from Loxo's API reference: Loxo read (job, pipeline,

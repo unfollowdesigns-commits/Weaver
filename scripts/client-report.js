@@ -19,7 +19,7 @@ import { loadTemplate } from "../src/prompt.js";
 import { getProvider } from "../src/providers/index.js";
 import { scoreJob } from "../src/score.js";
 import { loxoClientFromEnv } from "../src/loxo/index.js";
-import { fetchJob, listJobCandidates, loadCandidates, teamScorecards } from "../src/loxo/read.js";
+import { fetchJob, listJobCandidates, loadCandidates, teamScorecards, workflowStageNames } from "../src/loxo/read.js";
 import { buildReportModel, loadStages } from "../src/client-report/model.js";
 import { narrativeRequest, applyNarrative } from "../src/client-report/narrative.js";
 import { renderReport } from "../src/client-report/render.js";
@@ -60,7 +60,9 @@ if (!args.results && provider.name !== "mock" && !args.go) {
   process.exit(0);
 }
 
-const { candidates, failures } = await loadCandidates(client, entries);
+// Pipeline entries carry only a stage id; the names come from Loxo's stage list.
+const stageNames = await workflowStageNames(client);
+const { candidates, failures } = await loadCandidates(client, entries, { stageNames });
 for (const f of failures) console.log(`  could not read entry ${f.entry_id}: ${f.error}`);
 if (!args.results) {
   const scorecard = scorecardResolver({ fallback: loadScorecard(process.env.SCORECARD_FILE || "config/scorecards/standard-executive.v2.json"), dir: args["scorecards-dir"] })(job.id, job);

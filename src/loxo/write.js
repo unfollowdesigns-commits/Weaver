@@ -20,7 +20,8 @@ export function summaryText(result) {
   if (result.where_they_fit?.length) lines.push("", "Where they fit:", ...result.where_they_fit.map((q) => `- ${q}`));
   if (result.where_to_probe?.length) lines.push("", "Where to probe:", ...result.where_to_probe.map((q) => `- ${q}`));
   if (result.flags.length) lines.push("", "Flags:", ...result.flags.map((f) => `- ${f}`));
-  lines.push("", `Scorecard ${result.scorecard}, ${result.provider} ${result.model ?? ""}, ${result.scored_at.slice(0, 10)}.`);
+  // No AI provider or model name: the firm sees this in Loxo (30 Oct 2026 review).
+  lines.push("", `Scorecard ${result.scorecard}, ${result.scored_at.slice(0, 10)}.`);
   return lines.join("\n");
 }
 
@@ -67,25 +68,35 @@ const NOTE_MARKERS = ["AI first read, awaiting recruiter review", "AI assessment
 
 // Person IDs on a job that already have an AI assessment, in one pass per job.
 // Checked before calling the AI, so nobody is paid for twice.
+// Loxo's filters are trusted no further than the page: every record is checked on our side
+// too, so an ignored filter can never mark the wrong person as done (30 Oct 2026 review).
+const pidOf = (x) => String(x?.person_id ?? x?.person?.id ?? "");
+const jobOf = (x) => (x?.job_id ?? x?.job?.id ?? null);
+const sameJob = (x, jobId) => jobOf(x) === null || String(jobOf(x)) === String(jobId);
+// A record without a person id is trusted to the filter we sent (the safe side: never write a
+// duplicate). A record with one must match.
+const samePerson = (x, personId) => pidOf(x) === "" || pidOf(x) === String(personId);
+
 export async function aiScoredPersonIds(client, jobId, cfg) {
   const ids = new Set();
   if (cfg.target === "note") {
     for (const marker of NOTE_MARKERS) {
       const events = await client.list("/person_events", { job_ids: [jobId], notes_format: "plain", query: `"${marker}"` });
-      for (const e of events) if (String(e.notes ?? "").includes(marker)) ids.add(String(e.person_id ?? e.person?.id));
+      for (const e of events) if (String(e.notes ?? "").includes(marker) && sameJob(e, jobId)) ids.add(pidOf(e));
     }
   } else {
     const cards = await client.list("/scorecards", { job_id: jobId });
-    for (const s of cards) if (s.external_creator_name === AI_AUTHOR) ids.add(String(s.person_id ?? s.person?.id));
+    for (const s of cards) if (s.external_creator_name === AI_AUTHOR && sameJob(s, jobId)) ids.add(pidOf(s));
   }
   ids.delete("undefined");
+  ids.delete("");
   return ids;
 }
 
 export async function hasAiAssessment(client, jobId, personId, cfg) {
   if (cfg.target === "note") return (await aiScoredPersonIds(client, jobId, cfg)).has(String(personId));
   const cards = firstArray(await client.get("/scorecards", { person_id: personId, job_id: jobId }));
-  return cards.some((s) => s.external_creator_name === AI_AUTHOR);
+  return cards.some((s) => s.external_creator_name === AI_AUTHOR && samePerson(s, personId) && sameJob(s, jobId));
 }
 
 // Skips a candidate that already has an AI scorecard for this job, so re-runs do not pile up duplicates.
@@ -95,7 +106,7 @@ export async function writeResult(client, result, cfg) {
   const { path, body } = buildPayload(result, cfg);
   if (cfg.target !== "note") {
     const existing = firstArray(await client.get("/scorecards", { person_id: result.loxo.person_id, job_id: result.job_id }));
-    if (existing.some((s) => s.external_creator_name === AI_AUTHOR)) return { status: "skipped", reason: "already has an AI scorecard for this job" };
+    if (existing.some((s) => s.external_creator_name === AI_AUTHOR && samePerson(s, result.loxo.person_id) && sameJob(s, result.job_id))) return { status: "skipped", reason: "already has an AI scorecard for this job" };
   }
   const response = await client.post(path, body);
   return { status: "written", id: response?.id ?? response?.scorecard?.id ?? response?.person_event?.id ?? null };

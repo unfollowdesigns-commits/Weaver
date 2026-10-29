@@ -53,7 +53,10 @@ export function createLoxoClient({ domain, slug, apiKey, writeEnabled = false, f
         },
         body: body ? JSON.stringify(body) : undefined,
       });
-      if ((res.status === 429 || res.status >= 500) && attempt < maxAttempts) {
+      // A write that failed with 5xx may still have landed on Loxo's side: retrying it could
+      // create a duplicate scorecard. Writes are retried on 429 (refused, not done) only.
+      const retriable = res.status === 429 || (res.status >= 500 && method === "GET");
+      if (retriable && attempt < maxAttempts) {
         const retryAfter = Number(res.headers?.get?.("retry-after"));
         // 2, 4, 8, 16, 30, 30 seconds unless Loxo says how long.
         await sleep(retryAfter > 0 ? retryAfter * 1000 : Math.min(30000, 2000 * 2 ** (attempt - 1)));
@@ -98,8 +101,10 @@ export function createLoxoClient({ domain, slug, apiKey, writeEnabled = false, f
       if (!items.length || !added) break;
       const total = Number(data?.total_count ?? data?.total ?? data?.meta?.total_count);
       if (Number.isFinite(total) && total > 0 && out.length >= total) break;
+      // Some scroll APIs return the same cursor on every page: keep going while pages add new
+      // people (the checks above stop on an empty page or a page with nothing new).
       const cursor = data?.scroll_id;
-      if (cursor && !seenCursors.has(cursor)) {
+      if (cursor && (mode !== "page")) {
         seenCursors.add(cursor);
         scrollId = cursor;
         mode = "scroll";

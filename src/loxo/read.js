@@ -96,7 +96,8 @@ export async function loadCandidates(client, entries, { concurrency = 3, onProgr
   return { candidates: slots.filter(Boolean), failures };
 }
 
-const norm = (t) => String(t ?? "").toLowerCase().normalize("NFKD").replace(/[^a-z\s]/g, " ").replace(/\s+/g, " ").trim();
+// Accents are dropped before comparing, so "Jose Garcia" matches "José García".
+const norm = (t) => String(t ?? "").toLowerCase().normalize("NFKD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z\s]/g, " ").replace(/\s+/g, " ").trim();
 // A listed name matches when every word of it appears in the Loxo name (so "Jane Roe" matches
 // "Jane A. Roe, CPA").
 export function nameMatches(listed, loxoName) {

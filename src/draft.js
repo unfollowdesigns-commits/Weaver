@@ -2,6 +2,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { checkScorecard } from "./scorecard.js";
+import { scrubPay } from "./candidate.js";
 
 // Drafts a per-search scorecard from the job description. The draft is never used
 // for scoring until a person approves it (scripts/draft-scorecard.js --approve).
@@ -28,7 +29,7 @@ export function draftSchema() {
 export function draftRequest(job, promptFile = DRAFT_PROMPT) {
   return {
     system: fs.readFileSync(promptFile, "utf8"),
-    user: `<job>\nTitle: ${job.title}\nCompany: ${job.company_summary ?? ""}\n\n${job.description ?? ""}\n</job>\n\n${job.scorecard_template?.criteria?.length
+    user: `<job>\nTitle: ${job.title}\nCompany: ${job.company_summary ?? ""}\n\n${scrubPay(job.description ?? "")}\n</job>\n\n${job.scorecard_template?.criteria?.length
       ? `The firm already has its own scorecard template on this search in Loxo. Keep exactly these criteria, as labels, in this order, and write the description for each:\n${job.scorecard_template.criteria.map((c, i) => `${i + 1}. ${c}`).join("\n")}\n\n`
       : ""}Draft the scorecard for this search.`,
     schema: draftSchema(),

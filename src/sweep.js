@@ -1,7 +1,7 @@
-import { fetchJob, listJobCandidates, loadCandidates } from "./loxo/read.js";
+import { fetchJob, listJobCandidates, loadCandidates, workflowStageNames } from "./loxo/read.js";
 import { personIdOf } from "./loxo/map.js";
 import { aiScoredPersonIds, writeResult, buildPayload } from "./loxo/write.js";
-import { prepareRequest, resultBase, resultFromAnswer, inputFlagCodes, scoreCandidate } from "./score.js";
+import { prepareRequest, resultBase, resultFromAnswer, inputFlagCodes, scoreCandidate, isThin } from "./score.js";
 
 // The hourly safety net. For each chosen job it finds candidates without an AI
 // assessment and scores them. Catches missed webhooks, restarts and deploys, and
@@ -28,10 +28,13 @@ export function parseBatchId(id) {
   return { jobId: m[1], personId: m[2], flagCodes: Object.keys(FLAG_BITS).filter((c) => bits & FLAG_BITS[c]) };
 }
 
-export async function runSweep({ client, provider, jobIds, scorecard, template, cfg, writes, maxPerRun = 50, useBatch = true, now = Date.now(), log = () => {} }) {
+// maxLoad: most candidates read from Loxo per run. Name-only records are read, found empty and
+// skipped without paying the AI; the window rotates every hour so they cannot crowd out the
+// rest of a search (30 Oct 2026 review: 146 name-only people on one real search).
+export async function runSweep({ client, provider, jobIds, scorecard, template, cfg, writes, maxPerRun = 50, maxLoad = 200, useBatch = true, now = Date.now(), log = () => {} }) {
   // `scorecard` is one scorecard, or (jobId) => scorecard for per-search scorecards.
   const scorecardFor = typeof scorecard === "function" ? scorecard : () => scorecard;
-  const summary = { written: 0, already_done: 0, submitted: 0, scored_direct: 0, failed: 0, waiting: false, left_for_review: [], dry_run: [] };
+  const summary = { written: 0, already_done: 0, submitted: 0, scored_direct: 0, failed: 0, not_enough_in_loxo: 0, waiting: false, left_for_review: [], dry_run: [] };
   const allowed = new Set(jobIds.map(String));
   const jobs = new Map();
   const getJob = async (id) => {
@@ -96,20 +99,33 @@ export async function runSweep({ client, provider, jobIds, scorecard, template, 
         summary.left_for_review.push({ job: jobId, person: pid });
         continue;
       }
-      if (todo.length >= maxPerRun) break;
       todo.push({ jobId, entry });
     }
   }
   if (!todo.length) return summary;
+  // This run's window: up to maxLoad people, starting at a point that moves every hour.
+  const start = todo.length > maxLoad ? (Math.floor(now / 3600_000) * maxLoad) % todo.length : 0;
+  const window = [...todo.slice(start), ...todo.slice(0, start)].slice(0, maxLoad);
+
+  const stageNames = await workflowStageNames(client);
 
   // 3. Score them: in one batch (half price), or directly for providers without batches.
   const items = [];
-  for (const jobId of new Set(todo.map((t) => t.jobId))) {
+  let picked = 0;
+  for (const jobId of new Set(window.map((t) => t.jobId))) {
+    if (picked >= maxPerRun) break;
     const job = await getJob(jobId);
     const sc = scorecardFor(jobId, job);
-    const { candidates, failures: loadFailures } = await loadCandidates(client, todo.filter((t) => t.jobId === jobId).map((t) => t.entry));
+    const { candidates, failures: loadFailures } = await loadCandidates(client, window.filter((t) => t.jobId === jobId).map((t) => t.entry), { stageNames });
     summary.failed += loadFailures.length;
     for (const candidate of candidates) {
+      // Nothing to read yet: not sent to the AI, nothing written to Loxo.
+      if (isThin(candidate)) {
+        summary.not_enough_in_loxo++;
+        continue;
+      }
+      if (picked >= maxPerRun) break;
+      picked++;
       if (batchMode) {
         const flagCodes = inputFlagCodes(candidate);
         items.push({ custom_id: batchId({ jobId, personId: candidate.loxo.person_id, flagCodes }), ...prepareRequest({ candidate, job, scorecard: sc, template }) });

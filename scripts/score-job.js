@@ -62,7 +62,7 @@ if (args["loxo-job"]) {
   if (stages) console.log(`  only stages: ${stages.join(", ")}`);
   if (names) console.log(`  only the ${names.length} people in ${args["names-file"]}: ${loaded.candidates.length} found${loaded.unmatched.length ? `, ${loaded.unmatched.length} not on this search: ${loaded.unmatched.join(", ")}` : ""}`);
   ({ job, candidates } = loaded);
-  console.log(`  ${loaded.pipelineCount} on the pipeline, ${candidates.length} loaded${loaded.failures.length ? `, ${loaded.failures.length} could not be read` : ""}`);
+  console.log(`  ${loaded.pipelineCount} ${stages || names ? "selected" : "on the pipeline"}, ${candidates.length} loaded${loaded.failures.length ? `, ${loaded.failures.length} could not be read` : ""}`);
   for (const f of loaded.failures) console.log(`  could not read entry ${f.entry_id}: ${f.error}`);
 } else {
   job = JSON.parse(fs.readFileSync(args.job, "utf8"));

@@ -4,19 +4,27 @@
 
 const EMAIL = /[\w.+-]+@[\w-]+(\.[\w-]+)+/g;
 const PHONE = /(\+?\d[\d\s().-]{7,}\d)/g;
-const URL = /https?:\/\/\S+/g;
+// Links with or without a scheme (a resume often starts "linkedin.com/in/<name>").
+const URL = /\bhttps?:\/\/\S+|\bwww\.\S+|\blinkedin\.com\/\S*/gi;
 
-// Pay must not reach the model (29 Oct 2026: recruiter notes and the job description
-// carried base, bonus and salary range). Any sentence about pay is replaced as a whole.
-const PAY_WORDS = /\b(salary|salaries|compensation|comp|OTE|bonus(es)?|RSUs?|stock options?|pay (range|rate|band)|hourly rate|total package|desired pay|current pay|wage|wages)\b/i;
-const K_AMOUNT = /\$?\s?\d{2,3}(\.\d)?\s?[kK]\b/;
-const BASE_WITH_MONEY = /\bbase\b[^.\n]{0,40}(\$|\d{2,3}\s?[kK]\b)|(\$|\d{2,3}\s?[kK]\b)[^.\n]{0,40}\bbase\b/i;
-const EQUITY_PAY = /\bequity\b/i;
-const NOT_PAY_EQUITY = /\b(private equity|equity[- ]backed|equity firm|equity partners|equity research|equity investment)/i;
+// Pay must not reach the model (29 Oct 2026: recruiter notes and the job description carried
+// base, bonus and salary range). A sentence is about pay when it has a pay word, or a pay
+// context with an amount. Business figures (savings, raises, rounds, revenue) are evidence
+// and stay (30 Oct 2026 review: "$40M growth equity raise" and "cut costs by $500K" were
+// being removed from finance resumes).
+const PAY_STRONG = /\b(salary|salaries|compensation(?!\s+committee)|OTE|bonus(es)?|RSUs?|stock options?|pay (range|rate|band)|hourly rate|total package|desired pay|current pay|wages?|total comp|all[- ]in)\b|\bcomp\b(?!\s+committee)|\bTC\b/i;
+const TC_UPPER = /\bTC\b/;
+const PAY_CONTEXT = /\b(base|earns?|earning|wants|asking|currently at|package)\b|\bmaking\s+(about\s+|around\s+)?\$?\d/i;
+const AMOUNT = /\$?\s?\d{2,3}(\.\d)?\s?[kK]\b|\$\s?\d{1,3}(,\d{3})+|\b\d{1,3}(,\d{3}){1,2}\b|\$?\d+(\.\d+)?\s?[mM]\b/;
+const BASE_NUMBER = /\bbase\s*[:=]?\s*\$?\s?\d{2,3}\b/i;
+const EQUITY = /\bequity\b/i;
+const NOT_PAY_EQUITY = /\b(private equity|growth equity|equity[- ]backed|equity firm|equity partners|equity research|equity investment|equity raise|raise|round|funding)\b/i;
 
 export function isAboutPay(sentence) {
-  return PAY_WORDS.test(sentence) || K_AMOUNT.test(sentence) || BASE_WITH_MONEY.test(sentence)
-    || (EQUITY_PAY.test(sentence) && !NOT_PAY_EQUITY.test(sentence) && /\$|%|\d/.test(sentence));
+  const s = String(sentence ?? "");
+  const strong = PAY_STRONG.test(s) && (!/\bTC\b/i.test(s) || TC_UPPER.test(s) || /\b(salary|compensation|bonus|comp)\b/i.test(s));
+  return strong || (PAY_CONTEXT.test(s) && AMOUNT.test(s)) || BASE_NUMBER.test(s)
+    || (EQUITY.test(s) && !NOT_PAY_EQUITY.test(s) && /\$|%/.test(s));
 }
 
 export function scrubPay(text) {
@@ -29,10 +37,9 @@ export function scrubPay(text) {
     .trim();
 }
 
-// The team's own scores must not reach the model either, or Weaver could echo them back
-// (30 Oct 2026 review: a first read matched the team's screen score exactly). Sentences
-// with a score out of five, or about a screen or scorecard score, are removed.
-const TEAM_SCORE = /\b[1-5](\.\d)?\s?(\/|out of)\s?5\b|\b(screen|scorecard|overall|average)\s+(score|rating)\b|\bscored\s+(a\s+)?[1-5](\.\d)?\b|\brated\s+(a\s+)?[1-5](\.\d)?\b/i;
+// The team's own scores and recommendations must not reach the model either, or Weaver
+// could echo them back (30 Oct 2026 review: a first read matched the team's 4.1 exactly).
+const TEAM_SCORE = /\b[1-5](\.\d)?\s?(\/|out of)\s?5\b|\b(screen|scorecard|overall|average)\s+(score|rating)\b|\bscored\s+(a\s+)?[1-5](\.\d)?\b|\brated\s+(a\s+)?[1-5](\.\d)?\b|\brecommend(ation|ed)?\b\s*:?\s*(strong\s+)?(yes|no)\b/i;
 
 export function scrubScores(text) {
   if (typeof text !== "string" || !text) return "";
@@ -53,9 +60,34 @@ export function scrubText(text) {
     .replace(PHONE, (m) => (m.replace(/\D/g, "").length >= 9 ? "[phone removed]" : m));
 }
 
-const scrubAll = (t) => scrubScores(scrubPay(scrubText(t)));
+// The candidate's own name, as written in the resume and notes (almost every resume starts
+// with it). Credentials after the name (CPA, MBA) are kept.
+const CREDENTIAL = /^(CPA|CFA|CMA|MBA|PMP|CFE|CIA|CISA|PE|PHD|JD|ESQ|SPHR|PHR|CSCP|CPIM|CPM|CPE|CPMM|MCR|MEM|CDCP|AIA|FMP|CSSGB|ARM|CHFP|JR|SR|II|III|IV)$/i;
+export function scrubName(text, name) {
+  if (typeof text !== "string" || !text || !name) return text ?? "";
+  const words = String(name).split(/[\s,.()]+/).filter((w) => w.length > 1 && !CREDENTIAL.test(w));
+  let out = text;
+  for (const w of words) {
+    const esc = w.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    const title = w.charAt(0).toUpperCase() + w.slice(1).toLowerCase();
+    // Capitalized or upper-case forms only, so ordinary lower-case words survive.
+    out = out.replace(new RegExp(`(?<![\\p{L}])(${esc}|${title.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}|${w.toUpperCase().replace(/[.*+?^${}()|[\]\\]/g, "\\$&")})(?![\\p{L}])`, "gu"), "[name]");
+  }
+  return out;
+}
+
+// Graduation years are an age proxy: blanked on resume lines about degrees or schools.
+const DEGREE_LINE = /\b(MBA|M\.?B\.?A|B\.?A\.?|B\.?S\.?|BSc|MSc|Bachelor|Master|Ph\.?D|Doctorate|University|College|School|Graduated|Class of)\b/i;
+export function scrubGradYears(text) {
+  if (typeof text !== "string" || !text) return text ?? "";
+  return text.split("\n").map((l) => (DEGREE_LINE.test(l) ? l.replace(/\b(19[4-9]\d|20[0-4]\d)\b/g, "[year]") : l)).join("\n");
+}
+
+// Weaver's own notes (written back to Loxo when notes are the target) are not evidence.
+const OWN_NOTE = /AI first read, awaiting recruiter review|AI assessment, awaiting recruiter review|Candidate scoring \(AI/;
 
 export function toPromptRecord(candidate) {
+  const scrubAll = (t) => scrubName(scrubScores(scrubPay(scrubText(t))), candidate.name);
   return {
     candidate_ref: String(candidate.id),
     current_title: candidate.current_title ?? null,
@@ -75,7 +107,7 @@ export function toPromptRecord(candidate) {
       institution: e.institution ?? null,
     })),
     skills: candidate.skills ?? [],
-    notes: (candidate.notes ?? []).map((n) => ({ date: n.date ?? null, text: scrubAll(n.text ?? "") })),
-    resume_text: scrubAll(candidate.resume_text ?? ""),
+    notes: (candidate.notes ?? []).filter((n) => !OWN_NOTE.test(n.text ?? "")).map((n) => ({ date: n.date ?? null, text: scrubAll(n.text ?? "") })),
+    resume_text: scrubAll(scrubGradYears(candidate.resume_text ?? "")),
   };
 }
