@@ -102,7 +102,8 @@ test("reads a whole job: pipeline, person, work history, latest resume, notes", 
 const result = {
   status: "scored", job_id: "7", loxo: { person_id: 9 }, scorecard: "example.v1", provider: "claude", model: "m", scored_at: "2026-10-27T00:00:00Z",
   criteria: [{ id: "a", label: "Sector", score: 4, evidence: "Ten years in sector." }, { id: "b", label: "Stage", score: null, evidence: "No evidence in the record" }],
-  average: 4, scored_count: 1, recommendation: "yes", assessment: "Strong.", open_questions: ["Relocation?"], flags: ["partial_record: 1 criteria had no evidence"],
+  average: 4, scored_count: 1, recommendation: "yes", assessment: "Strong.", industry: "adjacent",
+  strongest_signal: "Ten years in sector.", watch_item: "Relocation.", where_they_fit: ["Sector depth."], where_to_probe: ["Relocation?"], flags: ["partial_record: 1 criteria had no evidence"],
 };
 const cfg = { target: "scorecard", scorecardTypeId: "3", recommendationTypeIds: { yes: "11", no: "12" }, noteActivityTypeId: "20" };
 

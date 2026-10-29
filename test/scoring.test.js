@@ -17,8 +17,12 @@ const template = loadTemplate();
 const goodAnswer = () => ({
   criteria: scorecard.criteria.map((c) => ({ id: c.id, score: 4, evidence: "Evidence." })),
   recommendation: "yes",
+  industry: "direct",
+  strongest_signal: "Ten years in the sector.",
+  watch_item: "Based outside the region.",
+  where_they_fit: ["Ran a comparable team."],
+  where_to_probe: [],
   assessment: "Strong fit.",
-  open_questions: [],
 });
 
 test("scorecard checks catch broken scorecards", () => {

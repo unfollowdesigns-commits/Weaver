@@ -11,7 +11,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { parseArgs } from "node:util";
 import { loadEnv } from "../src/env.js";
-import { loadScorecard } from "../src/scorecard.js";
+import { loadScorecard, scorecardResolver, JOB_SCORECARD_DIR } from "../src/scorecard.js";
 import { loadTemplate } from "../src/prompt.js";
 import { getProvider } from "../src/providers/index.js";
 import { scoreJob } from "../src/score.js";
@@ -28,7 +28,8 @@ const { values: args } = parseArgs({
     "loxo-jobs": { type: "string" },
     "open-jobs": { type: "boolean", default: false },
     "limit-per-job": { type: "string" },
-    scorecard: { type: "string", default: process.env.SCORECARD_FILE || "config/scorecards/standard-executive.v1.json" },
+    scorecard: { type: "string", default: process.env.SCORECARD_FILE || "config/scorecards/standard-executive.v2.json" },
+    "scorecards-dir": { type: "string", default: process.env.SCORECARD_JOBS_DIR || JOB_SCORECARD_DIR },
     concurrency: { type: "string", default: "3" },
     go: { type: "boolean", default: false },
   },
@@ -77,26 +78,29 @@ if (!args.go) {
 
 // 2. Score job by job; one report each.
 const provider = await getProvider(args.provider);
-const scorecard = loadScorecard(args.scorecard);
+const fallback = loadScorecard(args.scorecard);
+const scorecardFor = scorecardResolver({ fallback, dir: args["scorecards-dir"] });
 const template = loadTemplate();
 const cfg = writeConfigFromEnv();
 const stamp = new Date().toISOString().replace(/[:.]/g, "-");
 const dir = path.join("data", "runs", `${stamp}-${provider.name}-jobs`);
 fs.mkdirSync(dir, { recursive: true });
-const meta = { scorecard: `${scorecard.id}.v${scorecard.version}`, provider: `${provider.name} (${provider.model})`, when: new Date().toLocaleString() };
+const meta = { scorecard: `per search, else ${fallback.id}.v${fallback.version}`, provider: `${provider.name} (${provider.model})`, when: new Date().toLocaleString() };
 const rows = [];
 
 for (const { job, entries } of plan) {
   console.log(`\n${job.title}`);
+  const scorecard = scorecardFor(job.id);
+  console.log(`  scorecard ${scorecard.id}.v${scorecard.version}`);
   const { candidates, failures } = await loadCandidates(client, entries);
   for (const f of failures) console.log(`  could not read entry ${f.entry_id}: ${f.error}`);
   const results = await scoreJob({
     candidates, job, scorecard, template, provider,
     concurrency: Number(args.concurrency),
-    onResult: (r) => console.log(`  ${r.status === "scored" ? "scored" : "ERROR "} ${r.candidate_name ?? r.candidate_id}${r.status === "scored" ? `  ${r.average?.toFixed(2)}  ${r.recommendation}` : `  ${r.error}`}`),
+    onResult: (r) => console.log(`  ${r.status === "scored" ? "scored" : "ERROR "} ${r.candidate_name ?? r.candidate_id}${r.status === "scored" ? `  ${r.average?.toFixed(1)}  ${r.recommendation}` : `  ${r.error}`}`),
   });
   const file = `job-${job.id}.html`;
-  const jobMeta = { ...meta, jobTitle: job.title };
+  const jobMeta = { ...meta, scorecard: `${scorecard.id}.v${scorecard.version}`, jobTitle: job.title };
   fs.writeFileSync(path.join(dir, file), toHtml(results, jobMeta));
   fs.writeFileSync(path.join(dir, `job-${job.id}.md`), toMarkdown(results, jobMeta));
   fs.writeFileSync(path.join(dir, `job-${job.id}.json`), JSON.stringify({ meta: jobMeta, results }, null, 2));

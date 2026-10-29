@@ -1,0 +1,81 @@
+{
+  "id": "job-101",
+  "version": 1,
+  "name": "VP Sales scorecard (sample)",
+  "job": {
+    "id": "101",
+    "title": "VP Sales"
+  },
+  "status": "approved",
+  "approved_at": "2026-10-29",
+  "scale": {
+    "min": 1,
+    "max": 5,
+    "labels": {
+      "1": "Does not meet",
+      "2": "Weak",
+      "3": "Meets",
+      "4": "Strong",
+      "5": "Exceptional"
+    },
+    "note": "Scored critically: 3 means meets, 4 is strong, 5 is kept for areas where the candidate is exceptional."
+  },
+  "criteria": [
+    {
+      "id": "industry",
+      "label": "Relevant industry experience and insight",
+      "description": "B2B software sold to finance teams. 3: has sold software to mid-market buyers. 5: has sold to CFOs and finance teams and knows how they buy."
+    },
+    {
+      "id": "team",
+      "label": "Building and leading a sales team",
+      "description": "Hiring and leading 15 to 25 sellers across new business and account management. 3: has led a team of that size. 5: has built one from a small base through a growth phase, with leaders who were promoted."
+    },
+    {
+      "id": "plan",
+      "label": "Owning the revenue plan",
+      "description": "Setting and hitting the number. 3: has owned a revenue target and forecast. 5: has owned the company plan and beaten it repeatedly, with figures in the record."
+    },
+    {
+      "id": "scaling",
+      "label": "Scaling and growth experience",
+      "description": "Growth stage, venture or private equity backed. 3: has worked in a company at this stage. 5: has scaled revenue through a funding round or a growth plan more than once."
+    },
+    {
+      "id": "process",
+      "label": "Sales process and systems",
+      "description": "Pipeline discipline, forecasting, CRM and enablement. 3: has run a clear sales process. 5: built the process and systems others still use."
+    },
+    {
+      "id": "ceo",
+      "label": "CEO partnership and commercial acumen",
+      "description": "Reporting to the CEO and working with the board on the plan. 3: has reported to a CEO or GM. 5: a trusted partner to the CEO and board, with notes or record that show it."
+    },
+    {
+      "id": "accounts",
+      "label": "Account management and expansion",
+      "description": "Keeping and growing existing customers. 3: has led account management or renewals. 5: drove measured expansion revenue and retention."
+    },
+    {
+      "id": "location",
+      "label": "Location, relocation or commuting",
+      "description": "Based in Washington, DC, about 30 percent travel. 3: in the region or open to relocate, travel fine. 5: in the region and has done this level of travel before."
+    },
+    {
+      "id": "market",
+      "label": "Ability to be the face in the market",
+      "description": "Representing the company with customers, partners and at events. 3: has represented the company with key customers. 5: a known voice in the market, speaking or partner-facing."
+    }
+  ],
+  "recommendation": {
+    "values": [
+      "yes",
+      "no"
+    ],
+    "meaning": "yes: worth a recruiter conversation for this search. no: not for this search."
+  },
+  "industry": {
+    "direct": "B2B software sold to finance or accounting teams.",
+    "adjacent": "Other B2B software, fintech, or financial services technology."
+  }
+}

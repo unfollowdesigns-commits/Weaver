@@ -7,14 +7,18 @@ export const AI_AUTHOR = "Candidate scoring (AI, awaiting review)";
 
 const esc = (t) => String(t ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
 
+const INDUSTRY_TAG = { direct: "Direct industry experience", adjacent: "Adjacent industry", other: null };
+
 export function summaryText(result) {
+  const avg = result.average === null || result.average === undefined ? "n/a" : result.average.toFixed(1);
   const lines = [
-    `AI assessment, awaiting recruiter review. Not a decision.`,
-    `Average ${result.average ?? "n/a"} of 5 (${result.scored_count} of ${result.criteria.length} criteria had evidence). Recommendation: ${result.recommendation}.`,
-    "",
-    result.assessment,
+    "AI first read, awaiting recruiter review. Not a decision.",
+    `${avg} / 5 · ${result.recommendation === "yes" ? "Yes" : "No"} (${result.scored_count} of ${result.criteria.length} criteria had evidence)`,
   ];
-  if (result.open_questions.length) lines.push("", "Open questions:", ...result.open_questions.map((q) => `- ${q}`));
+  if (INDUSTRY_TAG[result.industry]) lines.push(INDUSTRY_TAG[result.industry]);
+  lines.push("", `Strongest signal: ${result.strongest_signal}`, `Watch item: ${result.watch_item}`, "", result.assessment);
+  if (result.where_they_fit?.length) lines.push("", "Where they fit:", ...result.where_they_fit.map((q) => `- ${q}`));
+  if (result.where_to_probe?.length) lines.push("", "Where to probe:", ...result.where_to_probe.map((q) => `- ${q}`));
   if (result.flags.length) lines.push("", "Flags:", ...result.flags.map((f) => `- ${f}`));
   lines.push("", `Scorecard ${result.scorecard}, ${result.provider} ${result.model ?? ""}, ${result.scored_at.slice(0, 10)}.`);
   return lines.join("\n");
@@ -58,15 +62,18 @@ export function buildPayload(result, cfg) {
   return cfg.target === "note" ? { path: "/person_events", body: buildNotePayload(result, cfg) } : { path: "/scorecards", body: buildScorecardPayload(result, cfg) };
 }
 
-const NOTE_MARKER = "AI assessment, awaiting recruiter review";
+// Both wordings, so notes written before 29 Oct 2026 are still recognized.
+const NOTE_MARKERS = ["AI first read, awaiting recruiter review", "AI assessment, awaiting recruiter review"];
 
 // Person IDs on a job that already have an AI assessment, in one pass per job.
 // Checked before calling the AI, so nobody is paid for twice.
 export async function aiScoredPersonIds(client, jobId, cfg) {
   const ids = new Set();
   if (cfg.target === "note") {
-    const events = await client.list("/person_events", { job_ids: [jobId], notes_format: "plain", query: `"${NOTE_MARKER}"` });
-    for (const e of events) if (String(e.notes ?? "").includes(NOTE_MARKER)) ids.add(String(e.person_id ?? e.person?.id));
+    for (const marker of NOTE_MARKERS) {
+      const events = await client.list("/person_events", { job_ids: [jobId], notes_format: "plain", query: `"${marker}"` });
+      for (const e of events) if (String(e.notes ?? "").includes(marker)) ids.add(String(e.person_id ?? e.person?.id));
+    }
   } else {
     const cards = await client.list("/scorecards", { job_id: jobId });
     for (const s of cards) if (s.external_creator_name === AI_AUTHOR) ids.add(String(s.person_id ?? s.person?.id));

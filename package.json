@@ -17,7 +17,8 @@
     "fake-loxo": "node scripts/fake-loxo.js",
     "loxo:check": "node scripts/loxo-check.js",
     "serve": "node scripts/serve.js",
-    "sweep": "node scripts/sweep.js"
+    "sweep": "node scripts/sweep.js",
+    "scorecard:draft": "node scripts/draft-scorecard.js"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "0.133.0"

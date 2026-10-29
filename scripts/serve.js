@@ -15,7 +15,7 @@ import fs from "node:fs";
 import path from "node:path";
 import crypto from "node:crypto";
 import { loadEnv } from "../src/env.js";
-import { loadScorecard } from "../src/scorecard.js";
+import { loadScorecard, scorecardResolver, JOB_SCORECARD_DIR } from "../src/scorecard.js";
 import { loadTemplate } from "../src/prompt.js";
 import { getProvider } from "../src/providers/index.js";
 import { scoreCandidate } from "../src/score.js";
@@ -33,7 +33,7 @@ if (secret.length < 16) {
   process.exit(1);
 }
 const allowedJobs = new Set((process.env.LOXO_AUTO_SCORE_JOB_IDS ?? "").split(",").map((s) => s.trim()).filter(Boolean));
-const scorecard = loadScorecard(process.env.SCORECARD_FILE || "config/scorecards/standard-executive.v1.json");
+const scorecardFor = scorecardResolver({ fallback: loadScorecard(process.env.SCORECARD_FILE || "config/scorecards/standard-executive.v2.json"), dir: process.env.SCORECARD_JOBS_DIR || JOB_SCORECARD_DIR });
 const template = loadTemplate();
 const provider = await getProvider(process.env.SCORING_PROVIDER || "mock");
 const client = loxoClientFromEnv(process.env, { allowWrites: true });
@@ -80,7 +80,7 @@ async function handle(body) {
   const job = jobCache.get(jobId).job;
   const entry = firstArray(await client.get(`/jobs/${jobId}/candidates`, { person_id: personId }))[0] ?? { person_id: personId };
   const candidate = await loadCandidate(client, entry);
-  const result = await scoreCandidate({ candidate, job, scorecard, template, provider });
+  const result = await scoreCandidate({ candidate, job, scorecard: scorecardFor(jobId), template, provider });
   const tokens = result.usage ? ` tokens in ${result.usage.input_tokens ?? result.usage.prompt_tokens} out ${result.usage.output_tokens ?? result.usage.completion_tokens}` : "";
   log(`${tag}: ${result.status}${result.status === "scored" ? ` ${result.average} ${result.recommendation}${tokens}` : ` ${result.error}`}`);
   if (result.status !== "scored") return;

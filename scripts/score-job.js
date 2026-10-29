@@ -15,7 +15,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { parseArgs } from "node:util";
 import { loadEnv } from "../src/env.js";
-import { loadScorecard } from "../src/scorecard.js";
+import { loadScorecard, scorecardResolver, JOB_SCORECARD_DIR } from "../src/scorecard.js";
 import { loadTemplate } from "../src/prompt.js";
 import { getProvider } from "../src/providers/index.js";
 import { scoreJob } from "../src/score.js";
@@ -32,7 +32,8 @@ const { values: args } = parseArgs({
     job: { type: "string", default: "samples/job.sample.json" },
     candidates: { type: "string", default: "samples/candidates.sample.json" },
     "loxo-job": { type: "string" },
-    scorecard: { type: "string", default: "config/scorecards/standard-executive.v1.json" },
+    scorecard: { type: "string", default: "config/scorecards/standard-executive.v2.json" },
+    "scorecards-dir": { type: "string", default: process.env.SCORECARD_JOBS_DIR || JOB_SCORECARD_DIR },
     limit: { type: "string" },
     concurrency: { type: "string", default: "3" },
     write: { type: "boolean", default: false },
@@ -40,7 +41,7 @@ const { values: args } = parseArgs({
 });
 
 const limit = args.limit ? Number(args.limit) : undefined;
-const scorecard = loadScorecard(args.scorecard);
+const scorecardFor = scorecardResolver({ fallback: loadScorecard(args.scorecard), dir: args["scorecards-dir"] });
 const template = loadTemplate();
 const provider = await getProvider(args.provider);
 
@@ -66,11 +67,13 @@ if (args["loxo-job"] && args.write && writesAllowed()) {
   if (before !== candidates.length) console.log(`  ${before - candidates.length} already assessed, skipped`);
 }
 
+// A search's own approved scorecard wins over the standard one.
+const scorecard = scorecardFor(job.id);
 console.log(`Scoring ${candidates.length} candidates for "${job.title}" with ${provider.name} (${provider.model})`);
 const results = await scoreJob({
   candidates, job, scorecard, template, provider,
   concurrency: Number(args.concurrency),
-  onResult: (r) => console.log(`  ${r.status === "scored" ? "scored" : "ERROR "} ${r.candidate_name ?? r.candidate_id}${r.status === "scored" ? `  ${r.average?.toFixed(2)}  ${r.recommendation}` : `  ${r.error}`}`),
+  onResult: (r) => console.log(`  ${r.status === "scored" ? "scored" : "ERROR "} ${r.candidate_name ?? r.candidate_id}${r.status === "scored" ? `  ${r.average?.toFixed(1)}  ${r.recommendation}` : `  ${r.error}`}`),
 });
 
 const stamp = new Date().toISOString().replace(/[:.]/g, "-");

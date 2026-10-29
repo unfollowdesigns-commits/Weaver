@@ -1,77 +1,135 @@
 // Dry-run report: what the recruiter would see, before anything is written to Loxo.
+// Written in the firm's report language, in its navy and blue.
 
 const esc = (t) => String(t ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
-const avg = (r) => (r.average === null || r.average === undefined ? "–" : r.average.toFixed(2));
+const avg = (r) => (r.average === null || r.average === undefined ? "–" : r.average.toFixed(1));
+const rec = (r) => (r.recommendation === "yes" ? "Yes" : "No");
+const STAR = { direct: "★", adjacent: "☆", other: "" };
+const who = (r) => r.candidate_name ?? r.candidate_id;
 
 export function toMarkdown(results, meta) {
   const lines = [
-    `# Dry run: ${meta.jobTitle}`,
+    `# First read: ${meta.jobTitle}`,
     "",
-    `Scorecard ${meta.scorecard} · provider ${meta.provider} · ${meta.when}`,
+    `Scorecard ${meta.scorecard} · ${meta.provider} · ${meta.when}`,
     "Nothing has been written to Loxo. Every result is waiting for recruiter review.",
+    "★ direct industry experience · ☆ adjacent industry",
     "",
-    "| # | Candidate | Average | Recommendation | Flags |",
-    "|---|---|---|---|---|",
+    "| # | Candidate | Score | Strongest signal | Watch item | Flags |",
+    "|---|---|---|---|---|---|",
   ];
   results.forEach((r, i) => {
-    const who = r.candidate_name ?? r.candidate_id;
-    if (r.status !== "scored") lines.push(`| ${i + 1} | ${who} | – | error | ${r.error} |`);
-    else lines.push(`| ${i + 1} | ${who} | ${avg(r)} | ${r.recommendation} | ${r.flags.join("; ")} |`);
+    if (r.status !== "scored") lines.push(`| ${i + 1} | ${who(r)} | error | | | ${r.error} |`);
+    else lines.push(`| ${i + 1} | ${who(r)} ${STAR[r.industry] ?? ""} | ${avg(r)} / 5 · ${rec(r)} | ${r.strongest_signal} | ${r.watch_item} | ${r.flags.join("; ")} |`);
   });
   for (const r of results.filter((x) => x.status === "scored")) {
-    lines.push("", `## ${r.candidate_name ?? r.candidate_id}`, "", r.assessment, "");
+    lines.push("", `## ${who(r)} · ${avg(r)} / 5 · ${rec(r)}`, "", r.assessment);
+    if (r.where_they_fit.length) lines.push("", "Where they fit:", ...r.where_they_fit.map((q) => `- ${q}`));
+    if (r.where_to_probe.length) lines.push("", "Where to probe:", ...r.where_to_probe.map((q) => `- ${q}`));
+    lines.push("", "Scorecard:");
     for (const c of r.criteria) lines.push(`- ${c.label}: ${c.score ?? "no evidence"}. ${c.evidence}`);
-    if (r.open_questions.length) lines.push("", "Open questions:", ...r.open_questions.map((q) => `- ${q}`));
   }
   return lines.join("\n") + "\n";
 }
+
+const STYLE = `
+:root{--navy:#0d1526;--ink:#141b2b;--muted:#5b6578;--line:#dfe3ea;--soft:#f3f5f9;--blue:#3b7fd9;--blue-soft:#e8f0fb;--paper:#fff}
+*{box-sizing:border-box}
+body{margin:0;background:var(--soft);color:var(--ink);font:15px/1.55 -apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif;-webkit-font-smoothing:antialiased}
+header{background:var(--navy);color:#fff;padding:40px 16px 34px}
+.wrap{max-width:1040px;margin:0 auto}
+.eyebrow{font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:#8fb4ea;font-weight:600}
+h1{font-size:clamp(26px,4vw,38px);line-height:1.15;margin:10px 0 8px;letter-spacing:-.01em}
+.meta{color:#aeb8c9;font-size:13px;margin:0}
+.stats{display:flex;gap:28px;flex-wrap:wrap;margin-top:26px}
+.stats div{min-width:110px}.stats b{display:block;font-size:28px;font-variant-numeric:tabular-nums}.stats span{font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:#aeb8c9}
+main{padding:28px 16px 60px}
+.note{background:var(--paper);border-left:3px solid var(--blue);padding:12px 16px;margin:0 0 22px;color:var(--muted);font-size:14px}
+h2{font-size:12px;letter-spacing:.16em;text-transform:uppercase;margin:34px 0 12px;color:var(--ink)}
+.table{background:var(--paper);border:1px solid var(--line);border-radius:10px;overflow-x:auto}
+table{width:100%;border-collapse:collapse;min-width:720px}
+th{font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);text-align:left;padding:12px 14px;border-bottom:1px solid var(--line);font-weight:600}
+td{padding:13px 14px;border-top:1px solid var(--line);vertical-align:top}
+tr:first-child td{border-top:0}
+.n{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+.rank{color:var(--blue);font-weight:700;width:36px}
+.name{font-weight:650}.star{color:var(--blue);margin-left:4px}
+.score{font-weight:700;white-space:nowrap}.score em{font-style:normal;font-weight:600;margin-left:6px;padding:2px 8px;border-radius:4px;font-size:12px}
+.yes em{background:var(--blue);color:#fff}.no em{background:var(--soft);color:var(--muted);border:1px solid var(--line)}
+.flag{display:block;color:#9a5b12;font-size:12px;margin-top:4px}
+.err{color:#a3361b;font-weight:600}
+.card{background:var(--paper);border:1px solid var(--line);border-radius:10px;padding:24px;margin:0 0 16px}
+.card-head{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;align-items:baseline;border-bottom:1px solid var(--line);padding-bottom:14px}
+.card-head h3{margin:0;font-size:21px}.card-head .score{font-size:18px}
+.sum{margin:14px 0 0;color:var(--ink)}
+.cols{display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-top:18px}
+.cols h4{font-size:11px;letter-spacing:.14em;text-transform:uppercase;margin:0 0 8px;padding-bottom:6px;border-bottom:1px solid var(--ink)}
+.cols .probe h4{color:var(--blue);border-color:var(--blue)}
+.cols ul{margin:0;padding:0;list-style:none}.cols li{padding:5px 0 5px 16px;position:relative;font-size:14px}
+.cols li:before{content:"";position:absolute;left:0;top:14px;width:8px;height:2px;background:var(--ink)}.cols .probe li:before{background:var(--blue)}
+.crit{margin-top:20px;border-top:1px solid var(--line)}
+.crit div{display:grid;grid-template-columns:1fr auto;gap:6px 18px;padding:10px 0;border-bottom:1px solid var(--line)}
+.crit b{font-size:14px}.crit p{grid-column:1;margin:0;color:var(--muted);font-size:13px}
+.dots{grid-row:1 / span 2;grid-column:2;display:flex;gap:4px;align-self:center}
+.dots i{width:22px;height:22px;border-radius:4px;border:1px solid var(--line);font:600 11px/20px inherit;text-align:center;font-style:normal;color:var(--muted)}
+.dots i.on{background:var(--blue);border-color:var(--blue);color:#fff}
+.dots .none{font-size:12px;color:var(--muted);align-self:center}
+.legend{color:var(--muted);font-size:12px;margin-top:10px}
+a{color:var(--blue)}
+tfoot td{font-weight:700;border-top:1px solid var(--ink)}
+@media (max-width:700px){.cols{grid-template-columns:1fr}.crit div{grid-template-columns:1fr}.dots{grid-row:auto;grid-column:1}}
+@media print{body{background:#fff}.card{break-inside:avoid}}
+`;
+
+const page = (title, header, body) => `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>${esc(title)}</title><style>${STYLE}</style></head><body>
+<header><div class="wrap">${header}</div></header>
+<main><div class="wrap">${body}</div></main>
+</body></html>
+`;
+
+const dots = (score, max = 5) =>
+  score === null ? '<span class="dots"><span class="none">No evidence</span></span>'
+    : `<span class="dots">${Array.from({ length: max }, (_, i) => `<i class="${i < score ? "on" : ""}">${i + 1}</i>`).join("")}</span>`;
+
+const scoreCell = (r) => `<span class="score ${r.recommendation}">${avg(r)} / 5<em>${rec(r)}</em></span>`;
 
 // Summary page for a run across several jobs, linking to each job's report.
 export function toIndexHtml(rows, meta) {
   const body = rows.map((r) => `<tr><td><a href="${esc(r.file)}">${esc(r.title)}</a></td><td class="n">${r.candidates}</td><td class="n">${r.scored}</td><td class="n">${r.yes}</td><td class="n">${r.errors}</td></tr>`).join("\n");
   const total = rows.reduce((t, r) => ({ c: t.c + r.candidates, s: t.s + r.scored, y: t.y + r.yes, e: t.e + r.errors }), { c: 0, s: 0, y: 0, e: 0 });
-  return `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Dry run: ${rows.length} searches</title>
-<style>
-body{font:15px/1.55 -apple-system,"Segoe UI",Helvetica,Arial,sans-serif;color:#17201d;background:#f5f6f3;margin:0;padding:32px 16px}
-main{max-width:980px;margin:0 auto}h1{font:300 30px/1.2 Georgia,serif;margin:0 0 6px}.m{color:#4d5753;margin:0 0 20px}
-table{width:100%;border-collapse:collapse;background:#fff;border:1px solid #d6dbd6}th,td{padding:10px 12px;border-top:1px solid #d6dbd6;text-align:left}
-th{font-size:12px;text-transform:uppercase;letter-spacing:.08em;color:#4d5753}.n{text-align:right;font-variant-numeric:tabular-nums}a{color:#1e4a3d}
-tfoot td{font-weight:600}
-</style></head><body><main>
-<h1>Dry run across ${rows.length} searches</h1>
-<p class="m">Scorecard ${esc(meta.scorecard)} · ${esc(meta.provider)} · ${esc(meta.when)}<br>Nothing has been written to Loxo. Open a search to see every candidate's scores and assessment.</p>
-<table><thead><tr><th>Search</th><th class="n">Candidates</th><th class="n">Scored</th><th class="n">Recommended</th><th class="n">Errors</th></tr></thead>
+  const header = `<span class="eyebrow">First read · dry run</span><h1>${rows.length} searches</h1><p class="meta">Scorecard ${esc(meta.scorecard)} · ${esc(meta.provider)} · ${esc(meta.when)}</p>
+<div class="stats"><div><b>${total.c}</b><span>Candidates</span></div><div><b>${total.s}</b><span>Read</span></div><div><b>${total.y}</b><span>Worth a call</span></div></div>`;
+  return page(`Dry run: ${rows.length} searches`, header, `<p class="note">Nothing has been written to Loxo. Open a search to see every candidate's first read.</p>
+<div class="table"><table><thead><tr><th>Search</th><th class="n">Candidates</th><th class="n">Scored</th><th class="n">Recommended</th><th class="n">Errors</th></tr></thead>
 <tbody>${body}</tbody>
-<tfoot><tr><td>Total</td><td class="n">${total.c}</td><td class="n">${total.s}</td><td class="n">${total.y}</td><td class="n">${total.e}</td></tr></tfoot></table>
-</main></body></html>
-`;
+<tfoot><tr><td>Total</td><td class="n">${total.c}</td><td class="n">${total.s}</td><td class="n">${total.y}</td><td class="n">${total.e}</td></tr></tfoot></table></div>`);
 }
 
 export function toHtml(results, meta) {
+  const scored = results.filter((r) => r.status === "scored");
   const rows = results.map((r, i) => {
-    const who = esc(r.candidate_name ?? r.candidate_id);
-    if (r.status !== "scored") {
-      return `<tr><td>${i + 1}</td><td>${who}</td><td class="n">–</td><td class="err">Error</td><td>${esc(r.error)}</td></tr>`;
-    }
-    const crit = r.criteria.map((c) => `<li><b>${esc(c.label)}</b> <span class="n">${c.score ?? "–"}</span> ${esc(c.evidence)}</li>`).join("");
-    const qs = r.open_questions.map((q) => `<li>${esc(q)}</li>`).join("");
-    return `<tr><td>${i + 1}</td><td>${who}</td><td class="n">${avg(r)}</td><td class="${r.recommendation}">${esc(r.recommendation)}</td><td>${esc(r.flags.join("; "))}</td></tr>
-<tr class="d"><td></td><td colspan="4"><p>${esc(r.assessment)}</p><ul>${crit}</ul>${qs ? `<p><b>Open questions</b></p><ul>${qs}</ul>` : ""}</td></tr>`;
+    if (r.status !== "scored") return `<tr><td class="rank">${i + 1}</td><td class="name">${esc(who(r))}</td><td class="err">Error</td><td colspan="2">${esc(r.error)}</td></tr>`;
+    const flags = r.flags.map((f) => `<span class="flag">${esc(f.split(":")[0].replaceAll("_", " "))}</span>`).join("");
+    return `<tr><td class="rank">${i + 1}</td><td><span class="name">${esc(who(r))}</span>${STAR[r.industry] ? `<span class="star" title="${r.industry} industry">${STAR[r.industry]}</span>` : ""}${flags}</td><td>${scoreCell(r)}</td><td>${esc(r.strongest_signal)}</td><td>${esc(r.watch_item)}</td></tr>`;
   }).join("\n");
 
-  return `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Dry run: ${esc(meta.jobTitle)}</title>
-<style>
-body{font:15px/1.55 -apple-system,"Segoe UI",Helvetica,Arial,sans-serif;color:#17201d;background:#f5f6f3;margin:0;padding:32px 16px}
-main{max-width:980px;margin:0 auto}h1{font:300 30px/1.2 Georgia,serif;margin:0 0 6px}.m{color:#4d5753;margin:0 0 20px}
-table{width:100%;border-collapse:collapse;background:#fff;border:1px solid #d6dbd6}td{padding:10px 12px;border-top:1px solid #d6dbd6;vertical-align:top}
-.n{font-variant-numeric:tabular-nums;text-align:right;white-space:nowrap}.yes{color:#1e6b4a;font-weight:600}.no{color:#6b6f6c;font-weight:600}.err{color:#9a3a1a;font-weight:600}
-tr.d td{border-top:0;padding-top:0;color:#38413d;font-size:14px}tr.d ul{margin:6px 0 10px;padding-left:18px}tr.d .n{display:inline-block;min-width:1.5em}
-</style></head><body><main>
-<h1>Dry run: ${esc(meta.jobTitle)}</h1>
-<p class="m">Scorecard ${esc(meta.scorecard)} · ${esc(meta.provider)} · ${esc(meta.when)}<br>Nothing has been written to Loxo. Every result is waiting for recruiter review.</p>
-<table>${rows}</table>
-</main></body></html>
-`;
+  const cards = scored.map((r) => {
+    const list = (items) => items.map((t) => `<li>${esc(t)}</li>`).join("");
+    const crit = r.criteria.map((c) => `<div><b>${esc(c.label)}</b>${dots(c.score)}<p>${esc(c.evidence)}</p></div>`).join("");
+    return `<section class="card"><div class="card-head"><h3>${esc(who(r))}${STAR[r.industry] ? `<span class="star">${STAR[r.industry]}</span>` : ""}</h3>${scoreCell(r)}</div>
+<p class="sum">${esc(r.assessment)}</p>
+<div class="cols"><div><h4>Where they fit</h4><ul>${list(r.where_they_fit)}</ul></div><div class="probe"><h4>Where to probe</h4><ul>${list(r.where_to_probe)}</ul></div></div>
+<div class="crit">${crit}</div></section>`;
+  }).join("\n");
+
+  const yes = scored.filter((r) => r.recommendation === "yes").length;
+  const header = `<span class="eyebrow">First read · dry run</span><h1>${esc(meta.jobTitle)}</h1><p class="meta">Scorecard ${esc(meta.scorecard)} · ${esc(meta.provider)} · ${esc(meta.when)}</p>
+<div class="stats"><div><b>${results.length}</b><span>Candidates</span></div><div><b>${scored.length}</b><span>Read</span></div><div><b>${yes}</b><span>Worth a call</span></div></div>`;
+  return page(`Dry run: ${meta.jobTitle}`, header, `<p class="note">Nothing has been written to Loxo. Every result is a first read from the record, waiting for recruiter review.</p>
+<h2>Ranked</h2>
+<div class="table"><table><thead><tr><th>#</th><th>Candidate</th><th>Score</th><th>Strongest signal</th><th>Watch item</th></tr></thead><tbody>${rows}</tbody></table></div>
+<p class="legend">★ Direct industry experience · ☆ Adjacent industry · 1 Does not meet · 2 Weak · 3 Meets · 4 Strong · 5 Exceptional</p>
+<h2>Candidates</h2>
+${cards}`);
 }

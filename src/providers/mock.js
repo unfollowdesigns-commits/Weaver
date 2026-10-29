@@ -4,6 +4,7 @@
 export function createMockProvider({ broken = false, batchPending = false } = {}) {
   async function complete({ user, schema }) {
     if (broken) return { answer: { criteria: [], recommendation: "maybe" }, model: "mock" };
+    if (!schema.properties.criteria.items.properties.id?.enum) return draftAnswer(user);
     const ref = /"candidate_ref": "([^"]+)"/.exec(user)?.[1] ?? "x";
     const ids = schema.properties.criteria.items.properties.id.enum;
     const values = schema.properties.criteria.items.properties.score.anyOf[0].enum;
@@ -16,8 +17,12 @@ export function createMockProvider({ broken = false, batchPending = false } = {}
       answer: {
         criteria,
         recommendation: avg >= 3.5 ? "yes" : "no",
+        industry: ["direct", "adjacent", "other"][hash(ref) % 3],
+        strongest_signal: "Sample signal produced offline.",
+        watch_item: "Sample watch item produced offline.",
+        where_they_fit: ["Sample point produced offline. Not a real reading of the candidate."],
+        where_to_probe: ["Sample point for the first conversation."],
         assessment: "Sample assessment produced offline. Not a real reading of the candidate.",
-        open_questions: ["Sample question for the recruiter."],
       },
       model: "mock",
     };
@@ -45,6 +50,19 @@ export function createMockProvider({ broken = false, batchPending = false } = {}
         return batches.get(id)?.results ?? [];
       },
     },
+  };
+}
+
+// Draft scorecard for a search, shaped like a real draft.
+function draftAnswer(user) {
+  const title = /Title: (.*)/.exec(user)?.[1]?.trim() || "this search";
+  const labels = ["Relevant industry experience", "Functional depth", "Scale and scope", "Track record of results", "Leadership and team building", "Stage and context fit", "Location, relocation or commuting", "Partnership with the CEO and leadership team", "Ability to be the face in the market"];
+  return {
+    answer: {
+      criteria: labels.map((label) => ({ label, description: `Sample description for ${title}. 3: meets the bar. 5: exceptional.` })),
+      industry: { direct: "Sample: the search's own industry.", adjacent: "Sample: neighboring industries." },
+    },
+    model: "mock",
   };
 }
 

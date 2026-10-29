@@ -29,6 +29,8 @@ export function parseBatchId(id) {
 }
 
 export async function runSweep({ client, provider, jobIds, scorecard, template, cfg, writes, maxPerRun = 50, useBatch = true, now = Date.now(), log = () => {} }) {
+  // `scorecard` is one scorecard, or (jobId) => scorecard for per-search scorecards.
+  const scorecardFor = typeof scorecard === "function" ? scorecard : () => scorecard;
   const summary = { written: 0, already_done: 0, submitted: 0, scored_direct: 0, failed: 0, waiting: false, left_for_review: [], dry_run: [] };
   const allowed = new Set(jobIds.map(String));
   const jobs = new Map();
@@ -62,10 +64,11 @@ export async function runSweep({ client, provider, jobIds, scorecard, template, 
         if (!ref || !allowed.has(ref.jobId)) continue;
         if (done.get(ref.jobId).has(ref.personId)) continue;
         const job = await getJob(ref.jobId);
-        const base = resultBase({ candidateId: ref.personId, loxo: { person_id: Number(ref.personId) }, job, scorecard, template, provider });
+        const sc = scorecardFor(ref.jobId);
+        const base = resultBase({ candidateId: ref.personId, loxo: { person_id: Number(ref.personId) }, job, scorecard: sc, template, provider });
         const result = r.error
           ? { ...base, status: "error", error: r.error }
-          : resultFromAnswer({ base, answer: r.answer, model: r.model, usage: r.usage, scorecard, flagCodes: ref.flagCodes });
+          : resultFromAnswer({ base, answer: r.answer, model: r.model, usage: r.usage, scorecard: sc, flagCodes: ref.flagCodes });
         if (result.status !== "scored") {
           const key = `${ref.jobId}:${ref.personId}`;
           failures.set(key, (failures.get(key) ?? 0) + 1);
@@ -103,14 +106,15 @@ export async function runSweep({ client, provider, jobIds, scorecard, template, 
   const items = [];
   for (const jobId of new Set(todo.map((t) => t.jobId))) {
     const job = await getJob(jobId);
+    const sc = scorecardFor(jobId);
     const { candidates, failures: loadFailures } = await loadCandidates(client, todo.filter((t) => t.jobId === jobId).map((t) => t.entry));
     summary.failed += loadFailures.length;
     for (const candidate of candidates) {
       if (batchMode) {
         const flagCodes = inputFlagCodes(candidate);
-        items.push({ custom_id: batchId({ jobId, personId: candidate.loxo.person_id, flagCodes }), ...prepareRequest({ candidate, job, scorecard, template }) });
+        items.push({ custom_id: batchId({ jobId, personId: candidate.loxo.person_id, flagCodes }), ...prepareRequest({ candidate, job, scorecard: sc, template }) });
       } else {
-        const result = await scoreCandidate({ candidate, job, scorecard, template, provider });
+        const result = await scoreCandidate({ candidate, job, scorecard: sc, template, provider });
         if (result.status !== "scored") {
           summary.failed++;
           continue;

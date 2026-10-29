@@ -97,9 +97,10 @@ have to design one). Ask for two things only:
    locally so the full flow can be shown before the key arrives.
 
 Decided by us, shown to Josh for a yes or a change:
-- Scorecard: `config/scorecards/standard-executive.v1.json`, nine criteria
-  scored 1 to 5, each with what 3 (meets) and 5 (exceptional) look like.
-  Josh can change it; a per-job scorecard comes later if he asks.
+- Scorecard: per search, like DP's own (see the correction below). Drafted by
+  `npm run scorecard:draft` from the job, approved by Josh, saved as
+  `config/scorecards/jobs/job-<id>.v<N>.json`. Fallback for any search without
+  one: `config/scorecards/standard-executive.v2.json` (DP's scale labels).
 - Where the score lands: a Loxo scorecard on the candidate.
 
 Correction, 29 Oct 2026, after DP sent two of their own client pipeline
@@ -119,7 +120,10 @@ Consequences: Weaver is the first read on the record before any call, not a
 replacement for their post-interview scorecard. Use their scale labels and
 wording; criteria per search (drafted from the job, approved by Josh), with
 the standard scorecard as fallback. The pipeline report is the obvious
-phase 2.
+phase 2. Built 29 Oct 2026: scorecard v2, scoring prompt v2 (strongest
+signal, watch item, where they fit, where to probe, industry star), per-search
+scorecards with draft and approve, report in DP's navy and blue (their brand
+color; Houssem: keep the color, improve the layout).
 
 ## Rules
 

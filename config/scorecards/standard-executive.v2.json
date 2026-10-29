@@ -1,0 +1,72 @@
+{
+  "id": "standard-executive",
+  "version": 2,
+  "name": "Standard executive search scorecard",
+  "scale": {
+    "min": 1,
+    "max": 5,
+    "labels": {
+      "1": "Does not meet",
+      "2": "Weak",
+      "3": "Meets",
+      "4": "Strong",
+      "5": "Exceptional"
+    },
+    "note": "Scored critically: 3 means meets, 4 is strong, 5 is kept for areas where the candidate is exceptional."
+  },
+  "criteria": [
+    {
+      "id": "functional",
+      "label": "Functional expertise",
+      "description": "Depth in the function this role leads. 3: has led this function at a comparable level. 5: recognized as a top operator in it, with methods others copy."
+    },
+    {
+      "id": "scope",
+      "label": "Scale and scope",
+      "description": "Size of what they have run (team, budget, P&L, revenue, territory) compared with this role. 3: has run roughly the scope the role requires. 5: has run clearly larger scope and could grow into the next stage."
+    },
+    {
+      "id": "results",
+      "label": "Track record of results",
+      "description": "Specific, recent outcomes they drove, not responsibilities they held. 3: at least one clear, quantified result in a recent role. 5: a repeated pattern of quantified results across roles."
+    },
+    {
+      "id": "leadership",
+      "label": "Leadership and team building",
+      "description": "Hiring, developing and keeping strong people. 3: has built or rebuilt a team at the level this role needs. 5: has developed leaders who went on to bigger roles, or built a team from scratch through a growth phase."
+    },
+    {
+      "id": "context",
+      "label": "Stage and context fit",
+      "description": "Experience in a company like this one: size, ownership (founder, venture, private equity, public), growth phase and pace. 3: has worked in a similar context. 5: has succeeded in this exact context, ideally more than once."
+    },
+    {
+      "id": "market",
+      "label": "Industry and market knowledge",
+      "description": "Knowledge of the sector, customers, buyers and regulation this role faces. 3: adjacent sector with transferable knowledge. 5: deep, current knowledge of this exact market and its key players."
+    },
+    {
+      "id": "strategy",
+      "label": "Strategic judgment",
+      "description": "Evidence of setting direction, making trade-offs and changing course when needed, shown in the record or the notes. 3: has owned a plan and its outcome. 5: has shaped company strategy beyond their own function."
+    },
+    {
+      "id": "communication",
+      "label": "Executive presence and communication",
+      "description": "How clearly they communicate with senior stakeholders, boards and clients, as shown in conversation notes and their own materials. 3: clear and credible. 5: notes show they were compelling and persuasive at board or CEO level."
+    },
+    {
+      "id": "motivation",
+      "label": "Motivation and availability",
+      "description": "A credible, job-related reason to consider this move now, and fit with the role's timing, location and travel as stated in the job. 3: open to the move with no blocking constraint. 5: actively motivated by this specific role and available on the client's timeline."
+    }
+  ],
+  "recommendation": {
+    "values": [
+      "yes",
+      "no"
+    ],
+    "meaning": "yes: worth a recruiter conversation for this search. no: not for this search."
+  },
+  "industry": null
+}

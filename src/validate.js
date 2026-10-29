@@ -1,3 +1,7 @@
+import { INDUSTRY_VALUES } from "./schema.js";
+
+const clean = (list) => list.map((t) => t.trim()).filter(Boolean).slice(0, 5);
+
 // Checks a model answer against the scorecard. Never trusts the model's shape.
 export function validateAnswer(answer, scorecard) {
   const errors = [];
@@ -34,8 +38,13 @@ export function validateAnswer(answer, scorecard) {
   } else if (answer.assessment.length > 1500) {
     errors.push("assessment is too long");
   }
-  if (!Array.isArray(answer.open_questions) || answer.open_questions.some((q) => typeof q !== "string")) {
-    errors.push("open_questions must be a list of text");
+  if (!INDUSTRY_VALUES.includes(answer.industry)) errors.push(`industry ${JSON.stringify(answer.industry)} is not one of ${INDUSTRY_VALUES.join(", ")}`);
+  for (const k of ["strongest_signal", "watch_item"]) {
+    if (typeof answer[k] !== "string" || !answer[k].trim()) errors.push(`${k} is empty`);
+    else if (answer[k].length > 300) errors.push(`${k} is too long`);
+  }
+  for (const k of ["where_they_fit", "where_to_probe"]) {
+    if (!Array.isArray(answer[k]) || answer[k].some((q) => typeof q !== "string")) errors.push(`${k} must be a list of text`);
   }
   return { ok: errors.length === 0, errors };
 }
@@ -64,7 +73,11 @@ export function finalize(answer, scorecard) {
     scored_count: scored.length,
     recommendation: answer.recommendation,
     assessment: answer.assessment.trim(),
-    open_questions: answer.open_questions.slice(0, 5),
+    industry: answer.industry,
+    strongest_signal: answer.strongest_signal.trim(),
+    watch_item: answer.watch_item.trim(),
+    where_they_fit: clean(answer.where_they_fit),
+    where_to_probe: clean(answer.where_to_probe),
     flags,
   };
 }

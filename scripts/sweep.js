@@ -11,7 +11,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { parseArgs } from "node:util";
 import { loadEnv } from "../src/env.js";
-import { loadScorecard } from "../src/scorecard.js";
+import { loadScorecard, scorecardResolver, JOB_SCORECARD_DIR } from "../src/scorecard.js";
 import { loadTemplate } from "../src/prompt.js";
 import { getProvider } from "../src/providers/index.js";
 import { loxoClientFromEnv } from "../src/loxo/index.js";
@@ -38,7 +38,7 @@ try {
     client: loxoClientFromEnv(process.env, { allowWrites: writes }),
     provider: await getProvider(process.env.SCORING_PROVIDER || "mock"),
     jobIds,
-    scorecard: loadScorecard(process.env.SCORECARD_FILE || "config/scorecards/standard-executive.v1.json"),
+    scorecard: scorecardResolver({ fallback: loadScorecard(process.env.SCORECARD_FILE || "config/scorecards/standard-executive.v2.json"), dir: process.env.SCORECARD_JOBS_DIR || JOB_SCORECARD_DIR }),
     template: loadTemplate(),
     cfg: writeConfigFromEnv(),
     writes,

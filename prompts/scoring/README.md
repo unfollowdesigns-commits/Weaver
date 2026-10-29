@@ -1,8 +1,11 @@
 # Scoring prompt
 
-The prompt Claude uses to score one candidate against one job's scorecard.
+The prompt Claude uses to give a first read of one candidate against one search's scorecard.
 
-Waiting on DP's scorecard (criteria, scale, fixed or per job). Do not draft the
-prompt until it arrives.
+- `scoring-prompt.v1.md`: first version, assessment and open questions.
+- `scoring-prompt.v2.md` (in use since 29 Oct 2026): written in the firm's own report language
+  (where they fit, where to probe, strongest signal, watch item, industry star) and its
+  scoring habit (3 meets, 4 strong, 5 exceptional).
 
-Versioning: never overwrite. Add `scoring-prompt.v2.md` beside `v1`, and so on.
+Versioning: never overwrite. Add `scoring-prompt.v3.md` beside the others and point
+`DEFAULT_PROMPT` in `src/prompt.js` at it.
