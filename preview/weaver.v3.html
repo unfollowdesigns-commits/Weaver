@@ -1,0 +1,402 @@
+<title>Shortlist Scoring Preview</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Spectral:ital,wght@0,300;0,400;1,300&family=Public+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+  /* Layout: a short, calm page for a busy founder. One live demo (his pipeline board),
+     then the scorecard, the safeguards and the one step to start. */
+  :root {
+    --paper: #f5f6f3; --sheet: #ffffff; --ink: #17201d; --ink-2: #4d5753; --rule: #d6dbd6;
+    --pine: #1e4a3d; --pine-soft: #e3ece7; --on-pine: #f5f6f3;
+    --yes: #1e6b4a; --no: #8a908c; --wait: #9a6a1a;
+    --display: "Spectral", Georgia, "Times New Roman", serif;
+    --body: "Public Sans", -apple-system, "Segoe UI", Helvetica, Arial, sans-serif;
+    --mono: "IBM Plex Mono", ui-monospace, Menlo, Consolas, monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --paper: #121715; --sheet: #19201d; --ink: #e7ebe8; --ink-2: #a3ada8; --rule: #2e3833;
+      --pine: #8cc4ad; --pine-soft: #1f2d27; --on-pine: #121715;
+      --yes: #7fcca5; --no: #8e9692; --wait: #e0b46a; color-scheme: dark;
+    }
+  }
+  :root[data-theme="dark"] {
+    --paper: #121715; --sheet: #19201d; --ink: #e7ebe8; --ink-2: #a3ada8; --rule: #2e3833;
+    --pine: #8cc4ad; --pine-soft: #1f2d27; --on-pine: #121715;
+    --yes: #7fcca5; --no: #8e9692; --wait: #e0b46a; color-scheme: dark;
+  }
+  * { box-sizing: border-box; }
+  body { background: var(--paper); color: var(--ink); font: 400 16px/1.6 var(--body); -webkit-font-smoothing: antialiased; }
+  .wrap { max-width: 1000px; margin: 0 auto; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+  h1, h2 { font-family: var(--display); font-weight: 300; line-height: 1.15; margin: 0; text-wrap: balance; }
+  h1 { font-size: clamp(36px, 6.4vw, 60px); max-width: 15ch; }
+  h2 { font-size: clamp(26px, 4vw, 36px); }
+  p { margin: 0; }
+  .label { font: 500 11.5px/1.3 var(--body); letter-spacing: .12em; text-transform: uppercase; color: var(--ink-2); }
+  button { font: inherit; color: inherit; }
+  :focus-visible { outline: 2px solid var(--pine); outline-offset: 2px; }
+
+  .top .wrap { display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; padding-block: 16px; border-bottom: 1px solid var(--rule); }
+  .brand { font: 400 20px/1 var(--display); }
+  .hero .wrap { padding-block: clamp(44px, 8vw, 88px) 36px; display: grid; gap: 20px; }
+  .lede { font-size: 19px; color: var(--ink-2); max-width: 54ch; }
+
+  .steps { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0; border-top: 1px solid var(--rule); border-bottom: 1px solid var(--rule); }
+  .step { padding: 20px 20px 22px 0; display: grid; gap: 6px; }
+  .step + .step { padding-left: 20px; border-left: 1px solid var(--rule); }
+  .step .n { font: 400 13px/1 var(--mono); color: var(--pine); }
+  .step b { font-weight: 600; }
+  .step span { color: var(--ink-2); font-size: 15px; }
+
+  section.block .wrap { padding-block: 64px 0; display: grid; gap: 22px; }
+  .intro { display: grid; gap: 8px; max-width: 62ch; }
+  .intro p { color: var(--ink-2); }
+
+  /* Demo */
+  .demo { background: var(--sheet); border: 1px solid var(--rule); min-width: 0; }
+  .demo-head { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; padding: 14px 18px; border-bottom: 1px solid var(--rule); }
+  .demo-head .t { font: 300 22px/1.2 var(--display); }
+  .demo-head .s { font-size: 13px; color: var(--ink-2); }
+  .add { background: var(--pine); color: var(--on-pine); border: 0; padding: 10px 14px; font-weight: 600; font-size: 14px; cursor: pointer; }
+  .add[disabled] { opacity: .6; cursor: default; }
+  .demo-body { display: grid; grid-template-columns: minmax(0, 1fr) 340px; }
+  .board-scroll { overflow-x: auto; border-right: 1px solid var(--rule); }
+  .board { display: grid; grid-template-columns: repeat(3, minmax(190px, 1fr)); gap: 14px; padding: 16px; min-width: 610px; }
+  .col { display: grid; gap: 10px; align-content: start; }
+  .col-name { padding-bottom: 6px; border-bottom: 1px solid var(--rule); }
+  .card { text-align: left; border: 1px solid var(--rule); background: var(--paper); padding: 10px 12px; display: grid; gap: 3px; cursor: pointer; width: 100%; }
+  .card:hover { border-color: var(--pine); }
+  .card[aria-pressed="true"] { border-color: var(--pine); box-shadow: inset 3px 0 0 var(--pine); }
+  .card b { font-weight: 600; font-size: 14px; }
+  .card .r { font-size: 13px; color: var(--ink-2); }
+  .card .ai { font: 500 12.5px/1.3 var(--mono); display: flex; align-items: center; gap: 6px; margin-top: 5px; padding-top: 6px; border-top: 1px dashed var(--rule); }
+  .card .ai::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: var(--no); flex: none; }
+  .card .ai.yes::before { background: var(--yes); }
+  .card .ai.wait { color: var(--wait); }
+  .card .ai.wait::before { background: var(--wait); animation: pulse 1s ease-in-out infinite; }
+  .card.fresh { animation: land 2.4s ease-out; }
+  @keyframes pulse { 50% { opacity: .25; } }
+  @keyframes land { from { background: var(--pine-soft); } to { background: var(--paper); } }
+
+  .detail { padding: 18px; display: grid; gap: 14px; align-content: start; min-width: 0; }
+  .detail h3 { margin: 0; font: 400 22px/1.2 var(--display); }
+  .detail .r { color: var(--ink-2); font-size: 14px; margin-top: 2px; }
+  .sum { display: flex; gap: 16px; align-items: baseline; flex-wrap: wrap; }
+  .sum .avg { font: 500 28px/1 var(--mono); }
+  .rec { font-weight: 600; font-size: 14px; }
+  .rec.yes { color: var(--yes); } .rec.no { color: var(--no); }
+  .crit { display: grid; gap: 6px; }
+  .crit-row { display: grid; grid-template-columns: minmax(0, 1fr) auto 14px; gap: 10px; align-items: center; font-size: 13.5px; }
+  .dots { display: inline-flex; gap: 3px; }
+  .dots i { width: 9px; height: 9px; border-radius: 50%; border: 1px solid var(--pine); }
+  .dots i.on { background: var(--pine); }
+  .crit-row .v { font: 400 12.5px/1 var(--mono); text-align: right; }
+  .note { font-size: 14.5px; }
+  .ask { font-size: 13.5px; color: var(--ink-2); }
+  .review { justify-self: start; background: none; border: 1px solid var(--pine); color: var(--pine); padding: 8px 12px; font-weight: 600; font-size: 14px; cursor: pointer; }
+  .review[aria-pressed="true"] { background: var(--pine); color: var(--on-pine); }
+  .hint { color: var(--ink-2); font-size: 14px; }
+
+  /* Package */
+  .pkg { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 12px; }
+  .pkg .tile { grid-column: span 2; }
+  .pkg .tile.main { grid-column: span 3; padding: 22px; }
+  .pkg .tile.main b { font-size: 24px; }
+  .pkg .tile.main span { font-size: 15px; }
+  .tile { background: var(--sheet); border: 1px solid var(--rule); padding: 16px; display: grid; gap: 8px; align-content: start; }
+  .tile.main { border-color: var(--pine); box-shadow: inset 0 3px 0 var(--pine); }
+  .tile .k { font: 500 11px/1.3 var(--body); letter-spacing: .12em; text-transform: uppercase; color: var(--pine); }
+  .tile b { font: 400 19px/1.25 var(--display); }
+  .tile span { color: var(--ink-2); font-size: 14px; }
+  .tile a { color: var(--pine); font-size: 13.5px; font-weight: 600; text-decoration: none; }
+  .tile a:hover { text-decoration: underline; }
+
+  /* Ask */
+  .claude { background: var(--sheet); border: 1px solid var(--rule); min-width: 0; }
+  .claude-head { display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; padding: 14px 18px; border-bottom: 1px solid var(--rule); font-size: 13px; color: var(--ink-2); }
+  .claude-head b { color: var(--ink); font-weight: 600; }
+  .tabs { display: flex; gap: 8px; flex-wrap: wrap; padding: 14px 18px 0; }
+  .tab { border: 1px solid var(--rule); background: var(--paper); padding: 8px 12px; font-size: 14px; cursor: pointer; }
+  .tab[aria-selected="true"] { background: var(--pine); color: var(--on-pine); border-color: var(--pine); }
+  .claude .chat { border: 0; background: none; }
+  .chat { background: var(--sheet); border: 1px solid var(--rule); padding: 18px; display: grid; gap: 12px; }
+  .bubble { max-width: 62ch; padding: 10px 14px; font-size: 15px; }
+  .bubble.me { justify-self: end; background: var(--pine); color: var(--on-pine); }
+  .bubble.ai { background: var(--paper); border: 1px solid var(--rule); }
+  .bubble ol { margin: 6px 0 4px; padding-left: 20px; display: grid; gap: 6px; }
+
+  /* Scorecard */
+  .sc { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); border-top: 1px solid var(--rule); }
+  .sc div { padding: 16px 18px 18px 0; border-bottom: 1px solid var(--rule); display: grid; gap: 4px; }
+  .sc b { font-weight: 600; }
+  .sc span { color: var(--ink-2); font-size: 14.5px; }
+  .scale { display: flex; flex-wrap: wrap; gap: 6px 18px; font-size: 14px; color: var(--ink-2); }
+  .scale b { font-family: var(--mono); color: var(--ink); margin-right: 4px; font-weight: 500; }
+
+  ul.safe { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 24px; }
+  ul.safe li { display: grid; gap: 6px; padding-top: 14px; border-top: 2px solid var(--pine); }
+  ul.safe b { font-weight: 600; }
+  ul.safe span { color: var(--ink-2); font-size: 15px; }
+
+  .start { background: var(--pine); color: var(--on-pine); margin-top: 72px; }
+  .start .wrap { padding-block: 56px; display: grid; gap: 20px; }
+  .start h2 { color: var(--on-pine); }
+  .start ol { margin: 0; padding-left: 22px; display: grid; gap: 10px; max-width: 62ch; font-size: 17px; }
+  .start p { max-width: 62ch; opacity: .85; }
+  footer .wrap { padding-block: 22px 44px; font-size: 13px; color: var(--ink-2); display: flex; justify-content: space-between; flex-wrap: wrap; gap: 8px; }
+
+  @media (max-width: 960px) { .pkg { grid-template-columns: repeat(2, minmax(0, 1fr)); } .pkg .tile { grid-column: auto; } .pkg .tile.main { grid-column: 1 / -1; } }
+  @media (max-width: 860px) {
+    .demo-body { grid-template-columns: 1fr; }
+    .board-scroll { border-right: 0; border-bottom: 1px solid var(--rule); }
+    .steps, .sc, ul.safe { grid-template-columns: 1fr; }
+    .step + .step { padding-left: 0; border-left: 0; border-top: 1px solid var(--rule); }
+    .sc div { padding-right: 0; }
+  }
+  @media (max-width: 640px) {
+    .pkg { grid-template-columns: 1fr; }
+    .pkg .tile, .pkg .tile.main { grid-column: auto; }
+    .board { grid-template-columns: 1fr; min-width: 0; }
+  }
+  @media (prefers-reduced-motion: reduce) { .card.fresh, .card .ai.wait::before { animation: none; } }
+</style>
+
+<div class="top"><div class="wrap">
+  <span class="brand">Weaver</span>
+  <span class="label">Preview with sample candidates</span>
+</div></div>
+
+<section class="hero"><div class="wrap">
+  <span class="label">For your team on Loxo</span>
+  <h1>Know who to call first, on every search.</h1>
+  <p class="lede">Two things, working together inside the tools you already use. <b>Weaver</b> scores every candidate on your searches and puts the score, the reasons and the rank right on the candidate in Loxo. <b>Your Claude, connected to Loxo,</b> answers any question about your candidates in seconds. Your team decides.</p>
+  <div class="steps">
+    <div class="step"><span class="n">1</span><b>Add candidates as usual</b><span>Nothing changes in how your team works in Loxo.</span></div>
+    <div class="step"><span class="n">2</span><b>Weaver scores them</b><span>Work history, resume and notes, read in about a minute.</span></div>
+    <div class="step"><span class="n">3</span><b>You see the ranking</b><span>Score, reasons and rank on each card. You decide who moves on.</span></div>
+  </div>
+</div></section>
+
+<section class="block" id="package"><div class="wrap">
+  <div class="intro">
+    <span class="label">The package</span>
+    <h2>Everything you get</h2>
+    <p>Set up for you, tested on your real searches, and looked after every month.</p>
+  </div>
+  <div class="pkg">
+    <div class="tile main"><span class="k">Automatic</span><b>Weaver scoring</b><span>Every candidate on your chosen searches is scored against the scorecard, ranked, and saved on the card in Loxo. New candidates too, by themselves.</span><a href="#try">See it below</a></div>
+    <div class="tile main"><span class="k">On demand</span><b>Claude, connected to Loxo</b><span>Your team asks Claude about any candidate or search and gets the answer from your own Loxo: shortlists, call prep, client updates.</span><a href="#ask">See it below</a></div>
+    <div class="tile"><span class="k">Before launch</span><b>Full test on your searches</b><span>Every candidate on your open searches scored, with a summary and one report per search, before anything appears in Loxo.</span></div>
+    <div class="tile"><span class="k">Launch day</span><b>Team walkthrough</b><span>30 minutes with your team, plus a one-page guide to reading the scores.</span></div>
+    <div class="tile"><span class="k">Every month</span><b>Care and tuning</b><span>We watch costs and errors, adjust the scoring to how your team judges, and add searches when you ask.</span></div>
+  </div>
+</div></section>
+
+<section class="block" id="try"><div class="wrap">
+  <div class="intro">
+    <span class="label">Part 1 · Weaver scoring</span>
+    <h2>Your pipeline, with one extra line on each card</h2>
+    <p>Tap a candidate to see why they scored what they did. Then add a new candidate and watch it get scored.</p>
+  </div>
+  <div class="demo">
+    <div class="demo-head">
+      <div><div class="t">VP Sales · sample search</div><div class="s"><span id="count">8</span> candidates · ranked by score</div></div>
+      <button class="add" id="add" type="button">Add a candidate</button>
+    </div>
+    <div class="demo-body">
+      <div class="board-scroll"><div class="board" id="board"></div></div>
+      <div class="detail" id="detail"></div>
+    </div>
+  </div>
+</div></section>
+
+<section class="block" id="ask"><div class="wrap">
+  <div class="intro">
+    <span class="label">Part 2 · Claude, connected to Loxo</span>
+    <h2>Ask anything about your candidates</h2>
+    <p>We connect the Claude your team already uses to your Loxo, using Loxo's own official connection. Then anyone on the team can ask in plain English and get answers from your real data, including Weaver's scores. Pick a question:</p>
+  </div>
+  <div class="claude">
+    <div class="claude-head"><span><b>Claude</b> · connected to your Loxo</span><span>sample answers</span></div>
+    <div class="tabs" role="tablist" id="tabs"></div>
+    <div class="chat" id="chat" role="tabpanel"></div>
+  </div>
+</div></section>
+
+<section class="block"><div class="wrap">
+  <div class="intro">
+    <span class="label">The scorecard</span>
+    <h2>Nine questions every executive search asks</h2>
+    <p>Ready to use. Change any of them and Weaver follows.</p>
+  </div>
+  <div class="scale"><span><b>1–2</b>below the bar</span><span><b>3</b>meets</span><span><b>4</b>strong</span><span><b>5</b>exceptional</span><span>No score when there is no evidence, instead of a guess.</span></div>
+  <div class="sc">
+    <div><b>Functional expertise</b><span>Has led this function at this level.</span></div>
+    <div><b>Scale and scope</b><span>Teams, budgets and revenue run, compared with the role.</span></div>
+    <div><b>Track record</b><span>Specific, recent results, not job titles.</span></div>
+    <div><b>Leadership</b><span>Built and developed strong teams.</span></div>
+    <div><b>Stage and context</b><span>Has worked in a company like this one.</span></div>
+    <div><b>Market knowledge</b><span>Knows the sector, customers and buyers.</span></div>
+    <div><b>Strategic judgement</b><span>Has set direction and owned the outcome.</span></div>
+    <div><b>Executive presence</b><span>Clear and credible with boards and CEOs.</span></div>
+    <div><b>Motivation and timing</b><span>A real reason to move now, and fits the role's location.</span></div>
+  </div>
+</div></section>
+
+<section class="block"><div class="wrap">
+  <div class="intro"><span class="label">Peace of mind</span><h2>Built to be safe</h2></div>
+  <ul class="safe">
+    <li><b>Your team decides</b><span>Every score is a recommendation with its reasons. Nobody is moved or rejected automatically.</span></li>
+    <li><b>You approve first</b><span>We test it on your real searches and show you the results before anything appears in Loxo.</span></li>
+    <li><b>Private</b><span>Runs in your firm's own accounts. Names, contact details and pay are never sent to the AI.</span></li>
+  </ul>
+</div></section>
+
+<section class="start"><div class="wrap">
+  <span class="label" style="color:var(--on-pine);opacity:.75">To start</span>
+  <h2>Two things from you, the rest is on us</h2>
+  <ol>
+    <li>Access to your Loxo. We'll show you where to create it; it takes two minutes.</li>
+    <li>Which searches to test: all your open ones, or a few you pick.</li>
+  </ol>
+  <p>We run the full test and send you the results. When you say yes, we switch on Weaver, connect your Claude to Loxo, and walk your team through both. Nothing changes in Loxo before that.</p>
+</div></section>
+
+<footer><div class="wrap"><span>Weaver · prepared by Houssem Gabsi</span><span>Sample candidates only</span></div></footer>
+
+<script>
+(function () {
+  var criteria = ["Functional expertise", "Scale and scope", "Track record", "Leadership", "Stage and context",
+    "Market knowledge", "Strategic judgement", "Executive presence", "Motivation and timing"];
+  var people = [
+    { id: "a", name: "Candidate A", role: "VP Sales, Series C software", col: 2, s: [4,5,5,4,4,5,4,4,3], rec: "Yes",
+      text: "Built and ran a sales team through two funding rounds, the stage this company is at. Results are recent and specific.", ask: "Ask early about relocation." },
+    { id: "b", name: "Candidate B", role: "Head of Revenue, PE-backed", col: 1, s: [4,4,4,4,5,4,4,5,5], rec: "Yes",
+      text: "Strong fit for a backed company in a growth phase, across new business and account growth. Communicates clearly.", ask: "Sector is adjacent rather than identical." },
+    { id: "c", name: "Candidate C", role: "Regional Sales Director, public co.", col: 2, s: [4,4,4,5,3,4,3,3,4], rec: "Yes",
+      text: "Leads a large team and delivers consistently, inside a much bigger and more structured company.", ask: "How would they work with less process?" },
+    { id: "d", name: "Candidate D", role: "Director of Sales, Series A", col: 1, s: [3,3,4,3,5,3,4,4,5], rec: "No",
+      text: "Right stage and clearly motivated, but has led a small team compared with what this role needs.", ask: "A strong prospect for a similar search in two years." },
+    { id: "e", name: "Candidate E", role: "Sales Lead, regional agency", col: 1, s: [3,3,3,3,3,3,3,4,4], rec: "No",
+      text: "Meets the bar on most points without standing out on any. Little evidence of results in the record.", ask: "A short call would settle it." },
+    { id: "f", name: "Candidate F", role: "Senior Account Executive", col: 0, s: [3,2,3,2,3,3,4,4,5], rec: "No",
+      text: "A good individual seller who has not yet managed people or a budget. The role asks for both.", ask: "Keep for a more junior search." },
+    { id: "g", name: "Candidate G", role: "CCO, seed stage company", col: 0, s: [3,3,3,3,4,2,2,3,3], rec: "No",
+      text: "Different sector and a thin record on results. Notes say they are not looking this year.", ask: "Not a fit for this search." },
+    { id: "h", name: "Candidate H", role: "Business Development Manager", col: 0, s: [2,2,3,2,2,2,3,3,4], rec: "No",
+      text: "Early in their career for a role at this level.", ask: "Keep for a more junior search." }
+  ];
+  var newcomer = { id: "i", name: "Candidate I", role: "VP Commercial, Series B fintech", col: 0, s: [4,4,4,5,5,3,4,4,4], rec: "Yes",
+    text: "Has run sales at a company of this size and stage and grown the team. Less depth in the sector, though the buyers are similar.", ask: "Worth an early call." };
+  var cols = ["New", "Screening", "Interview"];
+  var reviewed = {};
+  var selected = "b";
+  var scoring = false;
+
+  var avg = function (p) { return p.s.reduce(function (a, b) { return a + b; }, 0) / p.s.length; };
+  var board = document.getElementById("board");
+  var detail = document.getElementById("detail");
+
+  function ranks() {
+    var r = {};
+    people.slice().sort(function (x, y) { return avg(y) - avg(x); }).forEach(function (p, i) { r[p.id] = i + 1; });
+    return r;
+  }
+
+  function render(freshId) {
+    var r = ranks();
+    var html = "";
+    cols.forEach(function (name, ci) {
+      html += '<div class="col"><div class="col-name label">' + name + "</div>";
+      if (ci === 0 && scoring) {
+        html += '<div class="card"><b>' + newcomer.name + '</b><span class="r">' + newcomer.role + '</span><span class="ai wait">Scoring…</span></div>';
+      }
+      people.filter(function (p) { return p.col === ci; })
+        .sort(function (x, y) { return r[x.id] - r[y.id]; })
+        .forEach(function (p) {
+          html += '<button type="button" class="card' + (p.id === freshId ? " fresh" : "") + '" data-id="' + p.id + '" aria-pressed="' + (p.id === selected) + '">' +
+            "<b>" + p.name + '</b><span class="r">' + p.role + "</span>" +
+            '<span class="ai' + (p.rec === "Yes" ? " yes" : "") + '">' + avg(p).toFixed(1) + " · " + p.rec + " · #" + r[p.id] + " of " + people.length + "</span></button>";
+        });
+      html += "</div>";
+    });
+    board.innerHTML = html;
+    document.getElementById("count").textContent = people.length;
+    showDetail();
+  }
+
+  function showDetail() {
+    var p = people.find(function (x) { return x.id === selected; });
+    if (!p) { detail.innerHTML = '<p class="hint">Tap a candidate to see their scorecard.</p>'; return; }
+    var r = ranks();
+    var rows = criteria.map(function (c, k) {
+      var dots = "";
+      for (var i = 1; i <= 5; i++) dots += '<i class="' + (i <= p.s[k] ? "on" : "") + '"></i>';
+      return '<div class="crit-row"><span>' + c + '</span><span class="dots" aria-hidden="true">' + dots + '</span><span class="v">' + p.s[k] + "</span></div>";
+    }).join("");
+    var done = !!reviewed[p.id];
+    detail.innerHTML =
+      '<div><span class="label">Rank ' + r[p.id] + " of " + people.length + "</span><h3>" + p.name + '</h3><div class="r">' + p.role + "</div></div>" +
+      '<div class="sum"><span class="avg">' + avg(p).toFixed(1) + '</span><span class="rec ' + (p.rec === "Yes" ? "yes" : "no") + '">' + (p.rec === "Yes" ? "Worth a call" : "Not for this search") + "</span></div>" +
+      '<div class="crit">' + rows + "</div>" +
+      '<p class="note">' + p.text + "</p>" +
+      '<p class="ask"><b>Check on the call:</b> ' + p.ask + "</p>" +
+      '<button type="button" class="review" id="rv" aria-pressed="' + done + '">' + (done ? "Reviewed" : "Mark as reviewed") + "</button>";
+  }
+
+  board.addEventListener("click", function (e) {
+    var c = e.target.closest(".card[data-id]");
+    if (!c) return;
+    selected = c.getAttribute("data-id");
+    render();
+  });
+  detail.addEventListener("click", function (e) {
+    if (!e.target.closest("#rv")) return;
+    reviewed[selected] = !reviewed[selected];
+    showDetail();
+  });
+
+  var add = document.getElementById("add");
+  add.addEventListener("click", function () {
+    if (scoring || people.some(function (p) { return p.id === newcomer.id; })) return;
+    scoring = true;
+    add.disabled = true;
+    add.textContent = "Scoring…";
+    render();
+    var reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    setTimeout(function () {
+      scoring = false;
+      people.push(newcomer);
+      selected = newcomer.id;
+      add.textContent = "Added and scored";
+      render(newcomer.id);
+    }, reduce ? 300 : 1800);
+  });
+
+  var qa = [
+    { q: "Top 3 on the VP Sales search, and why?", a: "From the scores on this search:<ol><li><b>Candidate B</b> (4.3): fits a backed company in a growth phase. Check: sector is adjacent.</li><li><b>Candidate A</b> (4.2): built a team through two funding rounds. Check: relocation.</li><li><b>Candidate C</b> (3.8): leads a large team, steady results. Check: comfort with less process.</li></ol>Want call prep for Candidate B?" },
+    { q: "Prep my call with Candidate B in 5 lines.", a: "<ol><li>Head of Revenue at a PE-backed services firm; team of 22.</li><li>Grew revenue 2.3x in four years, selling to finance leaders.</li><li>Scored 4.3: strongest on stage fit and executive presence.</li><li>Open point: the sector is adjacent; ask how they would ramp.</li><li>Notes: wants to move back into software, 60 days' notice.</li></ol>" },
+    { q: "Draft this week's update for the client on the VP Sales search.", a: "Here is a draft you can edit:<br><br><i>This week we reviewed 9 candidates against the agreed scorecard. Three stand out: one revenue leader from a PE-backed business, one VP Sales who scaled a team through two funding rounds, and one regional director from a public company. We are scheduling first calls this week and will share short profiles by Friday.</i>" },
+    { q: "Who in our database could fit a CRO search in DC?", a: "Searching your Loxo for revenue leaders in the DC area:<ol><li><b>Candidate B</b>: Head of Revenue, Arlington. Already on your VP Sales search.</li><li><b>Candidate C</b>: Regional Sales Director, Washington DC.</li></ol>Want me to add them to the CRO search so Weaver scores them?" }
+  ];
+  var tabs = document.getElementById("tabs");
+  var chat = document.getElementById("chat");
+  var current = 0;
+  function showQA() {
+    tabs.innerHTML = qa.map(function (x, i) {
+      return '<button type="button" class="tab" role="tab" aria-selected="' + (i === current) + '" data-i="' + i + '">' + ["Top 3", "Call prep", "Client update", "Search the database"][i] + "</button>";
+    }).join("");
+    chat.innerHTML = '<div class="bubble me">' + qa[current].q + '</div><div class="bubble ai">' + qa[current].a + "</div>";
+  }
+  tabs.addEventListener("click", function (e) {
+    var t = e.target.closest(".tab");
+    if (!t) return;
+    current = Number(t.getAttribute("data-i"));
+    showQA();
+  });
+  showQA();
+
+  render();
+})();
+</script>
