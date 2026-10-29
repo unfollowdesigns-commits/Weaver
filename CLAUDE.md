@@ -180,6 +180,10 @@ fields `title`, `company` (text), `city`/`state`/`country`, `description`,
 and compensation fields on the person (`compensation`, `salary`, `bonus`,
 `equity`), which stay out of the model input. `src/loxo/map.js` handles both
 these names and the earlier guesses. Still to confirm on the real account.
+Its tests (29 Oct) show a pipeline entry as `{ id, person: { name },
+workflow_stage_id }` (person nested, so the person id is `person.id`) and a
+created event returned as `{ person_event: { id, person_id, job_id, ... } }`.
+Both already handled. Test fixtures written by that developer, not Loxo.
 
 ## Status
 
