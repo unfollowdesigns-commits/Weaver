@@ -68,6 +68,11 @@ if (!args.results) {
   console.log(`  scored ${results.filter((r) => r.status === "scored").length} with ${provider.name}`);
 }
 
+// The range the firm actually uses, when the search's scorecard sets one.
+{
+  const sc = scorecardResolver({ fallback: loadScorecard(process.env.SCORECARD_FILE || "config/scorecards/standard-executive.v2.json"), dir: args["scorecards-dir"] })(job.id, job);
+  if (sc.pay_range) job.pay_range = sc.pay_range;
+}
 const stages = loadStages(args.stages);
 const teamCards = await teamScorecards(client, jobId);
 let model = buildReportModel({ job, candidates, results, teamCards, stages, firm: args.firm, client: args.client });

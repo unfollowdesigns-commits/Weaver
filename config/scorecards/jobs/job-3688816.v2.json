@@ -1,0 +1,85 @@
+{
+  "id": "job-3688816",
+  "version": 2,
+  "name": "Head of Finance and Accounting scorecard",
+  "job": {
+    "id": "3688816",
+    "title": "Head of Finance and Accounting"
+  },
+  "status": "approved for testing",
+  "approved_at": "2026-10-30",
+  "note": "Labels exactly as the firm's Loxo template on this search. v2 (30 Oct 2026) after review against the firm's own report: one fixed location rule, direct-industry anchors so IT solutions finance scores high, adjacent widened to match the firm's own stars, the firm's range ceiling ($200k), and what No means. Location rule and range to confirm with Josh.",
+  "scale": {
+    "min": 1,
+    "max": 5,
+    "labels": {
+      "1": "Does not meet",
+      "2": "Weak",
+      "3": "Meets",
+      "4": "Strong",
+      "5": "Exceptional"
+    },
+    "note": "Scored critically: 3 means meets, 4 is strong, 5 is kept for areas where the candidate is exceptional."
+  },
+  "criteria": [
+    {
+      "id": "industry",
+      "label": "Relevant Industry Experience and Insight",
+      "description": "Knows IT solutions economics from the inside: partner and OEM funding, vendor programs, gross margin and services mix. Any finance role at an IT solutions provider, value-added reseller, systems integrator or MSP counts as direct, for example CDW, Presidio, Insight, SHI, World Wide Technology, AHEAD, CBTS or Red River. 3: adjacent industry only (technology infrastructure, enterprise software or tech-enabled services), or under two years at an IT solutions provider. 4: several years in a senior finance role at an IT solutions provider. 5: years of finance leadership at an IT solutions provider, owning partner and vendor economics."
+    },
+    {
+      "id": "accounting",
+      "label": "Accounting Leadership & Technical Depth",
+      "description": "Ownership of the accounting side, not FP&A alone: the close, GAAP reporting, controllership, audit. 3: has owned the monthly and annual close and the financial statements as controller or equivalent, usually with a CPA. 5: has run the full accounting function as its primary owner, built controls and audit readiness, and still works hands-on in it."
+    },
+    {
+      "id": "location",
+      "label": "Relocation or Commuting",
+      "description": "Fixed rule for this search: the company is based in Tampa, Florida. The role can be held from elsewhere with regular travel to Tampa as needed; living in the Tampa Bay area is a plus. Score from where the candidate lives and what the notes say about travel or relocation. 5: lives in the Tampa Bay area. 4: lives in Florida, or the notes confirm they will travel to Tampa as needed or relocate. 3: lives elsewhere in the US and nothing in the record rules out regular travel. 2: the notes show a limit on travel or relocation. 1: the notes say they will not travel or relocate. Location unknown: no evidence."
+    },
+    {
+      "id": "fpa",
+      "label": "FP&A, Budgeting & Financial Strategy",
+      "description": "Planning, budgeting, forecasting and turning numbers into decisions. 3: has run budgeting and forecasting cycles and supported business decisions with analysis. 5: built or led an FP&A function, owned the company plan, and shaped strategy with the leadership team."
+    },
+    {
+      "id": "scaling",
+      "label": "Scaling & Growth Experience",
+      "description": "Building finance for a growing company of this size, including acquisitions. 3: has supported growth, a new entity or an acquisition integration. 5: has built or scaled a finance function through rapid growth or private equity ownership, including M&A integration, at a comparable size."
+    },
+    {
+      "id": "cash",
+      "label": "Cash Flow & Working Capital Management",
+      "description": "Owning liquidity: cash forecasting, working capital, lender relationships. 3: has owned cash forecasting (for example a 13-week forecast) and working capital. 5: drove measurable improvements in cash conversion or working capital, and managed banks or lenders directly."
+    },
+    {
+      "id": "systems",
+      "label": "Systems and ability to create efficiences",
+      "description": "Finance systems and automation that remove manual work. 3: implemented or improved an ERP, planning or reporting tool (for example NetSuite, Workday Adaptive Planning, Power BI). 5: led system rollouts or automation with measured results, such as hours or cost removed."
+    },
+    {
+      "id": "csuite",
+      "label": "C-Suite Partnership and Commercial Acument",
+      "description": "Working as a partner to the CEO and business leaders, with a commercial view. 3: reports to or works closely with a CEO, CFO or business unit head and supports their decisions. 5: a trusted advisor relied on by the CEO or a business leader, shaping commercial decisions with measurable impact."
+    },
+    {
+      "id": "market",
+      "label": "Ability to be the face and in the market",
+      "description": "Representing the company outside: partners, vendors, lenders, the local business community. 3: has represented finance with banks, auditors, partners or the board. 5: a visible external presence (lenders, investors, industry groups such as ACG) that clearly benefited the business."
+    }
+  ],
+  "recommendation": {
+    "values": [
+      "yes",
+      "no"
+    ],
+    "meaning": "yes: worth a recruiter conversation for this search. no: misses a must-have for this search, whatever the average: no direct or adjacent industry experience, or the notes rule out the location. Say which must-have in the assessment."
+  },
+  "industry": {
+    "direct": "IT solutions providers, value-added resellers (VARs), systems integrators or managed service providers (MSPs), for example CDW, Presidio, Insight, SHI, World Wide Technology, AHEAD, CBTS, Red River.",
+    "adjacent": "Data center, fiber and telecom, networking, cloud or security infrastructure businesses, and enterprise software, SaaS or other technology companies selling to businesses."
+  },
+  "pay_range": {
+    "max": 200000
+  }
+}

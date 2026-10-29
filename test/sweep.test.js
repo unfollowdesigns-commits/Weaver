@@ -60,7 +60,7 @@ test("batch mode: first run submits only the unassessed candidate, next run writ
   assert.equal(s2.written, 1);
   assert.equal(s2.submitted, 0);
   assert.equal(posts[0].person_id, 9);
-  assert.ok(posts[0].summary.includes("no_resume_text"));
+  assert.ok(posts[0].summary.includes("no_resume:"));
 
   const s3 = await sweep(client, provider);
   assert.equal(s3.written + s3.submitted, 0);

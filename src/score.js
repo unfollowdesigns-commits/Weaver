@@ -5,7 +5,7 @@ import { validateAnswer, finalize } from "./validate.js";
 
 // Flags about the input, shown to the recruiter next to the score.
 export const INPUT_FLAGS = {
-  no_resume: "no_resume_text: resume missing or not readable as text; scored on profile and notes only",
+  no_resume: "no_resume: no resume file in Loxo; read from the profile, work history and notes",
   resume_truncated: "resume_truncated: Loxo returned only part of the resume text",
   resume_trimmed: "resume_trimmed: very long resume, only the first part was read",
   notes_trimmed: "notes_trimmed: only the most recent notes were read",
@@ -40,6 +40,14 @@ export function resultFromAnswer({ base, answer, model, usage, scorecard, flagCo
   const check = validateAnswer(answer, scorecard);
   if (!check.ok) return { ...base, status: "error", error: `invalid answer: ${check.errors.join("; ")}` };
   const result = { ...base, status: "scored", model, usage: usage ?? null, ...finalize(answer, scorecard) };
+  // No resume file: evidence cannot come "from the resume" (30 Oct 2026 review). Point it at
+  // the profile instead, so the flag and the evidence agree.
+  if (flagCodes.includes("no_resume")) {
+    const fix = (t) => String(t).replace(/\bresumes?\b/gi, "profile");
+    result.criteria = result.criteria.map((c) => ({ ...c, evidence: fix(c.evidence) }));
+    result.where_they_fit = result.where_they_fit.map(fix);
+    result.assessment = fix(result.assessment);
+  }
   for (const code of flagCodes) if (INPUT_FLAGS[code]) result.flags.push(INPUT_FLAGS[code]);
   return result;
 }
@@ -84,7 +92,9 @@ export async function scoreJob({ candidates, concurrency = 3, onResult, skipThin
         ? { ...resultBase({ candidateId: c.id, candidateName: c.name ?? null, loxo: c.loxo ?? null, job: rest.job, scorecard: rest.scorecard, template: rest.template, provider: rest.provider }), status: "skipped", reason: "not enough in Loxo to score (no resume, work history or notes)" }
         : await scoreCandidate({ candidate: c, ...rest });
       // Pay facts for the team's report, attached after scoring: the AI never saw them.
-      results[i].pay = payFor(c, rest.job?.pay_range ?? null);
+      // The search's scorecard can set the range the firm actually uses (the range on the Loxo
+      // job was $160k-$220k where the firm's own report said it tops out at $200k).
+      results[i].pay = payFor(c, rest.scorecard?.pay_range ?? rest.job?.pay_range ?? null);
       onResult?.(results[i], i);
     }
   }

@@ -29,6 +29,21 @@ export function scrubPay(text) {
     .trim();
 }
 
+// The team's own scores must not reach the model either, or Weaver could echo them back
+// (30 Oct 2026 review: a first read matched the team's screen score exactly). Sentences
+// with a score out of five, or about a screen or scorecard score, are removed.
+const TEAM_SCORE = /\b[1-5](\.\d)?\s?(\/|out of)\s?5\b|\b(screen|scorecard|overall|average)\s+(score|rating)\b|\bscored\s+(a\s+)?[1-5](\.\d)?\b|\brated\s+(a\s+)?[1-5](\.\d)?\b/i;
+
+export function scrubScores(text) {
+  if (typeof text !== "string" || !text) return "";
+  return text
+    .split(/(?<=[.!?;])\s+|\n/)
+    .map((s) => (TEAM_SCORE.test(s) ? "[score removed]" : s))
+    .join(" ")
+    .replace(/(\[score removed\]\s*)+/g, "[score removed] ")
+    .trim();
+}
+
 export function scrubText(text) {
   if (typeof text !== "string") return "";
   return text
@@ -38,7 +53,7 @@ export function scrubText(text) {
     .replace(PHONE, (m) => (m.replace(/\D/g, "").length >= 9 ? "[phone removed]" : m));
 }
 
-const scrubAll = (t) => scrubPay(scrubText(t));
+const scrubAll = (t) => scrubScores(scrubPay(scrubText(t)));
 
 export function toPromptRecord(candidate) {
   return {

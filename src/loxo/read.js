@@ -96,8 +96,18 @@ export async function loadCandidates(client, entries, { concurrency = 3, onProgr
   return { candidates: slots.filter(Boolean), failures };
 }
 
+const norm = (t) => String(t ?? "").toLowerCase().normalize("NFKD").replace(/[^a-z\s]/g, " ").replace(/\s+/g, " ").trim();
+// A listed name matches when every word of it appears in the Loxo name (so "Jane Roe" matches
+// "Jane A. Roe, CPA").
+export function nameMatches(listed, loxoName) {
+  const words = norm(listed).split(" ").filter((w) => w.length > 1);
+  const have = new Set(norm(loxoName).split(" "));
+  return words.length > 0 && words.every((w) => have.has(w));
+}
+
 // stages: optional list of Loxo stage names to keep (case-insensitive), e.g. ["Screened"].
-export async function fetchJobForScoring(client, jobId, { limit, concurrency = 3, onProgress, stages = null } = {}) {
+// names: optional list of people to keep, matched by name (for comparing with a firm's report).
+export async function fetchJobForScoring(client, jobId, { limit, concurrency = 3, onProgress, stages = null, names = null } = {}) {
   const job = await fetchJob(client, jobId);
   let entries = await listJobCandidates(client, jobId);
   const stageNames = await workflowStageNames(client);
@@ -105,9 +115,14 @@ export async function fetchJobForScoring(client, jobId, { limit, concurrency = 3
     const want = stages.map((s) => s.trim().toLowerCase());
     entries = entries.filter((e) => want.includes(String(stageOf(e, stageNames).name ?? "").toLowerCase()));
   }
+  let unmatched = [];
+  if (names?.length) {
+    unmatched = names.filter((n) => !entries.some((e) => nameMatches(n, e.person?.name ?? e.name)));
+    entries = entries.filter((e) => names.some((n) => nameMatches(n, e.person?.name ?? e.name)));
+  }
   if (limit) entries = entries.slice(0, limit);
   const { candidates, failures } = await loadCandidates(client, entries, { concurrency, onProgress, stageNames });
-  return { job, candidates, failures, pipelineCount: entries.length };
+  return { job, candidates, failures, pipelineCount: entries.length, unmatched };
 }
 
 // Scorecards the firm's own team wrote on this job (Weaver's are left out), by person id.

@@ -265,6 +265,19 @@ First probe, job 3688816 (Head of Finance and Accounting, 194 candidates), 29 Oc
   stars match their own report, order close to theirs. A "No" at 3.9 ranked
   first by average: ranking now puts Yes before No, then average. gpt-4.1
   still writes "likely ..." inferences from titles; check Claude on this.
+- Review of the second run (30 Oct 2026, Houssem's coworker), all fixed: model
+  name removed from the report header; candidates now chosen by name from the
+  firm's own report (--names-file, local file in data/), since 3 of the 8 by
+  stage were not in it and the submitted candidate was missing; pay from Loxo
+  pay fields only (notes mixed candidate pay with the firm's outreach pitch and
+  were cut mid-sentence); range from the scorecard ($200k ceiling per the
+  firm's report; the Loxo job said $160k-$220k); adjacent industry widened to
+  match the firm's stars (enterprise software counts); one fixed location rule;
+  direct-industry anchors with named IT solutions firms; "No" means a missed
+  must-have, explained in the report; the team's own scores removed from notes
+  before the model (a first read had matched the team's 4.1 exactly); no
+  resume means evidence never cites a resume; flag legend in the report.
+  Scorecard job-3688816.v2. Location rule and range to confirm with Josh.
 - Rate limit: 429 after a burst of roughly 12 requests a second. Client now
   paces to LOXO_MAX_PER_SECOND (default 4) and retries 429 with 2-30 s waits.
 - Pipeline entry: { id, position, person: {...}, workflow_stage_id,

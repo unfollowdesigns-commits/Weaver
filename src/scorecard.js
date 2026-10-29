@@ -25,6 +25,7 @@ export function checkScorecard(sc) {
   }
   const values = sc.recommendation?.values;
   if (!Array.isArray(values) || values.length < 2) fail("recommendation needs at least two values");
+  if (sc.pay_range != null && !(Number.isFinite(sc.pay_range.min ?? 0) && Number.isFinite(sc.pay_range.max ?? 0))) fail("pay_range needs numeric min and/or max");
   if (sc.industry != null && (typeof sc.industry.direct !== "string" || typeof sc.industry.adjacent !== "string")) {
     fail("industry needs a direct and an adjacent description, or null");
   }

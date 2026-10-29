@@ -211,3 +211,11 @@ test("current title and company come from the open work history entry when the p
   assert.equal(c.current_company, "New Co");
   assert.equal(c.id, "4");
 });
+
+test("names in a list match Loxo names with middle initials and credentials", async () => {
+  const { nameMatches } = await import("../src/loxo/read.js");
+  assert.equal(nameMatches("Jane Roe", "Jane A. Roe, CPA"), true);
+  assert.equal(nameMatches("jane roe", "JANE ROE"), true);
+  assert.equal(nameMatches("Jane Roe", "Janet Roe"), false);
+  assert.equal(nameMatches("", "Jane Roe"), false);
+});

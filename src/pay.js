@@ -58,14 +58,16 @@ export function payCheck(base, range) {
   return { kind: "within", label: "Within range" };
 }
 
+// Base from Loxo's pay fields only. Reading pay out of notes was tried and dropped (30 Oct
+// 2026 review): notes mixed the candidate's pay with the firm's own outreach pitch ("comp is
+// $165k to $200k depending on experience") and lines were cut mid-sentence.
 export function payFor(candidate, range) {
   const comp = candidate?.report?.compensation ?? {};
   const notes = candidate?.report?.pay_notes ?? [];
-  const fromNotes = comp.base ? null : baseFromNotes(notes);
-  const base = comp.base ?? fromNotes;
+  const base = comp.base ?? null;
   return {
     base,
-    base_source: comp.base ? "Loxo" : fromNotes ? "notes" : null,
+    base_source: base ? "Loxo" : null,
     bonus: comp.bonus ?? null,
     equity: comp.equity ?? null,
     notes,

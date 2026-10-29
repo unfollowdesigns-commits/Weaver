@@ -7,11 +7,14 @@ const rec = (r) => (r.recommendation === "yes" ? "Yes" : "No");
 const STAR = { direct: "★", adjacent: "☆", other: "" };
 const who = (r) => r.candidate_name ?? r.candidate_id;
 const k = (n) => `$${Math.round(n / 1000)}k`;
+// Pay from Loxo's own pay fields only. Notes are not quoted: on the real account they mixed
+// candidate pay with the firm's outreach pitch and were cut mid-sentence (30 Oct 2026 review).
+const fieldPay = (r) => (r.pay && r.pay.base_source === "Loxo" ? r.pay : null);
 const payShort = (r) => {
-  const p = r.pay;
+  const p = fieldPay(r);
   if (!p) return "";
-  const base = p.base ? `${k(p.base)}${p.base_source === "notes" ? " (notes)" : ""}` : "";
-  return [base, p.check?.kind && p.check.kind !== "unknown" && p.check.kind !== "norange" ? p.check.label : (!p.base && p.notes?.length ? "See notes" : (!p.base ? "Not on file" : ""))].filter(Boolean).join(" · ");
+  const check = p.check?.kind && !["unknown", "norange"].includes(p.check.kind) ? p.check.label : "";
+  return [k(p.base), check].filter(Boolean).join(" · ");
 };
 const rangeText = (p) => (p?.range ? (p.range.min || p.range.max ? `${p.range.min ? k(p.range.min) : "?"} to ${p.range.max ? k(p.range.max) : "?"}` : p.range.text) : "Not set on the search");
 
@@ -19,7 +22,7 @@ export function toMarkdown(results, meta) {
   const lines = [
     `# First read: ${meta.jobTitle}`,
     "",
-    `Scorecard ${meta.scorecard} · ${meta.provider} · ${meta.when}`,
+    `${meta.when}`,
     "Nothing has been written to Loxo. Every result is waiting for recruiter review.",
     "★ direct industry experience · ☆ adjacent industry",
     "",
@@ -33,7 +36,7 @@ export function toMarkdown(results, meta) {
   });
   for (const r of results.filter((x) => x.status === "scored")) {
     lines.push("", `## ${who(r)} · ${avg(r)} / 5 · ${rec(r)}`, "", r.assessment);
-    if (r.pay) lines.push("", `Pay (not used in the score): ${payShort(r) || "not on file"}. Range: ${rangeText(r.pay)}.`, ...(r.pay.notes ?? []).map((n) => `- ${n}`));
+    if (fieldPay(r)) lines.push("", `Pay (not used in the score): ${payShort(r)}. Range: ${rangeText(r.pay)}.`);
     if (r.where_they_fit.length) lines.push("", "Where they fit:", ...r.where_they_fit.map((q) => `- ${q}`));
     if (r.where_to_probe.length) lines.push("", "Where to probe:", ...r.where_to_probe.map((q) => `- ${q}`));
     lines.push("", "Scorecard:");
@@ -84,7 +87,7 @@ tr:first-child td{border-top:0}
 .dots i{width:22px;height:22px;border-radius:4px;border:1px solid var(--line);font:600 11px/20px inherit;text-align:center;font-style:normal;color:var(--muted)}
 .dots i.on{background:var(--blue);border-color:var(--blue);color:#fff}
 .dots .none{font-size:12px;color:var(--muted);align-self:center}
-.legend{color:var(--muted);font-size:12px;margin-top:10px}
+.legend{color:var(--muted);font-size:12px;margin-top:10px}.legend p{margin:0 0 6px;max-width:900px}
 a{color:var(--blue)}
 tr.skip td{color:var(--muted)}
 td.pay{font-size:13px;white-space:nowrap}td.pay.above{color:#9a5b12;font-weight:600}td.pay.within{color:var(--blue)}
@@ -113,7 +116,7 @@ const scoreCell = (r) => `<span class="score ${r.recommendation}">${avg(r)} / 5<
 export function toIndexHtml(rows, meta) {
   const body = rows.map((r) => `<tr><td><a href="${esc(r.file)}">${esc(r.title)}</a></td><td class="n">${r.candidates}</td><td class="n">${r.scored}</td><td class="n">${r.yes}</td><td class="n">${r.errors}</td></tr>`).join("\n");
   const total = rows.reduce((t, r) => ({ c: t.c + r.candidates, s: t.s + r.scored, y: t.y + r.yes, e: t.e + r.errors }), { c: 0, s: 0, y: 0, e: 0 });
-  const header = `<span class="eyebrow">First read · dry run</span><h1>${rows.length} searches</h1><p class="meta">Scorecard ${esc(meta.scorecard)} · ${esc(meta.provider)} · ${esc(meta.when)}</p>
+  const header = `<span class="eyebrow">First read · dry run</span><h1>${rows.length} searches</h1><p class="meta">${esc(meta.when)}</p>
 <div class="stats"><div><b>${total.c}</b><span>Candidates</span></div><div><b>${total.s}</b><span>Read</span></div><div><b>${total.y}</b><span>Worth a call</span></div></div>`;
   return page(`Dry run: ${rows.length} searches`, header, `<p class="note">Nothing has been written to Loxo. Open a search to see every candidate's first read.</p>
 <div class="table"><table><thead><tr><th>Search</th><th class="n">Candidates</th><th class="n">Scored</th><th class="n">Recommended</th><th class="n">Errors</th></tr></thead>
@@ -123,11 +126,12 @@ export function toIndexHtml(rows, meta) {
 
 export function toHtml(results, meta) {
   const scored = results.filter((r) => r.status === "scored");
+  const showPay = results.some((r) => fieldPay(r));
   const rows = results.map((r, i) => {
-    if (r.status === "skipped") return `<tr class="skip"><td class="rank">–</td><td class="name">${esc(who(r))}</td><td>Not scored</td><td colspan="3">Not enough in Loxo to score: no resume, work history or notes yet.</td></tr>`;
-    if (r.status !== "scored") return `<tr><td class="rank">${i + 1}</td><td class="name">${esc(who(r))}</td><td class="err">Error</td><td colspan="3">${esc(r.error)}</td></tr>`;
+    if (r.status === "skipped") return `<tr class="skip"><td class="rank">–</td><td class="name">${esc(who(r))}</td><td>Not scored</td><td colspan="${showPay ? 3 : 2}">Not enough in Loxo to score: no resume, work history or notes yet.</td></tr>`;
+    if (r.status !== "scored") return `<tr><td class="rank">${i + 1}</td><td class="name">${esc(who(r))}</td><td class="err">Error</td><td colspan="${showPay ? 3 : 2}">${esc(r.error)}</td></tr>`;
     const flags = r.flags.map((f) => `<span class="flag">${esc(f.split(":")[0].replaceAll("_", " "))}</span>`).join("");
-    return `<tr><td class="rank">${i + 1}</td><td><span class="name">${esc(who(r))}</span>${STAR[r.industry] ? `<span class="star" title="${r.industry} industry">${STAR[r.industry]}</span>` : ""}${flags}</td><td>${scoreCell(r)}</td><td class="pay ${esc(r.pay?.check?.kind ?? "")}">${esc(payShort(r))}</td><td>${esc(r.strongest_signal)}</td><td>${esc(r.watch_item)}</td></tr>`;
+    return `<tr><td class="rank">${i + 1}</td><td><span class="name">${esc(who(r))}</span>${STAR[r.industry] ? `<span class="star" title="${r.industry} industry">${STAR[r.industry]}</span>` : ""}${flags}</td><td>${scoreCell(r)}</td>${showPay ? `<td class="pay ${esc(fieldPay(r)?.check?.kind ?? "")}">${esc(payShort(r))}</td>` : ""}<td>${esc(r.strongest_signal)}</td><td>${esc(r.watch_item)}</td></tr>`;
   }).join("\n");
 
   const cards = scored.map((r) => {
@@ -135,19 +139,21 @@ export function toHtml(results, meta) {
     const crit = r.criteria.map((c) => `<div><b>${esc(c.label)}</b>${dots(c.score)}<p>${esc(c.evidence)}</p></div>`).join("");
     return `<section class="card"><div class="card-head"><h3>${esc(who(r))}${STAR[r.industry] ? `<span class="star">${STAR[r.industry]}</span>` : ""}</h3>${scoreCell(r)}</div>
 <p class="sum">${esc(r.assessment)}</p>
-${r.pay ? `<div class="paybox"><span class="k">Pay · from Loxo, not used in the score</span><p><b>${esc(payShort(r) || "Not on file")}</b> · Range on the search: ${esc(rangeText(r.pay))}${r.pay.bonus ? ` · Bonus: ${esc(r.pay.bonus)}` : ""}${r.pay.equity ? ` · Equity: ${esc(r.pay.equity)}` : ""}</p>${r.pay.notes?.length ? `<ul>${r.pay.notes.map((n) => `<li>${esc(n)}</li>`).join("")}</ul>` : ""}</div>` : ""}
+${fieldPay(r) ? `<div class="paybox"><span class="k">Pay · from Loxo, not used in the score</span><p><b>${esc(payShort(r))}</b> · Range on the search: ${esc(rangeText(r.pay))}${r.pay.bonus ? ` · Bonus: ${esc(r.pay.bonus)}` : ""}${r.pay.equity ? ` · Equity: ${esc(r.pay.equity)}` : ""}</p></div>` : ""}
 <div class="cols"><div><h4>Where they fit</h4><ul>${list(r.where_they_fit)}</ul></div><div class="probe"><h4>Where to probe</h4><ul>${list(r.where_to_probe)}</ul></div></div>
 <div class="crit">${crit}</div></section>`;
   }).join("\n");
 
   const yes = scored.filter((r) => r.recommendation === "yes").length;
   const skipped = results.filter((r) => r.status === "skipped").length;
-  const header = `<span class="eyebrow">First read · dry run</span><h1>${esc(meta.jobTitle)}</h1><p class="meta">Scorecard ${esc(meta.scorecard)} · ${esc(meta.provider)} · ${esc(meta.when)}</p>
+  const header = `<span class="eyebrow">First read · dry run</span><h1>${esc(meta.jobTitle)}</h1><p class="meta">${esc(meta.when)}</p>
 <div class="stats"><div><b>${results.length}</b><span>Candidates</span></div><div><b>${scored.length}</b><span>Scored</span></div><div><b>${yes}</b><span>Worth a call</span></div>${skipped ? `<div><b>${skipped}</b><span>Not enough in Loxo</span></div>` : ""}</div>`;
   return page(`Dry run: ${meta.jobTitle}`, header, `<p class="note">Nothing has been written to Loxo. Every result is a first read from the record, waiting for recruiter review.</p>
 <h2>Ranked</h2>
-<div class="table"><table><thead><tr><th>#</th><th>Candidate</th><th>Score</th><th>Pay</th><th>Strongest signal</th><th>Watch item</th></tr></thead><tbody>${rows}</tbody></table></div>
-<p class="legend">★ Direct industry experience · ☆ Adjacent industry · 1 Does not meet · 2 Weak · 3 Meets · 4 Strong · 5 Exceptional</p>
+<div class="table"><table><thead><tr><th>#</th><th>Candidate</th><th>Score</th>${showPay ? "<th>Pay</th>" : ""}<th>Strongest signal</th><th>Watch item</th></tr></thead><tbody>${rows}</tbody></table></div>
+<div class="legend"><p>★ Direct industry experience · ☆ Adjacent industry · 1 Does not meet · 2 Weak · 3 Meets · 4 Strong · 5 Exceptional</p>
+<p><b>Yes / No.</b> Recommended candidates are listed first. "No" means the record misses a must-have for this search, such as industry experience, whatever the average.</p>
+<p><b>Flags.</b> Partial record: one or two criteria had no evidence. Thin record: three or more had none. No resume: no resume file in Loxo; read from the profile, work history and notes. Notes trimmed: only the most recent notes were read. Resume trimmed: a very long resume, only the first part was read. Check: the recommendation and the average point different ways; read the reasons.</p></div>
 <h2>Candidates</h2>
 ${cards}`);
 }

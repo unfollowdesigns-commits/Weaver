@@ -8,6 +8,8 @@
 // From a real Loxo job (read-only unless --write):
 //   node scripts/score-job.js --provider claude --loxo-job 123 [--limit 3] [--write]
 //     [--stages "Screened,Submitted to Client"]   only candidates at these Loxo stages
+//     [--names-file data/names.txt]   only these people, one name per line (keep the file in data/:
+//                                     real names, never committed)
 //
 // --write only writes when .env has LOXO_WRITE_ENABLED=true and DRY_RUN=false.
 // Otherwise the exact payloads that would be written are saved next to the report.
@@ -37,6 +39,7 @@ const { values: args } = parseArgs({
     "scorecards-dir": { type: "string", default: process.env.SCORECARD_JOBS_DIR || JOB_SCORECARD_DIR },
     limit: { type: "string" },
     stages: { type: "string" },
+    "names-file": { type: "string" },
     concurrency: { type: "string", default: "3" },
     write: { type: "boolean", default: false },
   },
@@ -52,10 +55,12 @@ if (args["loxo-job"]) {
   client = loxoClientFromEnv(process.env, { allowWrites: args.write });
   console.log(`Reading job ${args["loxo-job"]} from Loxo ...`);
   const stages = args.stages ? args.stages.split(",").filter((s) => s.trim()) : null;
+  const names = args["names-file"] ? fs.readFileSync(args["names-file"], "utf8").split("\n").map((l) => l.trim()).filter(Boolean) : null;
   let read = 0;
-  const loaded = await fetchJobForScoring(client, args["loxo-job"], { limit, stages, onProgress: () => { if (++read % 10 === 0) process.stdout.write(`\r  read ${read} candidates from Loxo ...`); } });
+  const loaded = await fetchJobForScoring(client, args["loxo-job"], { limit, stages, names, onProgress: () => { if (++read % 10 === 0) process.stdout.write(`\r  read ${read} candidates from Loxo ...`); } });
   if (read >= 10) process.stdout.write("\n");
   if (stages) console.log(`  only stages: ${stages.join(", ")}`);
+  if (names) console.log(`  only the ${names.length} people in ${args["names-file"]}: ${loaded.candidates.length} found${loaded.unmatched.length ? `, ${loaded.unmatched.length} not on this search: ${loaded.unmatched.join(", ")}` : ""}`);
   ({ job, candidates } = loaded);
   console.log(`  ${loaded.pipelineCount} on the pipeline, ${candidates.length} loaded${loaded.failures.length ? `, ${loaded.failures.length} could not be read` : ""}`);
   for (const f of loaded.failures) console.log(`  could not read entry ${f.entry_id}: ${f.error}`);

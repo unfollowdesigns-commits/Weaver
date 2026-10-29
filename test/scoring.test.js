@@ -113,9 +113,9 @@ test("a whole job scores end to end, ranked, all awaiting review", async () => {
 test("flags a candidate whose resume could not be read", async () => {
   const noResume = candidates.find((c) => !c.resume_text);
   const r = await scoreCandidate({ candidate: noResume, job, scorecard, template, provider: createMockProvider() });
-  assert.ok(r.flags.some((f) => f.startsWith("no_resume_text")));
+  assert.ok(r.flags.some((f) => f.startsWith("no_resume:")));
   const withResume = await scoreCandidate({ candidate: candidates[0], job, scorecard, template, provider: createMockProvider() });
-  assert.ok(!withResume.flags.some((f) => f.startsWith("no_resume_text")));
+  assert.ok(!withResume.flags.some((f) => f.startsWith("no_resume:")));
 });
 
 test("pay never reaches the model: sentences about pay are removed, achievements stay", async () => {
@@ -167,21 +167,36 @@ test("records with nothing to read are listed, not sent to the AI", async () => 
   assert.ok(toHtml(results, { jobTitle: "x", scorecard: "s", provider: "m", when: "now" }).includes("Not enough in Loxo"));
 });
 
-test("pay is shown to the team from Loxo and notes, checked against the range, never sent to the AI", async () => {
-  const { payNotesOf, baseFromNotes, payCheck, jobPayRange } = await import("../src/pay.js");
-  const notes = payNotesOf(["Strong call, very structured. Currently $225k base with a 25% bonus. Open to remote."]);
-  assert.deepEqual(notes, ["Currently $225k base with a 25% bonus."]);
-  assert.equal(baseFromNotes(notes), 225000);
+test("pay is shown to the team from Loxo's pay fields only, checked against the range, never sent to the AI", async () => {
+  const { payNotesOf, payCheck, jobPayRange } = await import("../src/pay.js");
+  const notes = payNotesOf(["Strong call. Currently $225k base with a 25% bonus. Open to remote."]);
   const range = jobPayRange({ salary_min: "180000", salary_max: "200000" });
   assert.deepEqual(payCheck(225000, range), { kind: "above", label: "Above range by about $25k" });
   assert.equal(payCheck(190000, range).kind, "within");
-  assert.equal(payCheck(null, range).kind, "unknown");
-  const c = { ...candidates[0], report: { compensation: {}, pay_notes: notes } };
-  const res = await scoreJob({ candidates: [c], job: { ...job, pay_range: range }, scorecard, template, provider: createMockProvider() });
-  assert.equal(res[0].pay.base, 225000);
-  assert.equal(res[0].pay.base_source, "notes");
-  assert.ok(!JSON.stringify(toPromptRecord(c)).includes("225"));
+  const fromNotes = { ...candidates[0], id: "n", report: { compensation: {}, pay_notes: notes } };
+  const fromFields = { ...candidates[1], id: "f", report: { compensation: { base: 225000 }, pay_notes: [] } };
+  const res = await scoreJob({ candidates: [fromNotes, fromFields], job: { ...job, pay_range: range }, scorecard, template, provider: createMockProvider() });
+  const byId = Object.fromEntries(res.map((r) => [r.candidate_id, r]));
+  assert.equal(byId.n.pay.base, null);
+  assert.equal(byId.f.pay.base, 225000);
+  assert.ok(!JSON.stringify(toPromptRecord(fromFields)).includes("225"));
   const { toHtml } = await import("../src/report.js");
-  const html = toHtml(res, { jobTitle: "x", scorecard: "s", provider: "m", when: "now" });
+  const html = toHtml(res, { jobTitle: "x", scorecard: "s", provider: "openai (gpt-4.1)", when: "now" });
   assert.ok(html.includes("Above range by about $25k") && html.includes("not used in the score"));
+  assert.ok(!html.includes("Currently $225k") && !html.includes("gpt-4.1"));
+});
+
+test("the team's own scores in notes are removed before the model, and no-resume evidence never cites a resume", async () => {
+  const { scrubScores } = await import("../src/candidate.js");
+  const t = scrubScores("Second layer screen done. DP screen 4.1/5, overall Yes. Strong on FP&A.");
+  assert.ok(!t.includes("4.1") && t.includes("Strong on FP&A") && t.includes("[score removed]"));
+  assert.equal(scrubScores("Grew revenue 2.3x in 4 years; team of 5."), "Grew revenue 2.3x in 4 years; team of 5.");
+  const rec = toPromptRecord({ ...candidates[0], notes: [{ text: "Our screen score: 4.1 / 5." }] });
+  assert.ok(!JSON.stringify(rec).includes("4.1"));
+  const { resultFromAnswer, resultBase } = await import("../src/score.js");
+  const a = goodAnswer();
+  a.criteria[0].evidence = "Led close (resume).";
+  const r = resultFromAnswer({ base: { candidate_id: "x" }, answer: a, model: "m", scorecard, flagCodes: ["no_resume"] });
+  assert.equal(r.criteria.find((c) => c.id === a.criteria[0].id).evidence, "Led close (profile).");
+  assert.ok(r.flags.some((f) => f.startsWith("no_resume:")));
 });
