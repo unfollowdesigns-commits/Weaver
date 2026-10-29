@@ -297,6 +297,17 @@ First probe, job 3688816 (Head of Finance and Accounting, 194 candidates), 29 Oc
   quirks; test/e2e-real-shape.test.js runs read, privacy, scoring, report, write
   payload and client report end to end; scripts/fake-loxo-real.js serves it on
   port 8792 for running the commands by hand.
+- Two more review passes on name and pay cleaning (30 Oct 2026), all cases fixed
+  with tests (test/review-fixes.test.js). Pay: one rule set in isAboutPay (pay
+  words unless pay-as-a-topic; pay figures with cues; counts are not pay; business
+  figures stay without a cue). Names: folded matching, possessives, titles,
+  hyphen/apostrophe parts, everyday-word parts only next to the name, the
+  candidate's own employers/schools/location kept whole unless they hold two name
+  parts (own firm). Known limits, accepted and stated: an everyday-word name part
+  used alone ("Austin led FP&A") stays; nicknames not in Loxo stay; a firm named
+  after the surname only ("Roe Advisory") keeps the surname; unusual pay phrasing
+  can still slip through the cleaning, which is why the prompt forbids pay and the
+  output guard plus `npm run verify` check what the AI wrote.
 - Re-scoring after criteria change (30 Oct 2026, Houssem's ask before go-live):
   `npm run rescore -- --loxo-job <id> [--go] [--write]`. Finds AI scorecards on
   the search whose summary names another scorecard version, shows count and

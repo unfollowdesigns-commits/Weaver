@@ -154,6 +154,8 @@ export function stageOf(entry, stageNames = null) {
 export const money = (v) => {
   if (typeof v === "number" && isFinite(v)) return v > 0 ? v : null;
   if (typeof v !== "string") return null;
+  // An hourly rate is not an annual base.
+  if (/\/\s*h(ou)?r\b|per hour|hourly/i.test(v)) return null;
   const m = /(\d{1,3}(?:,\d{3})+|\d+(?:\.\d+)?)\s?([kKmM])?/.exec(v);
   if (!m) return null;
   let n = Number(m[1].replace(/,/g, ""));

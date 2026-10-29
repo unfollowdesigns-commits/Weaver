@@ -166,3 +166,44 @@ test("money: small numbers are not read as salaries", async () => {
   assert.equal(money("$90"), 90000);
   assert.equal(money("12"), null);
 });
+
+test("third review, pay: recruiter shorthand is caught", () => {
+  for (const s of ["Wants 250k but the client budget tops out at 230k.", "Currently 240 base.", "Making 275 plus 20%.", "Earning north of 300.", "Last role paid 260.", "He'd move for 280.", "Expectation 250-275.", "Floor is 240.", "250 base / 50 variable.", "tc 400.",
+    "$220k-$250k target", "OTE 350", "comp expectations high 200s", "At 245k with a 30% bonus target", "Needs 260 to move", "Would take 250K"]) {
+    assert.equal(isAboutPay(s), true, s);
+  }
+});
+
+test("third review, pay: counts, retirement plans, debt and pay-as-a-topic stay as evidence", () => {
+  for (const s of ["Built a 100k+ followers community.", "Ran a 10K race fundraiser.", "Migrated 500K lines of code.", "Processed 200k claims a year.", "Grew from 50k to 400k monthly visits.", "The team is at 120 people across 3 sites.", "Needs 200 engineers by Q3.", "Is at 95 percent retention.",
+    "Rolled out a new 401k plan for 800 staff.", "Paid down $1.2M of debt.", "Repaid 1.5MM in notes.", "Raised base salaries by 5% across the firm.", "Designed the bonus plan for 40 sales reps.", "Led compensation benchmarking for the C-suite.",
+    "$250K of AP per month", "120k sq ft facility", "payroll for 2,000 staff", "Cut DSO from 60 to 45 days", "Rebuilt the TC team."]) {
+    assert.equal(isAboutPay(s), false, s);
+  }
+});
+
+test("third review, team scores: overall, team and 'our read' are removed", () => {
+  for (const s of ["Overall 4.2.", "Our read: strong yes.", "Team: 4.1."]) assert.ok(scrubScores(s).includes("[score removed]"), s);
+});
+
+test("third review, names: possessives, titles, self-named firms; employers, schools and places kept", () => {
+  assert.equal(scrubName("Roe's team grew. ROE'S plan. Roe’s budget.", "Jane Roe"), "[name] team grew. [name] plan. [name] budget.");
+  assert.equal(scrubName("Ms. Lee's team.", "Mary Ann Lee"), "Ms. [name] team.");
+  assert.equal(scrubName("Mr. Lake led.", "Jordan Lake"), "Mr. [name] led.");
+  const rec = (name, extra) => toPromptRecord({ ...base, name, ...extra });
+  const self = rec("Jane Roe", { current_company: "Jane Roe Consulting", work_history: [{ title: "Owner", company: "Jane Roe Consulting", summary: "Ran Jane Roe Consulting." }] });
+  assert.ok(!/Roe/.test(JSON.stringify(self)), JSON.stringify(self));
+  const wells = rec("Morgan Wells", { current_company: "Wells Fargo", work_history: [{ title: "VP", company: "Wells Fargo", summary: "Joined Wells Fargo from Morgan Stanley." }, { title: "Analyst", company: "Morgan Stanley", summary: "" }], resume_text: "Morgan Wells\nVP, Wells Fargo" });
+  const w = JSON.stringify(wells);
+  assert.ok(w.includes("Wells Fargo") && w.includes("Morgan Stanley"), w);
+  assert.ok(wells.resume_text.startsWith("[name] [name]"), wells.resume_text);
+  const uva = rec("Virginia Hale", { education: [{ degree: "BS", institution: "University of Virginia" }], location: "Northern Virginia", resume_text: "Virginia Hale. University of Virginia. Lives in Northern Virginia. Hale led audits." });
+  assert.equal(uva.resume_text, "[name] [name]. University of Virginia. Lives in Northern Virginia. [name] led audits.");
+});
+
+test("third review: hourly pay fields are not read as a salary", async () => {
+  const { money } = await import("../src/loxo/map.js");
+  assert.equal(money("$25/hr"), null);
+  assert.equal(money("90 per hour"), null);
+  assert.equal(money("$225,000"), 225000);
+});
