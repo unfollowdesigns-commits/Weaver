@@ -1,0 +1,172 @@
+<title>How Weaver Works</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@600;700&family=Public+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500&display=swap">
+<style>
+  /* Layout: one column, three paths. Each path is a numbered sequence; a chip on every
+     step says where it runs, colored by system, so the hand-offs are visible at a glance. */
+  :root {
+    --bg: #f4f6fa; --sheet: #ffffff; --ink: #121a2b; --ink-2: #535e72; --rule: #dce1ea;
+    --navy: #0d1526; --on-navy: #ffffff; --navy-2: #aab6cb; --blue: #2f6fcf; --blue-soft: #e6eefb;
+    --loxo: #1f7a5a; --loxo-soft: #e3f3ec; --render: #6b4bd1; --render-soft: #eee9fb;
+    --claude: #b4542d; --claude-soft: #f8ebe4; --people: #535e72; --people-soft: #eceff4;
+    --display: "Archivo", -apple-system, "Segoe UI", Helvetica, Arial, sans-serif;
+    --body: "Public Sans", -apple-system, "Segoe UI", Helvetica, Arial, sans-serif;
+    --mono: "IBM Plex Mono", ui-monospace, Menlo, Consolas, monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #0b1120; --sheet: #121a2c; --ink: #e6ebf3; --ink-2: #9ca8bc; --rule: #26314a;
+      --navy: #16213a; --navy-2: #aab6cb; --blue: #7fb0f2; --blue-soft: #1a2742;
+      --loxo: #6fd1a8; --loxo-soft: #15302a; --render: #b4a1f5; --render-soft: #251f40;
+      --claude: #f0a07c; --claude-soft: #3a2219; --people: #b4bfd1; --people-soft: #1d2639; color-scheme: dark;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #0b1120; --sheet: #121a2c; --ink: #e6ebf3; --ink-2: #9ca8bc; --rule: #26314a;
+    --navy: #16213a; --navy-2: #aab6cb; --blue: #7fb0f2; --blue-soft: #1a2742;
+    --loxo: #6fd1a8; --loxo-soft: #15302a; --render: #b4a1f5; --render-soft: #251f40;
+    --claude: #f0a07c; --claude-soft: #3a2219; --people: #b4bfd1; --people-soft: #1d2639; color-scheme: dark;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink); font: 400 16px/1.6 var(--body); -webkit-font-smoothing: antialiased; }
+  .wrap { max-width: 920px; margin: 0 auto; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+  h1, h2, h3 { font-family: var(--display); margin: 0; letter-spacing: -.01em; text-wrap: balance; }
+  h1 { font-size: clamp(30px, 5vw, 44px); line-height: 1.1; }
+  h2 { font-size: clamp(22px, 3.4vw, 28px); line-height: 1.2; }
+  p { margin: 0; }
+  .label { font: 600 11px/1.3 var(--body); letter-spacing: .14em; text-transform: uppercase; color: var(--ink-2); }
+
+  header.top { background: var(--navy); color: var(--on-navy); }
+  header.top .wrap { padding-block: 40px 34px; display: grid; gap: 12px; }
+  header.top .label { color: var(--navy-2); }
+  header.top p { color: var(--navy-2); max-width: 62ch; font-size: 17px; }
+
+  .legend { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 6px; }
+
+  .chip { display: inline-flex; align-items: center; gap: 6px; font: 600 12px/1 var(--body); padding: 5px 9px; border-radius: 4px; white-space: nowrap; }
+  .chip::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: currentColor; }
+  .loxo { color: var(--loxo); background: var(--loxo-soft); }
+  .render { color: var(--render); background: var(--render-soft); }
+  .claude { color: var(--claude); background: var(--claude-soft); }
+  .people { color: var(--people); background: var(--people-soft); }
+  header.top .chip { background: rgba(255,255,255,.08); }
+  header.top .chip.loxo { color: #6fd1a8; } header.top .chip.render { color: #b4a1f5; } header.top .chip.claude { color: #f0a07c; } header.top .chip.people { color: #c9d2e0; }
+
+  /* Overview: the three paths side by side */
+  .paths { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+  .path { background: var(--sheet); border: 1px solid var(--rule); padding: 18px; display: grid; gap: 8px; align-content: start; text-decoration: none; color: inherit; }
+  .path:hover { border-color: var(--blue); }
+  .path .when { font: 500 12px/1.3 var(--mono); color: var(--blue); }
+  .path h3 { font-size: 19px; }
+  .path p { color: var(--ink-2); font-size: 14.5px; }
+  .path .tag { justify-self: start; font: 600 11px/1 var(--body); letter-spacing: .1em; text-transform: uppercase; padding: 4px 7px; border: 1px solid var(--rule); color: var(--ink-2); }
+  .path .tag.live { border-color: var(--blue); color: var(--blue); }
+
+  section.block .wrap { padding-block: 52px 0; display: grid; gap: 18px; }
+  .intro { display: grid; gap: 8px; max-width: 64ch; }
+  .intro p { color: var(--ink-2); }
+
+  /* Steps: a real sequence, so numbered */
+  ol.steps { list-style: none; margin: 0; padding: 0; display: grid; gap: 0; counter-reset: s; }
+  ol.steps li { counter-increment: s; display: grid; grid-template-columns: 40px minmax(0, 1fr); gap: 14px; position: relative; padding-bottom: 18px; }
+  ol.steps li::before { content: counter(s); width: 32px; height: 32px; border-radius: 50%; background: var(--navy); color: var(--on-navy); font: 700 14px/32px var(--display); text-align: center; z-index: 1; }
+  ol.steps li:not(:last-child)::after { content: ""; position: absolute; left: 15px; top: 34px; bottom: 0; width: 2px; background: var(--rule); }
+  .step { background: var(--sheet); border: 1px solid var(--rule); padding: 14px 16px; display: grid; gap: 6px; min-width: 0; }
+  .step .head { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; }
+  .step b { font-weight: 600; font-size: 16px; }
+  .step p { color: var(--ink-2); font-size: 14.5px; }
+  .step .what { font: 500 12.5px/1.5 var(--mono); color: var(--ink-2); background: var(--bg); padding: 6px 9px; overflow-x: auto; }
+  .step.out { border-color: var(--blue); box-shadow: inset 3px 0 0 var(--blue); }
+  .net { background: var(--blue-soft); border-left: 3px solid var(--blue); padding: 14px 16px; display: grid; gap: 4px; }
+  .net b { font-weight: 600; }
+  .net p { font-size: 14.5px; color: var(--ink); }
+
+  /* Who owns what */
+  .tscroll { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; background: var(--sheet); border: 1px solid var(--rule); font-size: 14.5px; }
+  th, td { text-align: left; padding: 11px 13px; border-top: 1px solid var(--rule); vertical-align: top; }
+  th { font: 600 11px/1.3 var(--body); letter-spacing: .12em; text-transform: uppercase; color: var(--ink-2); background: var(--bg); }
+
+  footer .wrap { padding-block: 40px 48px; font-size: 13px; color: var(--ink-2); }
+
+  @media (max-width: 760px) { .paths { grid-template-columns: 1fr; } }
+</style>
+
+<header class="top"><div class="wrap">
+  <span class="label">Weaver · internal guide for Houssem</span>
+  <h1>How Weaver works, step by step</h1>
+  <p>Three paths. One runs by itself, one runs when someone types in Claude, one runs when the team wants a client report. The colored chip on each step says where it happens.</p>
+  <div class="legend"><span class="chip loxo">Loxo · the firm's account</span><span class="chip render">Render · the firm's server</span><span class="chip claude">Claude · the firm's Anthropic account</span><span class="chip people">People</span></div>
+</div></header>
+
+<section class="block"><div class="wrap">
+  <div class="paths">
+    <a class="path" href="#scoring"><span class="when">A · by itself</span><h3>Scoring every candidate</h3><p>A candidate is added in Loxo, Weaver reads them, Claude scores, the score lands back on the candidate in Loxo.</p><span class="tag live">Phase 1</span></a>
+    <a class="path" href="#ask"><span class="when">B · when someone asks</span><h3>Claude connected to Loxo</h3><p>Josh types a question in Claude, Claude reads Loxo through Loxo's own connector, including Weaver's scores.</p><span class="tag live">Phase 1</span></a>
+    <a class="path" href="#report"><span class="when">C · when the team wants it</span><h3>Client pipeline report</h3><p>A draft of the report they send clients, built from Loxo and the scores. The team edits it and saves it as a PDF.</p><span class="tag">Phase 2 · prepared</span></a>
+  </div>
+</div></section>
+
+<section class="block" id="scoring"><div class="wrap">
+  <div class="intro"><span class="label">Path A · runs by itself</span><h2>From "candidate added" to a score on the card</h2><p>About a minute per candidate. Nobody has to press anything.</p></div>
+  <ol class="steps">
+    <li><div class="step"><div class="head"><b>A recruiter adds a candidate to a search</b><span class="chip people">Loxo, as usual</span></div><p>Nothing changes in how the team works.</p></div></li>
+    <li><div class="step"><div class="head"><b>Loxo tells Weaver</b><span class="chip loxo">Loxo → Render</span></div><p>Loxo sends a short message to Weaver's address on Render: "person 123 added to search 45". This is the webhook we register once at setup.</p></div></li>
+    <li><div class="step"><div class="head"><b>Weaver checks before spending anything</b><span class="chip render">Render</span></div><p>Is this search switched on? Has this person already been scored here? Is today's spending cap reached? If any answer stops it, nothing is paid for.</p></div></li>
+    <li><div class="step"><div class="head"><b>Weaver reads the candidate from Loxo</b><span class="chip loxo">Loxo, read only</span></div><p>Profile, work history, the resume text and the team's notes.</p></div></li>
+    <li><div class="step"><div class="head"><b>Weaver prepares the record</b><span class="chip render">Render</span></div><p>Removes name, email, phone, address, pay and graduation years. Picks the search's own scorecard (the nine criteria Josh approved), or the standard one.</p></div></li>
+    <li><div class="step"><div class="head"><b>Claude reads and scores</b><span class="chip claude">Claude</span></div><p>One request per candidate, on the firm's Anthropic account. Claude must answer in a fixed format: nine scores with evidence, Yes or No, star, strongest signal, watch item, where they fit, where to probe.</p></div></li>
+    <li><div class="step"><div class="head"><b>Weaver checks the answer</b><span class="chip render">Render</span></div><p>Rejects anything incomplete and asks once more. Computes the average itself, so it always matches the scores. Adds flags (no resume, thin record).</p></div></li>
+    <li><div class="step out"><div class="head"><b>The score lands on the candidate in Loxo</b><span class="chip loxo">Render → Loxo, write</span></div><p>As a scorecard marked "AI, awaiting review": 4.1 / 5 · Yes, the reasons, where to probe. Nothing else in Loxo is touched. Off until Josh approves the dry run.</p></div></li>
+    <li><div class="step"><div class="head"><b>The team decides</b><span class="chip people">People</span></div><p>They read it, agree or not, call or not. Weaver never moves or rejects anyone.</p></div></li>
+  </ol>
+  <div class="net"><b>Safety net, every hour</b><p>A second small job on Render looks for anyone on the switched-on searches without a score (a missed message, the cap reached yesterday) and scores them through Claude's half-price batch service. It also reads from Loxo and writes back exactly like steps 4 to 8.</p></div>
+</div></section>
+
+<section class="block" id="ask"><div class="wrap">
+  <div class="intro"><span class="label">Path B · runs when someone types</span><h2>Josh asks Claude a question</h2><p>No Render here. This is Loxo's own connector inside the firm's Claude. We switch it on once at setup.</p></div>
+  <ol class="steps">
+    <li><div class="step"><div class="head"><b>Josh types in Claude</b><span class="chip people">claude.ai</span></div><p>"Top 3 on the VP Sales search, and why?" or "Prep my call with Candidate B."</p></div></li>
+    <li><div class="step"><div class="head"><b>Claude asks Loxo through the connector</b><span class="chip claude">Claude → Loxo</span></div><p>Loxo's official connector (MCP). It only runs while someone is typing; it cannot score on its own, which is why Path A exists.</p></div></li>
+    <li><div class="step out"><div class="head"><b>Claude answers from the firm's real data</b><span class="chip loxo">Loxo</span></div><p>Including the scorecards Weaver wrote in Path A, so the answer can use the scores, signals and watch items.</p></div></li>
+  </ol>
+</div></section>
+
+<section class="block" id="report"><div class="wrap">
+  <div class="intro"><span class="label">Path C · phase 2, prepared</span><h2>The client pipeline report</h2><p>Built and tested on sample data, not switched on or sold yet. Today it runs from your Mac with one command; later it can be a button.</p></div>
+  <ol class="steps">
+    <li><div class="step"><div class="head"><b>Ask for the report of one search</b><span class="chip people">Your Mac, for now</span></div><p class="what">npm run report:client -- --loxo-job 45 --results data/runs/…/job-45.json</p></div></li>
+    <li><div class="step"><div class="head"><b>Weaver reads the search from Loxo</b><span class="chip loxo">Loxo, read only</span></div><p>Every candidate, their stage (outbound, responded, first screen, cleared, submitted), pay fields, and any scorecard the team wrote themselves.</p></div></li>
+    <li><div class="step"><div class="head"><b>Weaver lays out the report</b><span class="chip render">Weaver</span></div><p>Cover with the funnel, top ten ranked, where the search stands, a profile page per finalist, the team's own scorecard, then the screened, responded and outbound lists. Their navy and blue.</p></div></li>
+    <li><div class="step"><div class="head"><b>Claude writes only the short text</b><span class="chip claude">Claude</span></div><p>The cover line, "how to read the pipeline" and "where we're focusing next". It sees C1, C2… instead of names, and never pay. Names go back in afterwards.</p></div></li>
+    <li><div class="step"><div class="head"><b>The team edits the draft in the browser</b><span class="chip people">People</span></div><p>Click any text to change it, reorder the top ten, add the pay picture and what they learned on calls.</p></div></li>
+    <li><div class="step out"><div class="head"><b>Save as PDF and send to the client</b><span class="chip people">People</span></div><p>The client sees only what the team checked. Scores shown to the client come from the team's own scorecards, never from Weaver's first read.</p></div></li>
+  </ol>
+</div></section>
+
+<section class="block"><div class="wrap">
+  <div class="intro"><span class="label">Once per search</span><h2>Setting a search's scorecard</h2></div>
+  <ol class="steps">
+    <li><div class="step"><div class="head"><b>Draft the nine criteria from the job</b><span class="chip claude">Claude</span></div><p class="what">npm run scorecard:draft -- --provider claude --loxo-job 45</p></div></li>
+    <li><div class="step"><div class="head"><b>Josh approves or changes them</b><span class="chip people">People</span></div><p>You send him the short text file it makes. One minute for him.</p></div></li>
+    <li><div class="step out"><div class="head"><b>Approve, commit, and Render picks it up</b><span class="chip render">GitHub → Render</span></div><p class="what">npm run scorecard:draft -- --approve 45</p><p>Then commit and push. Render deploys the new file. This is why Render's automatic deploy has to work before go-live.</p></div></li>
+  </ol>
+</div></section>
+
+<section class="block"><div class="wrap">
+  <div class="intro"><span class="label">Accounts</span><h2>Who owns what</h2></div>
+  <div class="tscroll"><table>
+    <thead><tr><th>System</th><th>Owner</th><th>What it does here</th><th>Your access</th></tr></thead>
+    <tbody>
+      <tr><td><span class="chip loxo">Loxo</span></td><td>The firm</td><td>Their candidates. Source of every read, home of every score.</td><td>An API key they create</td></tr>
+      <tr><td><span class="chip render">Render</span></td><td>The firm (Pro workspace)</td><td>Runs Weaver: the always-on service (Path A) and the hourly safety net.</td><td>Invited as admin</td></tr>
+      <tr><td><span class="chip claude">Anthropic</span></td><td>The firm</td><td>Claude for scoring and report text, with a spending limit.</td><td>Invited as admin</td></tr>
+      <tr><td><span class="chip claude">Claude (team)</span></td><td>The firm</td><td>Their own Claude, with Loxo's connector for Path B.</td><td>Setup on a call</td></tr>
+      <tr><td><span class="chip people">GitHub</span></td><td>You</td><td>Weaver's code. Render deploys from it.</td><td>Owner</td></tr>
+    </tbody>
+  </table></div>
+</div></section>
+
+<footer><div class="wrap">Weaver · internal guide · sample names only · 29 Oct 2026</div></footer>
