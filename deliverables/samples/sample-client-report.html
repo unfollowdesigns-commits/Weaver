@@ -1,0 +1,276 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>VP Sales · pipeline report (draft)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Newsreader:opsz,wght@6..72,400;6..72,500;6..72,600&family=Public+Sans:wght@300;400;500;600;700&display=swap">
+<style>
+:root{--navy:#0d1526;--navy-2:#1b2740;--ink:#141b2b;--mut:#606a7c;--faint:#8a93a3;--line:#e2e6ee;--soft:#f5f7fb;--blue:#2f6fcf;--blue-2:#8fb4ea;--blue-soft:#eaf1fc;--paper:#fff;
+--serif:"Newsreader",Georgia,"Times New Roman",serif;--sans:"Public Sans",-apple-system,"Segoe UI",Helvetica,Arial,sans-serif}
+*{box-sizing:border-box}
+html{background:#e6e9ef}
+body{margin:0;color:var(--ink);font:300 9.6pt/1.55 var(--sans);-webkit-font-smoothing:antialiased}
+h1,h2,h3,h4{margin:0}
+a{color:var(--blue);text-decoration:none}
+b{font-weight:600}
+.page{width:8.5in;min-height:11in;margin:24px auto;background:var(--paper);box-shadow:0 2px 18px rgba(13,21,38,.12);padding:.55in .7in .85in;position:relative}
+.pb{flex:1}
+.ph{display:flex;justify-content:space-between;align-items:baseline;font:500 7pt/1 var(--sans);letter-spacing:.18em;text-transform:uppercase;color:var(--faint);margin-bottom:30px}
+.ph .sec{color:var(--blue)}
+.pf{position:absolute;left:.7in;right:.7in;bottom:.4in;display:flex;justify-content:space-between;align-items:center;padding-top:10px;border-top:1px solid var(--line);font-size:7pt;color:var(--faint)}
+.pf b{font:500 9pt/1 var(--serif);color:var(--ink);margin-left:12px}
+.draft-tag{font-size:6.5pt;letter-spacing:.16em;text-transform:uppercase;color:#a0661a;border:1px solid #e3c48f;padding:2px 6px}
+h2{font:500 25pt/1.08 var(--serif);letter-spacing:-.01em;margin-bottom:10px;max-width:6.4in}
+.lede{color:var(--mut);font-size:10pt;max-width:5.9in;margin:0 0 20px}
+.eyebrow{font:600 7pt/1 var(--sans);letter-spacing:.24em;text-transform:uppercase;color:var(--blue-2)}
+.eyebrow.dark{color:var(--blue)}
+.kick{font:600 7.5pt/1 var(--sans);letter-spacing:.18em;text-transform:uppercase;color:var(--ink);margin:28px 0 12px}
+
+/* cover */
+.cover{background:var(--navy);color:#fff;padding:.75in .8in .7in;overflow:hidden;display:flex;flex-direction:column;height:11in}
+.cover::after{content:"";position:absolute;right:-1.4in;top:-1.4in;width:4.6in;height:4.6in;border:1px solid rgba(143,180,234,.18);border-radius:50%}
+.cover::before{content:"";position:absolute;right:-.6in;top:-.6in;width:3in;height:3in;border:1px solid rgba(143,180,234,.12);border-radius:50%}
+.lock{display:flex;align-items:baseline;gap:12px;font-size:10pt;position:relative;z-index:1}
+.lock .firm{font:600 10pt/1 var(--sans);letter-spacing:.2em;text-transform:uppercase}
+.lock .for{font:italic 400 11pt/1 var(--serif);color:var(--blue-2)}
+.lock .client{font:500 13pt/1 var(--serif)}
+.cv-mid{margin:auto 0;padding:60px 0 40px;max-width:6.3in}
+.cover h1{font:500 50pt/1 var(--serif);letter-spacing:-.02em;margin:18px 0 18px}
+.sub{font:400 13pt/1.45 var(--serif);color:#c9d3e3;margin:0 0 22px}
+.date{font-size:8.5pt;letter-spacing:.14em;text-transform:uppercase;color:var(--blue-2);margin:0}
+.fun{display:grid;gap:9px;border-top:1px solid #2a3652;padding-top:18px}
+.fun .row{display:grid;grid-template-columns:1.9in 1fr .5in;align-items:center;gap:14px}
+.fun .fl{font-size:7.5pt;letter-spacing:.1em;text-transform:uppercase;color:#aab6cb}
+.fun .ft{height:8px;background:#18233a;display:block}.fun .ft i{display:block;height:100%;background:linear-gradient(90deg,var(--blue),#5a93e6)}
+.fun b{font:500 17pt/1 var(--serif);text-align:right}
+
+/* tables */
+.t{width:100%;border-collapse:collapse;font-size:8.8pt}
+.t th{text-align:left;font:600 6.6pt/1.2 var(--sans);letter-spacing:.16em;text-transform:uppercase;color:var(--faint);padding:0 8px 8px;border-bottom:1px solid var(--ink)}
+.t td{padding:10px 8px;border-bottom:1px solid var(--line);vertical-align:top}
+.t.compact td{padding:6px 8px;font-size:8.4pt}
+.t small{display:block;color:var(--mut);font-size:7.8pt;margin-top:1px}
+.t .n{text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums}
+.nm{font-weight:600;color:var(--ink);white-space:nowrap}
+.co{font-weight:500}
+.rk{font:500 20pt/1 var(--serif);color:var(--blue);width:34px;padding-top:7px!important}
+.rank td:nth-child(2){width:1.55in}.rank td:nth-child(3){width:1.35in}.rank td:nth-child(5){width:1.15in}
+.as{color:var(--ink)}
+.watch{color:var(--mut)}
+.mut{color:var(--mut)}
+.star{color:var(--blue);margin-left:4px;font-size:.95em}
+.legend{font-size:7pt;color:var(--faint);margin:10px 0 0}.legend span{margin-left:14px}
+
+/* stage progress */
+.prog{display:inline-grid;gap:4px}
+.prog .dots{display:flex;gap:3px}
+.prog .dots i{width:12px;height:3px;background:var(--line);display:block}
+.prog .dots i.on{background:var(--blue)}
+.prog .dots i.now{background:var(--navy)}
+.prog .pl{font-size:7.4pt;font-weight:500;color:var(--ink);white-space:nowrap}
+.prog.out .pl{color:var(--faint)}
+
+/* pull quote and notes */
+.pull{margin-top:28px;padding:18px 0 0;border-top:2px solid var(--navy);display:grid;grid-template-columns:1.6in 1fr;gap:20px}
+.pull .k{font:600 7pt/1.4 var(--sans);letter-spacing:.18em;text-transform:uppercase;color:var(--blue)}
+.pull p{margin:0;font:400 13pt/1.45 var(--serif);color:var(--ink)}
+.stats{display:grid;grid-template-columns:repeat(5,1fr);border-top:1px solid var(--ink);border-bottom:1px solid var(--line);margin:4px 0 18px}
+.stats div{padding:12px 10px 12px 0}
+.stats b{display:block;font:500 22pt/1 var(--serif)}
+.stats span{display:block;font-size:6.6pt;letter-spacing:.12em;text-transform:uppercase;color:var(--faint);margin-top:6px;line-height:1.35}
+.notes{display:grid;grid-template-columns:1fr 1fr;gap:16px 26px}
+.note{display:grid;grid-template-columns:26px 1fr;gap:8px}
+.note .num{font:500 13pt/1.2 var(--serif);color:var(--blue)}
+.note b{display:block;font:500 11.5pt/1.3 var(--serif);margin-bottom:4px}
+.note p{margin:0;color:var(--mut);font-size:8.8pt}
+
+/* profile */
+.prof{display:grid;grid-template-columns:1fr 2.05in;gap:30px}
+.pn{font-size:30pt;margin:10px 0 6px}
+.role{font-size:10pt;color:var(--mut);margin:0 0 22px}
+.role b{color:var(--ink)}
+h4{font:600 7pt/1 var(--sans);letter-spacing:.18em;text-transform:uppercase;margin:20px 0 8px;color:var(--ink)}
+h4.blue{color:var(--blue)}
+.fit,.probe{list-style:none;margin:0;padding:0;display:grid;gap:7px}
+.fit li,.probe li{position:relative;padding-left:18px;font-size:9.4pt;line-height:1.5}
+.fit li::before{content:"";position:absolute;left:0;top:.62em;width:9px;height:1.5px;background:var(--ink)}
+.probe li::before{content:"?";position:absolute;left:0;top:0;font:600 8pt/1.7 var(--sans);color:var(--blue)}
+.tl{list-style:none;margin:0;padding:0;border-left:1px solid var(--line)}
+.tl li{display:grid;grid-template-columns:.95in 1fr;gap:10px;padding:6px 0 6px 14px;position:relative}
+.tl li::before{content:"";position:absolute;left:-4px;top:12px;width:7px;height:7px;border-radius:50%;background:#fff;border:1.5px solid var(--blue)}
+.tl li:first-child::before{background:var(--blue)}
+.tl .yr{color:var(--faint);font-size:8.4pt;font-variant-numeric:tabular-nums}
+.tl b{display:block;font-size:9.2pt}.tl span{color:var(--mut);font-size:8.6pt}
+.side{background:var(--soft);padding:18px 18px 20px;display:grid;gap:15px;align-content:start;border-top:3px solid var(--navy)}
+.side .k{display:block;font:600 6.5pt/1 var(--sans);letter-spacing:.18em;text-transform:uppercase;color:var(--faint);margin-bottom:5px}
+.side .v{font-size:10pt;font-weight:500}
+.big{font:500 22pt/1 var(--serif)}.big small{font-size:11pt;color:var(--faint)}
+.rec{display:inline-block;margin-left:8px;font-size:8pt;font-weight:600;background:var(--blue);color:#fff;padding:2px 7px;vertical-align:middle}
+
+/* scorecard */
+.sc-head{display:grid;grid-template-columns:1fr 1fr;border-top:2px solid var(--navy);border-bottom:1px solid var(--line);padding:14px 0;margin-bottom:6px}
+.sc-head .k{display:block;font:600 6.8pt/1 var(--sans);letter-spacing:.18em;text-transform:uppercase;color:var(--faint);margin-bottom:6px}
+.crit{display:grid;grid-template-columns:1fr 1.55in;gap:24px;padding:11px 0;border-bottom:1px solid var(--line);align-items:center}
+.cl b{font-size:9.6pt}.cl p{margin:2px 0 0;color:var(--mut);font-size:8.5pt}
+.meter{display:flex;gap:4px;align-items:center}
+.meter i{flex:1;height:6px;background:var(--line);display:block}
+.meter i.on{background:var(--blue)}
+.meter span{font:500 12pt/1 var(--serif);width:18px;text-align:right}
+
+/* cards */
+.cards{display:grid;gap:0;border-top:1px solid var(--ink)}
+.card{padding:14px 0;border-bottom:1px solid var(--line);display:grid;gap:5px}
+.ch .nm{font:500 13pt/1.2 var(--serif)}
+.ch .meta{display:block;color:var(--mut);font-size:8.4pt;margin-top:2px}
+.card p{margin:0;font-size:9.2pt}
+.tag{display:inline-block;width:.6in;font:600 6.6pt/1.6 var(--sans);letter-spacing:.16em;text-transform:uppercase;color:var(--blue)}
+.tag.w{color:#a0661a}
+.ind{display:inline-block;font-size:7pt;font-weight:600;padding:2px 6px;background:var(--blue);color:#fff}.ind.adj{background:none;color:var(--blue);border:1px solid var(--blue)}
+
+/* editing */
+.ed{outline:none;border-radius:2px}.ed:hover{background:#fff6dc}.ed:focus{background:#fff1c2}
+.cover .ed:hover,.cover .ed:focus{background:rgba(255,255,255,.08)}
+.bar{position:sticky;top:0;z-index:5;background:#fff8e6;border-bottom:1px solid #f0d58a;padding:10px 16px;font:400 10pt/1.4 var(--sans);display:flex;gap:12px;align-items:center;justify-content:space-between;flex-wrap:wrap}
+.bar button,.mv button{font:inherit;font-size:9pt;border:1px solid var(--ink);background:#fff;padding:5px 10px;cursor:pointer;margin-left:6px}
+.mv{display:flex;margin-top:6px}.mv button{padding:0 6px;margin:0 3px 0 0}
+@page{size:Letter;margin:0}
+@media print{
+  html,body{background:#fff}.no-print{display:none!important}
+  .page{margin:0;box-shadow:none;break-after:page;min-height:11in}
+  .t tr,.card,.crit,.note{break-inside:avoid}
+  .ed:hover,.ed:focus{background:none}
+}
+@media screen and (max-width:8.6in){.page{width:auto;margin:12px 8px;padding:24px 18px 70px;min-height:0}.cover{height:auto}.pf{left:18px;right:18px;bottom:20px}.prof,.notes,.pull,.sc-head{grid-template-columns:1fr}.stats{grid-template-columns:repeat(3,1fr)}.fun .row{grid-template-columns:1fr 1fr .4in}.t{display:block;overflow-x:auto}.cover h1{font-size:36pt}}
+</style></head><body>
+<div class="bar no-print"><b>Draft for your team.</b> Click any text to change it, move the top ten with the arrows, then print or save as PDF. Check every line before it goes to a client.
+<span><button id="print">Print or save as PDF</button><button id="save">Download edited copy</button></span></div>
+<section class="page cover">
+  <div class="lock"><span class="firm"><span class="ed" contenteditable="true">Sample Search Partners</span></span><span class="for">for</span><span class="client"><span class="ed" contenteditable="true">Sample Software Co.</span></span></div>
+  <div class="cv-mid"><span class="eyebrow">Search pipeline report</span><h1><span class="ed" contenteditable="true">VP Sales</span></h1>
+  <p class="sub"><span class="ed" contenteditable="true">Where the search stands today, drawn from 8 sales leaders across B2B software, services and regional firms in the Washington area and beyond.</span></p>
+  <p class="date"><span class="ed" contenteditable="true">October 29, 2026</span></p></div>
+  <div class="fun"><div class="row"><span class="fl">Outbound</span><span class="ft"><i style="width:100.0%"></i></span><b>8</b></div><div class="row"><span class="fl">Responded &amp; initial conversation</span><span class="ft"><i style="width:75.0%"></i></span><b>6</b></div><div class="row"><span class="fl">First layer screen</span><span class="ft"><i style="width:50.0%"></i></span><b>4</b></div><div class="row"><span class="fl">Second layer screen &amp; cleared</span><span class="ft"><i style="width:25.0%"></i></span><b>2</b></div><div class="row"><span class="fl">Submitted to client</span><span class="ft"><i style="width:12.5%"></i></span><b>1</b></div></div>
+</section>
+<section class="page ">
+<header class="ph"><span class="sec">01 · Shortlist</span><span class="job">VP Sales</span></header>
+<div class="pb"><h2>Top 8 candidates, ranked</h2>
+<p class="lede"><span class="ed" contenteditable="true">Our current ranking across every stage of the search, from first conversation through submission.</span></p>
+<table class="t rank"><thead><tr><th></th><th>Candidate</th><th>Company</th><th>Our read</th><th>Stage</th></tr></thead><tbody id="top"><tr><td class="rk">1</td>
+<td><b class="nm">Candidate C</b><span class="star" title="Adjacent industry">☆</span><small>Regional Sales Director</small></td>
+<td><span class="co">Public software company</span><small>Washington, DC</small></td>
+<td class="as"><span class="ed" contenteditable="true">The most consistent operator here, at larger scale than the role. Fit with a growth-stage pace is the risk.</span></td>
+<td><span class="prog"><span class="dots"><i class="on"></i><i class="on"></i><i class="on now"></i><i class=""></i><i class=""></i></span><span class="pl">First screen</span></span><span class="mv no-print"><button data-mv="-1" title="Move up">↑</button><button data-mv="1" title="Move down">↓</button></span></td></tr><tr><td class="rk">2</td>
+<td><b class="nm">Candidate B</b><span class="star" title="Direct industry experience">★</span><small>Head of Revenue</small></td>
+<td><span class="co">PE-backed services firm</span><small>Arlington, VA</small></td>
+<td class="as"><span class="ed" contenteditable="true">Right buyer, right team size and local. The question is the move back from services to software.</span></td>
+<td><span class="prog"><span class="dots"><i class="on"></i><i class="on"></i><i class="on"></i><i class="on now"></i><i class=""></i></span><span class="pl">Cleared</span></span><span class="mv no-print"><button data-mv="-1" title="Move up">↑</button><button data-mv="1" title="Move down">↓</button></span></td></tr><tr><td class="rk">3</td>
+<td><b class="nm">Candidate A</b><span class="star" title="Adjacent industry">☆</span><small>VP Sales</small></td>
+<td><span class="co">Series C software company</span><small>Boston, MA</small></td>
+<td class="as"><span class="ed" contenteditable="true">The strongest scaling record in the pipeline, at exactly this team size. Location is the main open point.</span></td>
+<td><span class="prog"><span class="dots"><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on now"></i></span><span class="pl">Submitted</span></span><span class="mv no-print"><button data-mv="-1" title="Move up">↑</button><button data-mv="1" title="Move down">↓</button></span></td></tr><tr><td class="rk">4</td>
+<td><b class="nm">Candidate D</b><span class="star" title="Adjacent industry">☆</span><small>Director of Sales</small></td>
+<td><span class="co">Series A startup</span><small>Washington, DC</small></td>
+<td class="as"><span class="ed" contenteditable="true">Right stage and clearly motivated, but the team they have led is much smaller than this role needs.</span></td>
+<td><span class="prog"><span class="dots"><i class="on"></i><i class="on"></i><i class="on now"></i><i class=""></i><i class=""></i></span><span class="pl">First screen</span></span><span class="mv no-print"><button data-mv="-1" title="Move up">↑</button><button data-mv="1" title="Move down">↓</button></span></td></tr><tr><td class="rk">5</td>
+<td><b class="nm">Candidate F</b><span class="star" title="Adjacent industry">☆</span><small>Senior Account Executive</small></td>
+<td><span class="co">Growth stage software company</span><small>Washington, DC</small></td>
+<td class="as"><span class="ed" contenteditable="true">An excellent seller, not yet a sales leader. Not for this search.</span></td>
+<td><span class="prog"><span class="dots"><i class="on"></i><i class="on now"></i><i class=""></i><i class=""></i><i class=""></i></span><span class="pl">Initial conversation</span></span><span class="mv no-print"><button data-mv="-1" title="Move up">↑</button><button data-mv="1" title="Move down">↓</button></span></td></tr><tr><td class="rk">6</td>
+<td><b class="nm">Candidate E</b><small>Sales Lead</small></td>
+<td><span class="co">Regional agency</span><small>Baltimore, MD</small></td>
+<td class="as"><span class="ed" contenteditable="true">Too little in the record to judge. Worth one call before ruling out.</span></td>
+<td><span class="prog"><span class="dots"><i class="on"></i><i class="on now"></i><i class=""></i><i class=""></i><i class=""></i></span><span class="pl">Initial conversation</span></span><span class="mv no-print"><button data-mv="-1" title="Move up">↑</button><button data-mv="1" title="Move down">↓</button></span></td></tr><tr><td class="rk">7</td>
+<td><b class="nm">Candidate G</b><small>Chief Commercial Officer</small></td>
+<td><span class="co">Seed stage company</span><small>Austin, TX</small></td>
+<td class="as"><span class="ed" contenteditable="true">Different market and not open to a move this year.</span></td>
+<td><span class="prog"><span class="dots"><i class="on now"></i><i class=""></i><i class=""></i><i class=""></i><i class=""></i></span><span class="pl">Outbound</span></span><span class="mv no-print"><button data-mv="-1" title="Move up">↑</button><button data-mv="1" title="Move down">↓</button></span></td></tr><tr><td class="rk">8</td>
+<td><b class="nm">Candidate H</b><small>Business Development Manager</small></td>
+<td><span class="co">Logistics company</span><small>Richmond, VA</small></td>
+<td class="as"><span class="ed" contenteditable="true">Too early in their career for a VP role.</span></td>
+<td><span class="prog"><span class="dots"><i class="on now"></i><i class=""></i><i class=""></i><i class=""></i><i class=""></i></span><span class="pl">Outbound</span></span><span class="mv no-print"><button data-mv="-1" title="Move up">↑</button><button data-mv="1" title="Move down">↓</button></span></td></tr></tbody></table>
+<p class="legend">★ Direct industry experience <span>☆ Adjacent industry</span></p>
+<aside class="pull"><span class="k">Where we're focusing next</span><p class="ed" contenteditable="true">Candidate B remains our top candidate, with Candidate A and Candidate C close behind. We are moving Candidate A to a second screen focused on relocation and continuing to advance Candidate D as a longer-term option.</p></aside></div>
+<footer class="pf"><span>Sample Search Partners for Sample Software Co. · October 29, 2026</span><span><span class="draft-tag">Draft</span><b>2</b></span></footer></section>
+<section class="page ">
+<header class="ph"><span class="sec">02 · Pipeline</span><span class="job">VP Sales</span></header>
+<div class="pb"><h2>Where the search stands</h2>
+<div class="stats"><div><b>8</b><span>Outbound</span></div><div><b>6</b><span>Responded &amp; initial conversation</span></div><div><b>4</b><span>First layer screen</span></div><div><b>2</b><span>Second layer screen &amp; cleared</span></div><div><b>1</b><span>Submitted to client</span></div></div>
+<p class="lede"><span class="ed" contenteditable="true">Of 8 leaders worked, 6 responded and had an initial conversation, 4 went through a first layer screen, 2 cleared our second layer screen, and 1 is submitted to you.</span></p>
+<table class="t"><thead><tr><th>Candidate</th><th>Stage</th><th class="n">Base</th><th class="n">Bonus</th><th>Strongest signal</th><th>Watch item</th></tr></thead><tbody><tr><td><b class="nm">Candidate C</b><span class="star" title="Adjacent industry">☆</span><small>Public software company</small></td><td><span class="prog"><span class="dots"><i class="on"></i><i class="on"></i><i class="on now"></i><i class=""></i><i class=""></i></span><span class="pl">First screen</span></span></td>
+<td class="n">TBD</td><td class="n">TBD</td><td><span class="ed" contenteditable="true">Region at 104 to 112 percent of plan for five straight years, 45 sellers through 5 managers.</span></td><td class="watch"><span class="ed" contenteditable="true">Has always had a large company's process behind them; building from scratch is unproven.</span></td></tr><tr><td><b class="nm">Candidate B</b><span class="star" title="Direct industry experience">★</span><small>PE-backed services firm</small></td><td><span class="prog"><span class="dots"><i class="on"></i><i class="on"></i><i class="on"></i><i class="on now"></i><i class=""></i></span><span class="pl">Cleared</span></span></td>
+<td class="n">TBD</td><td class="n">TBD</td><td><span class="ed" contenteditable="true">Grew revenue 2.3x in four years selling to finance and operations leaders.</span></td><td class="watch"><span class="ed" contenteditable="true">Services today; wants to return to software, so ask how fast they would ramp on the product.</span></td></tr><tr><td><b class="nm">Candidate A</b><span class="star" title="Adjacent industry">☆</span><small>Series C software company</small></td><td><span class="prog"><span class="dots"><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on now"></i></span><span class="pl">Submitted</span></span></td>
+<td class="n">$250k</td><td class="n">$100k</td><td><span class="ed" contenteditable="true">Grew the team from 9 to 31 and revenue from $14M to $41M ARR across two funding rounds.</span></td><td class="watch"><span class="ed" contenteditable="true">Based in Boston with family settled there; relocation to DC is open.</span></td></tr><tr><td><b class="nm">Candidate D</b><span class="star" title="Adjacent industry">☆</span><small>Series A startup</small></td><td><span class="prog"><span class="dots"><i class="on"></i><i class="on"></i><i class="on now"></i><i class=""></i><i class=""></i></span><span class="pl">First screen</span></span></td>
+<td class="n">TBD</td><td class="n">TBD</td><td><span class="ed" contenteditable="true">Took a Series A from $1M to $4M ARR as its first sales leader.</span></td><td class="watch"><span class="ed" contenteditable="true">Team of 5; this role needs 15 to 25.</span></td></tr></tbody></table><p class="legend">★ Direct industry experience <span>☆ Adjacent industry</span></p>
+<h3 class="kick">How to read the pipeline</h3>
+<div class="notes"><div class="note"><span class="num">01</span><div><b><span class="ed" contenteditable="true">Scale-led profiles</span></b><p class="ed" contenteditable="true">Candidate A and Candidate C have run teams at or above the size this role needs, with records of hitting plan year after year. The question for both is fit: Candidate A would relocate from Boston, and Candidate C has always had a large company's process behind them.</p></div></div><div class="note"><span class="num">02</span><div><b><span class="ed" contenteditable="true">Buyer-led profile</span></b><p class="ed" contenteditable="true">Candidate B sells to finance and operations leaders today, the same buyer this company serves, and is local. The trade-off is the move back from services to software.</p></div></div><div class="note"><span class="num">03</span><div><b><span class="ed" contenteditable="true">The compensation picture</span></b><p class="ed" contenteditable="true">One candidate has a current base on file: $250k. [Add targets, bonus, equity and what candidates have told us.]</p></div></div></div></div>
+<footer class="pf"><span>Sample Search Partners for Sample Software Co. · October 29, 2026</span><span><span class="draft-tag">Draft</span><b>3</b></span></footer></section>
+<section class="page ">
+<header class="ph"><span class="sec">03 · Profile</span><span class="job">VP Sales</span></header>
+<div class="pb">
+<div class="prof"><div class="main">
+<span class="eyebrow dark">Second layer screen &amp; cleared</span>
+<h2 class="pn">Candidate B<span class="star" title="Direct industry experience">★</span></h2>
+<p class="role">Head of Revenue, <b>PE-backed services firm</b> · Arlington, VA</p>
+<h4>Where they fit</h4><ul class="fit"><li><span class="ed" contenteditable="true">Leads 22 people across new business and account growth at a PE-backed firm.</span></li><li><span class="ed" contenteditable="true">Sells to the same buyer: finance and operations leaders.</span></li><li><span class="ed" contenteditable="true">Ran a software sales region of 8, consistently above plan.</span></li></ul>
+<h4 class="blue">Where to probe</h4><ul class="probe"><li><span class="ed" contenteditable="true">Depth in software pricing and sales cycles.</span></li><li><span class="ed" contenteditable="true">Start date: 60 days notice.</span></li></ul>
+<h4>Career</h4><ol class="tl"><li><span class="yr">2020–present</span><div><b>Head of Revenue</b><span>PE-backed services firm</span></div></li><li><span class="yr">2015–2020</span><div><b>Regional Sales Director</b><span>Mid-market software company</span></div></li></ol>
+</div>
+<aside class="side"><div><span class="k">Stage</span><div class="v"><span class="prog"><span class="dots"><i class="on"></i><i class="on"></i><i class="on"></i><i class="on now"></i><i class=""></i></span><span class="pl">Cleared</span></span></div></div><div><span class="k">Current base</span><div class="v"><span class="ed" contenteditable="true">TBD</span></div></div><div><span class="k">Bonus</span><div class="v"><span class="ed" contenteditable="true">TBD</span></div></div><div><span class="k">Equity</span><div class="v"><span class="ed" contenteditable="true">TBD</span></div></div><div><span class="k">Our screen</span><div class="v"><span class="big">4.1<small> / 5</small></span><span class="rec">Yes</span></div></div></aside></div></div>
+<footer class="pf"><span>Sample Search Partners for Sample Software Co. · October 29, 2026</span><span><span class="draft-tag">Draft</span><b>4</b></span></footer></section>
+<section class="page ">
+<header class="ph"><span class="sec">03 · Screening scorecard</span><span class="job">VP Sales</span></header>
+<div class="pb"><h2>Candidate B: screening scorecard</h2>
+<p class="lede"><span class="ed" contenteditable="true">Scored by our team after the second layer screen. We score critically: a 3 means meets, a 4 is strong, and a 5 is reserved for areas where a candidate is exceptional.</span></p>
+<div class="sc-head"><div><span class="k">Average across 9 criteria</span><span class="big">4.1<small> / 5</small></span></div><div><span class="k">Overall recommendation</span><span class="big"><span class="ed" contenteditable="true">Yes</span></span></div></div>
+<div class="scorecard"><div class="crit"><div class="cl"><b>Relevant industry experience and insight</b><p class="ed" contenteditable="true">Sample note from the team's screen.</p></div><div class="meter" aria-label="5 of 5"><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><span>5</span></div></div><div class="crit"><div class="cl"><b>Building and leading a sales team</b><p class="ed" contenteditable="true">Sample note from the team's screen.</p></div><div class="meter" aria-label="4 of 5"><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class=""></i><span>4</span></div></div><div class="crit"><div class="cl"><b>Owning the revenue plan</b><p class="ed" contenteditable="true">Sample note from the team's screen.</p></div><div class="meter" aria-label="3 of 5"><i class="on"></i><i class="on"></i><i class="on"></i><i class=""></i><i class=""></i><span>3</span></div></div><div class="crit"><div class="cl"><b>Scaling and growth experience</b><p class="ed" contenteditable="true">Sample note from the team's screen.</p></div><div class="meter" aria-label="5 of 5"><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><span>5</span></div></div><div class="crit"><div class="cl"><b>Sales process and systems</b><p class="ed" contenteditable="true">Sample note from the team's screen.</p></div><div class="meter" aria-label="4 of 5"><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class=""></i><span>4</span></div></div><div class="crit"><div class="cl"><b>CEO partnership and commercial acumen</b><p class="ed" contenteditable="true">Sample note from the team's screen.</p></div><div class="meter" aria-label="3 of 5"><i class="on"></i><i class="on"></i><i class="on"></i><i class=""></i><i class=""></i><span>3</span></div></div><div class="crit"><div class="cl"><b>Account management and expansion</b><p class="ed" contenteditable="true">Sample note from the team's screen.</p></div><div class="meter" aria-label="5 of 5"><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><span>5</span></div></div><div class="crit"><div class="cl"><b>Location, relocation or commuting</b><p class="ed" contenteditable="true">Sample note from the team's screen.</p></div><div class="meter" aria-label="4 of 5"><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class=""></i><span>4</span></div></div><div class="crit"><div class="cl"><b>Ability to be the face in the market</b><p class="ed" contenteditable="true">Sample note from the team's screen.</p></div><div class="meter" aria-label="4 of 5"><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class=""></i><span>4</span></div></div></div>
+<p class="legend">1 Does not meet · 2 Weak · 3 Meets · 4 Strong · 5 Exceptional</p></div>
+<footer class="pf"><span>Sample Search Partners for Sample Software Co. · October 29, 2026</span><span><span class="draft-tag">Draft</span><b>5</b></span></footer></section>
+<section class="page ">
+<header class="ph"><span class="sec">04 · Profile</span><span class="job">VP Sales</span></header>
+<div class="pb">
+<div class="prof"><div class="main">
+<span class="eyebrow dark">Submitted to client</span>
+<h2 class="pn">Candidate A<span class="star" title="Adjacent industry">☆</span></h2>
+<p class="role">VP Sales, <b>Series C software company</b> · Boston, MA</p>
+<h4>Where they fit</h4><ul class="fit"><li><span class="ed" contenteditable="true">Built and led a 31-person team across new business and account management.</span></li><li><span class="ed" contenteditable="true">Took revenue from $14M to $41M ARR at a Series C company.</span></li><li><span class="ed" contenteditable="true">Earlier the first sales leader at a Series A, $2M to $9M ARR.</span></li></ul>
+<h4 class="blue">Where to probe</h4><ul class="probe"><li><span class="ed" contenteditable="true">Relocation to Washington, DC and 30 percent travel.</span></li><li><span class="ed" contenteditable="true">How much of the buyer base was finance teams.</span></li></ul>
+<h4>Career</h4><ol class="tl"><li><span class="yr">2021–present</span><div><b>VP Sales</b><span>Series C software company</span></div></li><li><span class="yr">2016–2021</span><div><b>Director of Sales</b><span>Series A data company</span></div></li></ol>
+</div>
+<aside class="side"><div><span class="k">Stage</span><div class="v"><span class="prog"><span class="dots"><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on now"></i></span><span class="pl">Submitted</span></span></div></div><div><span class="k">Current base</span><div class="v"><span class="ed" contenteditable="true">$250k</span></div></div><div><span class="k">Bonus</span><div class="v"><span class="ed" contenteditable="true">$100k</span></div></div><div><span class="k">Equity</span><div class="v"><span class="ed" contenteditable="true">TBD</span></div></div></aside></div></div>
+<footer class="pf"><span>Sample Search Partners for Sample Software Co. · October 29, 2026</span><span><span class="draft-tag">Draft</span><b>6</b></span></footer></section>
+<section class="page ">
+<header class="ph"><span class="sec">05 · First layer screen</span><span class="job">VP Sales</span></header>
+<div class="pb"><h2>First layer screen</h2>
+<p class="lede"><span class="ed" contenteditable="true">2 candidates have been through our first layer screen. We score candidates once they clear the second layer, so these profiles show what stood out and what we still need to confirm.</span></p>
+<div class="cards"><div class="card"><div class="ch"><b class="nm">Candidate C</b><span class="star" title="Adjacent industry">☆</span><span class="meta">Regional Sales Director, Public software company · Washington, DC</span></div>
+<p><span class="tag">Signal</span><span class="ed" contenteditable="true">Region at 104 to 112 percent of plan for five straight years, 45 sellers through 5 managers.</span></p><p><span class="tag w">Watch</span><span class="ed" contenteditable="true">Has always had a large company's process behind them; building from scratch is unproven.</span></p></div><div class="card"><div class="ch"><b class="nm">Candidate D</b><span class="star" title="Adjacent industry">☆</span><span class="meta">Director of Sales, Series A startup · Washington, DC</span></div>
+<p><span class="tag">Signal</span><span class="ed" contenteditable="true">Took a Series A from $1M to $4M ARR as its first sales leader.</span></p><p><span class="tag w">Watch</span><span class="ed" contenteditable="true">Team of 5; this role needs 15 to 25.</span></p></div></div><p class="legend">★ Direct industry experience <span>☆ Adjacent industry</span></p></div>
+<footer class="pf"><span>Sample Search Partners for Sample Software Co. · October 29, 2026</span><span><span class="draft-tag">Draft</span><b>7</b></span></footer></section>
+<section class="page ">
+<header class="ph"><span class="sec">06 · Conversations</span><span class="job">VP Sales</span></header>
+<div class="pb"><h2>Responded and initial conversation</h2>
+<p class="lede"><span class="ed" contenteditable="true">2 leaders have responded and had an initial conversation with our team. Candidates with direct or adjacent industry experience are listed first.</span></p>
+<table class="t"><thead><tr><th>Name</th><th>Company</th><th>Title</th><th>Industry</th><th>Location</th></tr></thead><tbody><tr><td><b class="nm">Candidate F</b><span class="star" title="Adjacent industry">☆</span></td><td>Growth stage software company</td><td>Senior Account Executive</td><td><span class="ind adj">Adjacent</span></td><td class="mut">Washington, DC </td></tr><tr><td><b class="nm">Candidate E</b></td><td>Regional agency</td><td>Sales Lead</td><td></td><td class="mut">Baltimore, MD </td></tr></tbody></table><p class="legend">★ Direct industry experience <span>☆ Adjacent industry</span></p></div>
+<footer class="pf"><span>Sample Search Partners for Sample Software Co. · October 29, 2026</span><span><span class="draft-tag">Draft</span><b>8</b></span></footer></section>
+<section class="page ">
+<header class="ph"><span class="sec">07 · Outbound</span><span class="job">VP Sales</span></header>
+<div class="pb"><h2>Outbound</h2>
+<p class="lede"><span class="ed" contenteditable="true">2 leaders in the pipeline to connect with.</span></p>
+<table class="t compact"><thead><tr><th>Name</th><th>Company</th><th>Title</th><th>Location</th></tr></thead><tbody><tr><td><b class="nm">Candidate G</b></td><td>Seed stage company</td><td>Chief Commercial Officer</td><td class="mut">Austin, TX</td></tr><tr><td><b class="nm">Candidate H</b></td><td>Logistics company</td><td>Business Development Manager</td><td class="mut">Richmond, VA</td></tr></tbody></table><p class="legend">★ Direct industry experience <span>☆ Adjacent industry</span></p></div>
+<footer class="pf"><span>Sample Search Partners for Sample Software Co. · October 29, 2026</span><span><span class="draft-tag">Draft</span><b>9</b></span></footer></section>
+<script>
+document.getElementById("print").onclick = function () { window.print(); };
+document.getElementById("save").onclick = function () {
+  var html = "<!doctype html>" + document.documentElement.outerHTML;
+  var a = document.createElement("a");
+  a.href = URL.createObjectURL(new Blob([html], { type: "text/html" }));
+  a.download = (document.title || "report").replace(/[^\w ]+/g, "").trim().replace(/ +/g, "-") + ".html";
+  a.click();
+};
+var top = document.getElementById("top");
+if (top) top.addEventListener("click", function (e) {
+  var b = e.target.closest("button[data-mv]"); if (!b) return;
+  var row = b.closest("tr"), dir = Number(b.getAttribute("data-mv"));
+  var other = dir < 0 ? row.previousElementSibling : row.nextElementSibling; if (!other) return;
+  dir < 0 ? top.insertBefore(row, other) : top.insertBefore(other, row);
+  Array.prototype.forEach.call(top.rows, function (r, i) { r.cells[0].textContent = i + 1; });
+});
+</script></body></html>

@@ -28,6 +28,9 @@ export function yearsOf(w) {
 export function buildReportModel({ job, candidates, results = [], teamCards = new Map(), stages, firm, client, date = new Date() }) {
   const byPerson = new Map(results.filter((r) => r.status === "scored").map((r) => [String(r.loxo?.person_id ?? r.candidate_id), r]));
   const order = stages.funnel;
+  // First names in the written parts, unless two people share one (then the full name).
+  const firstCount = new Map();
+  for (const c of candidates) firstCount.set(firstName(c.name), (firstCount.get(firstName(c.name)) ?? 0) + 1);
   const people = candidates.map((c, i) => {
     const pid = String(c.loxo?.person_id ?? c.id);
     const read = byPerson.get(pid) ?? null;
@@ -37,7 +40,7 @@ export function buildReportModel({ job, candidates, results = [], teamCards = ne
       ref: `C${i + 1}`,
       person_id: pid,
       name: c.name ?? `Candidate ${i + 1}`,
-      first_name: firstName(c.name),
+      first_name: firstCount.get(firstName(c.name)) > 1 ? (c.name ?? `Candidate ${i + 1}`) : firstName(c.name),
       initials: initials(c.name),
       title: c.current_title ?? "",
       company: c.current_company ?? "",

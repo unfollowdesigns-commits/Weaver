@@ -1,0 +1,691 @@
+{
+  "meta": {
+    "note": "Hand-written sample first reads for the fake Loxo search 101. Not produced by the AI."
+  },
+  "results": [
+    {
+      "status": "scored",
+      "candidate_id": "1",
+      "candidate_name": "Candidate A",
+      "job_id": "101",
+      "loxo": {
+        "person_id": 1
+      },
+      "scorecard": "job-101.v1",
+      "provider": "sample",
+      "model": "hand-written",
+      "scored_at": "2026-10-29T12:00:00Z",
+      "review_status": "awaiting_review",
+      "criteria": [
+        {
+          "id": "industry",
+          "score": 3,
+          "evidence": "See the record.",
+          "label": "Relevant industry experience and insight"
+        },
+        {
+          "id": "team",
+          "score": 5,
+          "evidence": "See the record.",
+          "label": "Building and leading a sales team"
+        },
+        {
+          "id": "plan",
+          "score": 5,
+          "evidence": "See the record.",
+          "label": "Owning the revenue plan"
+        },
+        {
+          "id": "scaling",
+          "score": 5,
+          "evidence": "See the record.",
+          "label": "Scaling and growth experience"
+        },
+        {
+          "id": "process",
+          "score": 4,
+          "evidence": "See the record.",
+          "label": "Sales process and systems"
+        },
+        {
+          "id": "ceo",
+          "score": 4,
+          "evidence": "See the record.",
+          "label": "CEO partnership and commercial acumen"
+        },
+        {
+          "id": "accounts",
+          "score": 4,
+          "evidence": "See the record.",
+          "label": "Account management and expansion"
+        },
+        {
+          "id": "location",
+          "score": 2,
+          "evidence": "See the record.",
+          "label": "Location, relocation or commuting"
+        },
+        {
+          "id": "market",
+          "score": 4,
+          "evidence": "See the record.",
+          "label": "Ability to be the face in the market"
+        }
+      ],
+      "average": 4,
+      "scored_count": 9,
+      "recommendation": "yes",
+      "assessment": "The strongest scaling record in the pipeline, at exactly this team size. Location is the main open point.",
+      "industry": "adjacent",
+      "strongest_signal": "Grew the team from 9 to 31 and revenue from $14M to $41M ARR across two funding rounds.",
+      "watch_item": "Based in Boston with family settled there; relocation to DC is open.",
+      "where_they_fit": [
+        "Built and led a 31-person team across new business and account management.",
+        "Took revenue from $14M to $41M ARR at a Series C company.",
+        "Earlier the first sales leader at a Series A, $2M to $9M ARR."
+      ],
+      "where_to_probe": [
+        "Relocation to Washington, DC and 30 percent travel.",
+        "How much of the buyer base was finance teams."
+      ],
+      "flags": []
+    },
+    {
+      "status": "scored",
+      "candidate_id": "2",
+      "candidate_name": "Candidate B",
+      "job_id": "101",
+      "loxo": {
+        "person_id": 2
+      },
+      "scorecard": "job-101.v1",
+      "provider": "sample",
+      "model": "hand-written",
+      "scored_at": "2026-10-29T12:00:00Z",
+      "review_status": "awaiting_review",
+      "criteria": [
+        {
+          "id": "industry",
+          "score": 4,
+          "evidence": "See the record.",
+          "label": "Relevant industry experience and insight"
+        },
+        {
+          "id": "team",
+          "score": 4,
+          "evidence": "See the record.",
+          "label": "Building and leading a sales team"
+        },
+        {
+          "id": "plan",
+          "score": 4,
+          "evidence": "See the record.",
+          "label": "Owning the revenue plan"
+        },
+        {
+          "id": "scaling",
+          "score": 4,
+          "evidence": "See the record.",
+          "label": "Scaling and growth experience"
+        },
+        {
+          "id": "process",
+          "score": 3,
+          "evidence": "See the record.",
+          "label": "Sales process and systems"
+        },
+        {
+          "id": "ceo",
+          "score": 4,
+          "evidence": "See the record.",
+          "label": "CEO partnership and commercial acumen"
+        },
+        {
+          "id": "accounts",
+          "score": 4,
+          "evidence": "See the record.",
+          "label": "Account management and expansion"
+        },
+        {
+          "id": "location",
+          "score": 5,
+          "evidence": "See the record.",
+          "label": "Location, relocation or commuting"
+        },
+        {
+          "id": "market",
+          "score": 4,
+          "evidence": "See the record.",
+          "label": "Ability to be the face in the market"
+        }
+      ],
+      "average": 4,
+      "scored_count": 9,
+      "recommendation": "yes",
+      "assessment": "Right buyer, right team size and local. The question is the move back from services to software.",
+      "industry": "direct",
+      "strongest_signal": "Grew revenue 2.3x in four years selling to finance and operations leaders.",
+      "watch_item": "Services today; wants to return to software, so ask how fast they would ramp on the product.",
+      "where_they_fit": [
+        "Leads 22 people across new business and account growth at a PE-backed firm.",
+        "Sells to the same buyer: finance and operations leaders.",
+        "Ran a software sales region of 8, consistently above plan."
+      ],
+      "where_to_probe": [
+        "Depth in software pricing and sales cycles.",
+        "Start date: 60 days notice."
+      ],
+      "flags": []
+    },
+    {
+      "status": "scored",
+      "candidate_id": "3",
+      "candidate_name": "Candidate C",
+      "job_id": "101",
+      "loxo": {
+        "person_id": 3
+      },
+      "scorecard": "job-101.v1",
+      "provider": "sample",
+      "model": "hand-written",
+      "scored_at": "2026-10-29T12:00:00Z",
+      "review_status": "awaiting_review",
+      "criteria": [
+        {
+          "id": "industry",
+          "score": 3,
+          "evidence": "See the record.",
+          "label": "Relevant industry experience and insight"
+        },
+        {
+          "id": "team",
+          "score": 5,
+          "evidence": "See the record.",
+          "label": "Building and leading a sales team"
+        },
+        {
+          "id": "plan",
+          "score": 5,
+          "evidence": "See the record.",
+          "label": "Owning the revenue plan"
+        },
+        {
+          "id": "scaling",
+          "score": 3,
+          "evidence": "See the record.",
+          "label": "Scaling and growth experience"
+        },
+        {
+          "id": "process",
+          "score": 4,
+          "evidence": "See the record.",
+          "label": "Sales process and systems"
+        },
+        {
+          "id": "ceo",
+          "score": 5,
+          "evidence": "See the record.",
+          "label": "CEO partnership and commercial acumen"
+        },
+        {
+          "id": "accounts",
+          "score": 4,
+          "evidence": "See the record.",
+          "label": "Account management and expansion"
+        },
+        {
+          "id": "location",
+          "score": 5,
+          "evidence": "See the record.",
+          "label": "Location, relocation or commuting"
+        },
+        {
+          "id": "market",
+          "score": 3,
+          "evidence": "See the record.",
+          "label": "Ability to be the face in the market"
+        }
+      ],
+      "average": 4.11,
+      "scored_count": 9,
+      "recommendation": "yes",
+      "assessment": "The most consistent operator here, at larger scale than the role. Fit with a growth-stage pace is the risk.",
+      "industry": "adjacent",
+      "strongest_signal": "Region at 104 to 112 percent of plan for five straight years, 45 sellers through 5 managers.",
+      "watch_item": "Has always had a large company's process behind them; building from scratch is unproven.",
+      "where_they_fit": [
+        "Leads 45 sellers through 5 managers at a public software company.",
+        "Five years at 104 to 112 percent of plan.",
+        "Based in Washington, DC."
+      ],
+      "where_to_probe": [
+        "How they would build process at a growth-stage company.",
+        "Appetite for a smaller team at first."
+      ],
+      "flags": []
+    },
+    {
+      "status": "scored",
+      "candidate_id": "4",
+      "candidate_name": "Candidate D",
+      "job_id": "101",
+      "loxo": {
+        "person_id": 4
+      },
+      "scorecard": "job-101.v1",
+      "provider": "sample",
+      "model": "hand-written",
+      "scored_at": "2026-10-29T12:00:00Z",
+      "review_status": "awaiting_review",
+      "criteria": [
+        {
+          "id": "industry",
+          "score": 3,
+          "evidence": "See the record.",
+          "label": "Relevant industry experience and insight"
+        },
+        {
+          "id": "team",
+          "score": 2,
+          "evidence": "See the record.",
+          "label": "Building and leading a sales team"
+        },
+        {
+          "id": "plan",
+          "score": 4,
+          "evidence": "See the record.",
+          "label": "Owning the revenue plan"
+        },
+        {
+          "id": "scaling",
+          "score": 4,
+          "evidence": "See the record.",
+          "label": "Scaling and growth experience"
+        },
+        {
+          "id": "process",
+          "score": 3,
+          "evidence": "See the record.",
+          "label": "Sales process and systems"
+        },
+        {
+          "id": "ceo",
+          "score": 3,
+          "evidence": "See the record.",
+          "label": "CEO partnership and commercial acumen"
+        },
+        {
+          "id": "accounts",
+          "score": 3,
+          "evidence": "See the record.",
+          "label": "Account management and expansion"
+        },
+        {
+          "id": "location",
+          "score": 5,
+          "evidence": "See the record.",
+          "label": "Location, relocation or commuting"
+        },
+        {
+          "id": "market",
+          "score": 3,
+          "evidence": "See the record.",
+          "label": "Ability to be the face in the market"
+        }
+      ],
+      "average": 3.33,
+      "scored_count": 9,
+      "recommendation": "no",
+      "assessment": "Right stage and clearly motivated, but the team they have led is much smaller than this role needs.",
+      "industry": "adjacent",
+      "strongest_signal": "Took a Series A from $1M to $4M ARR as its first sales leader.",
+      "watch_item": "Team of 5; this role needs 15 to 25.",
+      "where_they_fit": [
+        "Built a first sales team from zero.",
+        "Top performer three years running before that."
+      ],
+      "where_to_probe": [
+        "A strong prospect for a similar search in two years."
+      ],
+      "flags": []
+    },
+    {
+      "status": "scored",
+      "candidate_id": "5",
+      "candidate_name": "Candidate E",
+      "job_id": "101",
+      "loxo": {
+        "person_id": 5
+      },
+      "scorecard": "job-101.v1",
+      "provider": "sample",
+      "model": "hand-written",
+      "scored_at": "2026-10-29T12:00:00Z",
+      "review_status": "awaiting_review",
+      "criteria": [
+        {
+          "id": "industry",
+          "score": 2,
+          "evidence": "See the record.",
+          "label": "Relevant industry experience and insight"
+        },
+        {
+          "id": "team",
+          "score": 2,
+          "evidence": "See the record.",
+          "label": "Building and leading a sales team"
+        },
+        {
+          "id": "plan",
+          "score": null,
+          "evidence": "No evidence in the record",
+          "label": "Owning the revenue plan"
+        },
+        {
+          "id": "scaling",
+          "score": 2,
+          "evidence": "See the record.",
+          "label": "Scaling and growth experience"
+        },
+        {
+          "id": "process",
+          "score": null,
+          "evidence": "No evidence in the record",
+          "label": "Sales process and systems"
+        },
+        {
+          "id": "ceo",
+          "score": null,
+          "evidence": "No evidence in the record",
+          "label": "CEO partnership and commercial acumen"
+        },
+        {
+          "id": "accounts",
+          "score": null,
+          "evidence": "No evidence in the record",
+          "label": "Account management and expansion"
+        },
+        {
+          "id": "location",
+          "score": 5,
+          "evidence": "See the record.",
+          "label": "Location, relocation or commuting"
+        },
+        {
+          "id": "market",
+          "score": null,
+          "evidence": "No evidence in the record",
+          "label": "Ability to be the face in the market"
+        }
+      ],
+      "average": 2.75,
+      "scored_count": 4,
+      "recommendation": "no",
+      "assessment": "Too little in the record to judge. Worth one call before ruling out.",
+      "industry": "other",
+      "strongest_signal": "Leads a small sales team at a regional agency.",
+      "watch_item": "Very little in the record; no results or team size given.",
+      "where_they_fit": [
+        "Based in the region."
+      ],
+      "where_to_probe": [
+        "A short call would settle it."
+      ],
+      "flags": [
+        "thin_record: 5 of 9 criteria had no evidence"
+      ]
+    },
+    {
+      "status": "scored",
+      "candidate_id": "6",
+      "candidate_name": "Candidate F",
+      "job_id": "101",
+      "loxo": {
+        "person_id": 6
+      },
+      "scorecard": "job-101.v1",
+      "provider": "sample",
+      "model": "hand-written",
+      "scored_at": "2026-10-29T12:00:00Z",
+      "review_status": "awaiting_review",
+      "criteria": [
+        {
+          "id": "industry",
+          "score": 3,
+          "evidence": "See the record.",
+          "label": "Relevant industry experience and insight"
+        },
+        {
+          "id": "team",
+          "score": 1,
+          "evidence": "See the record.",
+          "label": "Building and leading a sales team"
+        },
+        {
+          "id": "plan",
+          "score": 3,
+          "evidence": "See the record.",
+          "label": "Owning the revenue plan"
+        },
+        {
+          "id": "scaling",
+          "score": 3,
+          "evidence": "See the record.",
+          "label": "Scaling and growth experience"
+        },
+        {
+          "id": "process",
+          "score": 3,
+          "evidence": "See the record.",
+          "label": "Sales process and systems"
+        },
+        {
+          "id": "ceo",
+          "score": 2,
+          "evidence": "See the record.",
+          "label": "CEO partnership and commercial acumen"
+        },
+        {
+          "id": "accounts",
+          "score": 3,
+          "evidence": "See the record.",
+          "label": "Account management and expansion"
+        },
+        {
+          "id": "location",
+          "score": 5,
+          "evidence": "See the record.",
+          "label": "Location, relocation or commuting"
+        },
+        {
+          "id": "market",
+          "score": 3,
+          "evidence": "See the record.",
+          "label": "Ability to be the face in the market"
+        }
+      ],
+      "average": 2.89,
+      "scored_count": 9,
+      "recommendation": "no",
+      "assessment": "An excellent seller, not yet a sales leader. Not for this search.",
+      "industry": "adjacent",
+      "strongest_signal": "140 percent of quota in 2025 at a growth-stage software company.",
+      "watch_item": "Has not managed people; the role leads 15 to 25.",
+      "where_they_fit": [
+        "A top individual seller in software, based in DC."
+      ],
+      "where_to_probe": [
+        "Keep for a first-line manager search."
+      ],
+      "flags": []
+    },
+    {
+      "status": "scored",
+      "candidate_id": "7",
+      "candidate_name": "Candidate G",
+      "job_id": "101",
+      "loxo": {
+        "person_id": 7
+      },
+      "scorecard": "job-101.v1",
+      "provider": "sample",
+      "model": "hand-written",
+      "scored_at": "2026-10-29T12:00:00Z",
+      "review_status": "awaiting_review",
+      "criteria": [
+        {
+          "id": "industry",
+          "score": 1,
+          "evidence": "See the record.",
+          "label": "Relevant industry experience and insight"
+        },
+        {
+          "id": "team",
+          "score": 2,
+          "evidence": "See the record.",
+          "label": "Building and leading a sales team"
+        },
+        {
+          "id": "plan",
+          "score": 2,
+          "evidence": "See the record.",
+          "label": "Owning the revenue plan"
+        },
+        {
+          "id": "scaling",
+          "score": 3,
+          "evidence": "See the record.",
+          "label": "Scaling and growth experience"
+        },
+        {
+          "id": "process",
+          "score": 2,
+          "evidence": "See the record.",
+          "label": "Sales process and systems"
+        },
+        {
+          "id": "ceo",
+          "score": 2,
+          "evidence": "See the record.",
+          "label": "CEO partnership and commercial acumen"
+        },
+        {
+          "id": "accounts",
+          "score": 3,
+          "evidence": "See the record.",
+          "label": "Account management and expansion"
+        },
+        {
+          "id": "location",
+          "score": 1,
+          "evidence": "See the record.",
+          "label": "Location, relocation or commuting"
+        },
+        {
+          "id": "market",
+          "score": 2,
+          "evidence": "See the record.",
+          "label": "Ability to be the face in the market"
+        }
+      ],
+      "average": 2,
+      "scored_count": 9,
+      "recommendation": "no",
+      "assessment": "Different market and not open to a move this year.",
+      "industry": "other",
+      "strongest_signal": "Commercial lead at a 12-person consumer health company.",
+      "watch_item": "Different sector, based in Austin, and not looking this year.",
+      "where_they_fit": [
+        "Early-stage commercial leadership."
+      ],
+      "where_to_probe": [
+        "Not a fit for this search."
+      ],
+      "flags": []
+    },
+    {
+      "status": "scored",
+      "candidate_id": "8",
+      "candidate_name": "Candidate H",
+      "job_id": "101",
+      "loxo": {
+        "person_id": 8
+      },
+      "scorecard": "job-101.v1",
+      "provider": "sample",
+      "model": "hand-written",
+      "scored_at": "2026-10-29T12:00:00Z",
+      "review_status": "awaiting_review",
+      "criteria": [
+        {
+          "id": "industry",
+          "score": 1,
+          "evidence": "See the record.",
+          "label": "Relevant industry experience and insight"
+        },
+        {
+          "id": "team",
+          "score": 1,
+          "evidence": "See the record.",
+          "label": "Building and leading a sales team"
+        },
+        {
+          "id": "plan",
+          "score": 2,
+          "evidence": "See the record.",
+          "label": "Owning the revenue plan"
+        },
+        {
+          "id": "scaling",
+          "score": 1,
+          "evidence": "See the record.",
+          "label": "Scaling and growth experience"
+        },
+        {
+          "id": "process",
+          "score": 1,
+          "evidence": "See the record.",
+          "label": "Sales process and systems"
+        },
+        {
+          "id": "ceo",
+          "score": 1,
+          "evidence": "See the record.",
+          "label": "CEO partnership and commercial acumen"
+        },
+        {
+          "id": "accounts",
+          "score": 2,
+          "evidence": "See the record.",
+          "label": "Account management and expansion"
+        },
+        {
+          "id": "location",
+          "score": 3,
+          "evidence": "See the record.",
+          "label": "Location, relocation or commuting"
+        },
+        {
+          "id": "market",
+          "score": 1,
+          "evidence": "See the record.",
+          "label": "Ability to be the face in the market"
+        }
+      ],
+      "average": 1.44,
+      "scored_count": 9,
+      "recommendation": "no",
+      "assessment": "Too early in their career for a VP role.",
+      "industry": "other",
+      "strongest_signal": "Generates new leads for a logistics sales team.",
+      "watch_item": "Early in their career for a role at this level.",
+      "where_they_fit": [
+        "Pipeline generation experience."
+      ],
+      "where_to_probe": [
+        "Keep for a more junior search."
+      ],
+      "flags": []
+    }
+  ]
+}

@@ -6,6 +6,7 @@
 //   node scripts/client-report.js --loxo-job 123 --results data/runs/<run>/job-123.json
 //   node scripts/client-report.js --loxo-job 123 --provider claude --go     (scores first)
 //   options: --firm "Firm name" --client "Client name" (default from .env and the Loxo job)
+//            --narrative file.json  use prepared short text instead of asking the AI
 //
 // Output: data/reports/<date>-job-<id>/report.html (real candidates: stays on this computer).
 
@@ -28,6 +29,7 @@ const { values: args } = parseArgs({
   options: {
     "loxo-job": { type: "string" },
     results: { type: "string" },
+    narrative: { type: "string" },
     provider: { type: "string", default: process.env.SCORING_PROVIDER || "mock" },
     firm: { type: "string", default: process.env.REPORT_FIRM_NAME || "" },
     client: { type: "string", default: "" },
@@ -71,7 +73,7 @@ const teamCards = await teamScorecards(client, jobId);
 let model = buildReportModel({ job, candidates, results, teamCards, stages, firm: args.firm, client: args.client });
 
 try {
-  const { answer } = await provider.complete(narrativeRequest(model));
+  const { answer } = args.narrative ? { answer: JSON.parse(fs.readFileSync(args.narrative, "utf8")) } : await provider.complete(narrativeRequest(model));
   model = applyNarrative(model, answer);
 } catch (err) {
   console.log(`  written parts not drafted (${err.message}); placeholders left for the team`);

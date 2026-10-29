@@ -58,7 +58,7 @@ test("the AI writes with references, never names or pay; names are put back afte
   assert.ok(!req.user.includes("Smith") && !req.user.includes("200000"));
   assert.ok(req.user.includes('"ref": "C10"'));
   const out = applyNarrative(m, { subtitle: "S", read_boxes: [{ title: "T", text: "C1 and C10 lead." }], focus_next: "C2 next." });
-  assert.equal(out.narrative.read_boxes[0].text, "Person and Person lead.");
+  assert.equal(out.narrative.read_boxes[0].text, "Person A Smith and Person J Smith lead."); // shared first names: full names
   assert.equal(narrativeSchema().additionalProperties, false);
 });
 

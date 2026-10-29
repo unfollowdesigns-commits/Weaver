@@ -37,15 +37,17 @@ export async function loadCandidate(client, entry) {
 
 // Loads candidates with a few requests at a time, so Loxo is not flooded.
 export async function loadCandidates(client, entries, { concurrency = 3, onProgress } = {}) {
-  const candidates = [];
+  // Kept in pipeline order, whatever order the requests finish in.
+  const slots = new Array(entries.length);
   const failures = [];
   let next = 0;
   async function worker() {
     while (next < entries.length) {
-      const entry = entries[next++];
+      const i = next++;
+      const entry = entries[i];
       try {
         const c = await loadCandidate(client, entry);
-        candidates.push(c);
+        slots[i] = c;
         onProgress?.(c);
       } catch (err) {
         failures.push({ entry_id: entry?.id ?? null, error: err.message });
@@ -53,7 +55,7 @@ export async function loadCandidates(client, entries, { concurrency = 3, onProgr
     }
   }
   await Promise.all(Array.from({ length: Math.min(concurrency, entries.length || 1) }, worker));
-  return { candidates, failures };
+  return { candidates: slots.filter(Boolean), failures };
 }
 
 export async function fetchJobForScoring(client, jobId, { limit, concurrency = 3, onProgress } = {}) {

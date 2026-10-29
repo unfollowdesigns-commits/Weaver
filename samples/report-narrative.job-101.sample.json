@@ -1,0 +1,9 @@
+{
+  "note": "Hand-written sample of the report's short text, with references (C1...) the way the AI writes it. Used with --narrative to preview the report without an AI call.",
+  "subtitle": "Where the search stands today, drawn from 8 sales leaders across B2B software, services and regional firms in the Washington area and beyond.",
+  "read_boxes": [
+    { "title": "Scale-led profiles", "text": "C1 and C3 have run teams at or above the size this role needs, with records of hitting plan year after year. The question for both is fit: C1 would relocate from Boston, and C3 has always had a large company's process behind them." },
+    { "title": "Buyer-led profile", "text": "C2 sells to finance and operations leaders today, the same buyer this company serves, and is local. The trade-off is the move back from services to software." }
+  ],
+  "focus_next": "C2 remains our top candidate, with C1 and C3 close behind. We are moving C1 to a second screen focused on relocation and continuing to advance C4 as a longer-term option."
+}
