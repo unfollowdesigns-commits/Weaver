@@ -17,7 +17,7 @@ import { firstArray } from "../src/loxo/client.js";
 import { personIdOf, jobStatusOf, isOpenStatus } from "../src/loxo/map.js";
 
 loadEnv();
-const { values: args } = parseArgs({ options: { job: { type: "string" }, jobs: { type: "boolean", default: false }, all: { type: "boolean", default: false }, probe: { type: "boolean", default: false } } });
+const { values: args } = parseArgs({ options: { job: { type: "string" }, jobs: { type: "boolean", default: false }, all: { type: "boolean", default: false }, probe: { type: "boolean", default: false }, sample: { type: "string", default: "10" } } });
 const client = loxoClientFromEnv();
 
 const show = (title, items) => {
@@ -79,7 +79,7 @@ try {
       // What the scorer will actually get, over the first 10 candidates. Counts only.
       const { loadCandidates, workflowStageNames } = await import("../src/loxo/read.js");
       const stageNames = await workflowStageNames(client);
-      const sample = entries.slice(0, 10);
+      const sample = entries.slice(0, Math.max(1, Number(args.sample) || 10));
       const { candidates, failures } = await loadCandidates(client, sample, { stageNames });
       let withResume = false;
       for (const c of candidates) {
@@ -92,6 +92,16 @@ try {
         }
       }
       const n = (f) => candidates.filter(f).length;
+      // Enough to score: a resume, or a work history with titles, or real notes.
+      const scoreable = (c) => Boolean(c.resume_text) || c.work_history.some((w) => w.title) || c.notes.some((x) => x.text.length > 200);
+      // Field names of the fullest record, so a rich profile can be checked too.
+      const richest = [...candidates].sort((a, b) => (b.resume_text?.length ?? 0) + b.work_history.length * 500 - ((a.resume_text?.length ?? 0) + a.work_history.length * 500))[0];
+      if (richest && (richest.resume_text || richest.work_history.length)) {
+        const rp = richest.loxo.person_id;
+        save("rich-person", await client.get(`/people/${rp}`));
+        const rj = firstArray(await client.get(`/people/${rp}/job_profiles`));
+        if (rj[0]?.id) save("rich-job-profile-detail", await tryGet(`/people/${rp}/job_profiles/${rj[0].id}`));
+      }
       console.log(`\nWhat Weaver gets, first ${sample.length} candidates on this search (counts only):`);
       console.log(`  read fine           ${candidates.length} of ${sample.length}${failures.length ? `  (${failures.length} failed: ${failures[0].error.slice(0, 90)})` : ""}`);
       console.log(`  current title       ${n((c) => c.current_title)}`);
@@ -103,6 +113,14 @@ try {
       console.log(`  notes               ${n((c) => c.notes.length)}`);
       console.log(`  stage name known    ${n((c) => c.report.stage.name)}`);
       console.log(`  pay on file         ${n((c) => c.report.compensation.base)}`);
+      const { bucketOf, loadStages } = await import("../src/client-report/model.js");
+      const stages = loadStages("config/report/stages.v2.json");
+      console.log(`\n  By stage (people / enough to score):`);
+      for (const b of stages.buckets) {
+        const inB = candidates.filter((c) => bucketOf(c.report.stage.name, stages) === b.id);
+        if (inB.length) console.log(`    ${b.label.padEnd(34)} ${String(inB.length).padStart(4)} / ${inB.filter(scoreable).length}`);
+      }
+      console.log(`    ${"Total".padEnd(34)} ${String(candidates.length).padStart(4)} / ${n(scoreable)}`);
       console.log(`  stage names in Loxo ${stageNames.size ? [...stageNames.values()].join(", ") : "none returned"}`);
       const { mapJob } = await import("../src/loxo/map.js");
       const tpl = mapJob(job).scorecard_template;

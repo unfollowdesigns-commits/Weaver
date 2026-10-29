@@ -15,8 +15,8 @@ const people = JSON.parse(fs.readFileSync("samples/candidates.sample.json", "utf
 const byId = new Map(people.map((p, i) => [String(i + 1), p]));
 const idOf = (sampleId) => String(people.findIndex((p) => p.id === sampleId) + 1);
 
-// Sample pipeline stages, in the order candidates appear on each search.
-const STAGES = ["Submitted to client", "Second screen - cleared", "First screen", "First screen", "Responded", "Responded", "Outbound", "Outbound", "Outbound"];
+// Sample pipeline stages (the real account's stage names), in the order candidates appear on each search.
+const STAGES = ["Submitted to Client", "Submitted to Account Manager", "Screened", "Screened", "Responded", "Responded", "Outbound", "Longlist", "Outbound"];
 
 // One scorecard written by the sample team, for the cleared candidate on search 101.
 function teamScorecard(jobId) {
