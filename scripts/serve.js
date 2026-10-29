@@ -16,6 +16,8 @@ import path from "node:path";
 import crypto from "node:crypto";
 import { loadEnv } from "../src/env.js";
 import { loadScorecard, scorecardResolver, JOB_SCORECARD_DIR } from "../src/scorecard.js";
+import { liveCriteria, AUTO_DIR } from "../src/auto-criteria.js";
+import { runSweep } from "../src/sweep.js";
 import { loadTemplate } from "../src/prompt.js";
 import { getProvider } from "../src/providers/index.js";
 import { scoreCandidate, isThin } from "../src/score.js";
@@ -34,9 +36,14 @@ if (secret.length < 16) {
   process.exit(1);
 }
 const allowedJobs = new Set((process.env.LOXO_AUTO_SCORE_JOB_IDS ?? "").split(",").map((s) => s.trim()).filter(Boolean));
-const scorecardFor = scorecardResolver({ fallback: loadScorecard(process.env.SCORECARD_FILE || "config/scorecards/standard-executive.v2.json"), dir: process.env.SCORECARD_JOBS_DIR || JOB_SCORECARD_DIR });
 const template = loadTemplate();
 const provider = await getProvider(process.env.SCORING_PROVIDER || "mock");
+// Each search: its approved scorecard, else criteria drafted from the job the first time it is
+// seen (the firm's own criteria names kept), stored on the persistent disk (CRITERIA_DIR) and
+// used straight away. AUTO_CRITERIA=false scores only searches with an approved scorecard.
+const standard = loadScorecard(process.env.SCORECARD_FILE || "config/scorecards/standard-executive.v2.json");
+const approvedDir = process.env.SCORECARD_JOBS_DIR || JOB_SCORECARD_DIR;
+const scorecardFor = liveCriteria({ standard, provider, approvedDir, store: process.env.CRITERIA_DIR || AUTO_DIR, auto: process.env.AUTO_CRITERIA !== "false", resolver: scorecardResolver({ fallback: standard, dir: approvedDir }), log });
 const client = loxoClientFromEnv(process.env, { allowWrites: true });
 const cfg = writeConfigFromEnv();
 const saveDebug = process.env.SAVE_DEBUG_FILES === "true";
@@ -85,7 +92,9 @@ async function handle(body) {
   if (isThin(candidate)) return log(`${tag}: not enough in Loxo to score yet (no resume, work history or notes), skipped`);
   // The daily cap counts AI readings only, so it is taken here, after the empty-record check.
   if (!dailyCap.take()) return log(`${tag}: daily cap reached, left for the sweep tomorrow`);
-  const result = await scoreCandidate({ candidate, job, scorecard: scorecardFor(jobId, job), template, provider });
+  const scorecard = await scorecardFor(jobId, job);
+  if (!scorecard) return log(`${tag}: no approved scorecard for this search yet (AUTO_CRITERIA=false); approve its criteria, then it is scored`);
+  const result = await scoreCandidate({ candidate, job, scorecard, template, provider });
   const tokens = result.usage ? ` tokens in ${result.usage.input_tokens ?? result.usage.prompt_tokens} out ${result.usage.output_tokens ?? result.usage.completion_tokens}` : "";
   log(`${tag}: ${result.status}${result.status === "scored" ? ` ${result.average} ${result.recommendation}${tokens}` : ` ${result.error}`}`);
   if (result.status !== "scored") return;
@@ -132,6 +141,25 @@ const server = http.createServer((req, res) => {
     queue = queue.then(() => handle(body)).catch((err) => log(`error: ${err.message}`));
   });
 });
+
+// The hourly catch-up runs inside this service (one Render service with the disk; Render's cron
+// jobs cannot use a disk). SWEEP_EVERY_MINUTES=0 turns it off, e.g. when a separate cron is used.
+const sweepEvery = Number(process.env.SWEEP_EVERY_MINUTES ?? 60);
+if (sweepEvery > 0 && allowedJobs.size) {
+  let running = false;
+  const sweepOnce = () => {
+    if (running) return;
+    running = true;
+    const writes = writesAllowed();
+    queue = queue.then(() => runSweep({ client, provider, jobIds: [...allowedJobs], scorecard: scorecardFor, template, cfg, writes,
+      maxPerRun: Number(process.env.SWEEP_MAX_PER_RUN || 50), useBatch: process.env.USE_BATCH !== "false", log }))
+      .then((s) => { const { dry_run, ...counts } = s; log(`sweep ${JSON.stringify(counts)}`); })
+      .catch((err) => log(`sweep failed: ${err.message}`))
+      .finally(() => { running = false; });
+  };
+  setInterval(sweepOnce, sweepEvery * 60_000).unref();
+  setTimeout(sweepOnce, 60_000).unref();
+}
 
 const port = Number(process.env.PORT || 8787);
 server.listen(port, () => {

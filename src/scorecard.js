@@ -72,6 +72,18 @@ export function scorecardFromTemplate(job, standard) {
   return sc;
 }
 
+// Live scoring (server and sweep): only a search's approved scorecard, else null, so nothing
+// is scored automatically on criteria Josh has not approved. REQUIRE_APPROVED_SCORECARD=false
+// falls back to the usual order.
+export function liveScorecardResolver({ fallback, dir = JOB_SCORECARD_DIR, requireApproved = true }) {
+  const any = scorecardResolver({ fallback, dir });
+  return (jobId, job = null) => {
+    const file = jobId === undefined || jobId === null ? null : jobScorecardFile(jobId, dir);
+    if (file) return loadScorecard(file);
+    return requireApproved ? null : any(jobId, job);
+  };
+}
+
 // Returns (jobId, job) => scorecard. Order: the search's approved file, then the firm's own
 // template on the job in Loxo, then the standard scorecard. Reads the folder on each call,
 // so a newly approved scorecard is used without a restart.

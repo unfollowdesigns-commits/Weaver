@@ -43,13 +43,18 @@ export function scorecardFromDraft(answer, job, standard) {
   const crit = Array.isArray(answer?.criteria) ? answer.criteria : [];
   // The firm's own Loxo templates can be shorter than nine; three is the floor.
   if (crit.length < 3 || crit.length > 12) throw new Error(`draft has ${crit.length} criteria; expected three to twelve, usually nine`);
+  // The firm's own criteria on the search in Loxo are kept exactly, in order: the draft only
+  // supplies their descriptions. A draft that changes their number is refused.
+  const fixed = job.scorecard_template?.criteria ?? null;
+  if (fixed?.length && fixed.length !== crit.length) throw new Error(`draft has ${crit.length} criteria; the firm's template on this search has ${fixed.length}`);
   const seen = new Set();
-  const criteria = crit.map((c) => {
-    if (!c?.label?.trim() || !c?.description?.trim()) throw new Error("a drafted criterion has no label or description");
-    let id = slug(c.label);
+  const criteria = crit.map((c, i) => {
+    const label = (fixed?.[i] ?? c?.label ?? "").trim();
+    if (!label || !c?.description?.trim()) throw new Error("a drafted criterion has no label or description");
+    let id = slug(label);
     while (seen.has(id)) id += "_2";
     seen.add(id);
-    return { id, label: c.label.trim(), description: c.description.trim() };
+    return { id, label, description: c.description.trim() };
   });
   const sc = {
     id: `job-${job.id}`,

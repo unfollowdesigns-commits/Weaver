@@ -13,6 +13,7 @@ import { parseArgs } from "node:util";
 import { loadEnv } from "../src/env.js";
 import { loadScorecard, scorecardResolver, JOB_SCORECARD_DIR } from "../src/scorecard.js";
 import { loadTemplate } from "../src/prompt.js";
+import { scorecardForSearch } from "../src/auto-criteria.js";
 import { getProvider } from "../src/providers/index.js";
 import { scoreJob } from "../src/score.js";
 import { toMarkdown, toHtml, toIndexHtml } from "../src/report.js";
@@ -31,6 +32,8 @@ const { values: args } = parseArgs({
     scorecard: { type: "string", default: process.env.SCORECARD_FILE || "config/scorecards/standard-executive.v2.json" },
     "scorecards-dir": { type: "string", default: process.env.SCORECARD_JOBS_DIR || JOB_SCORECARD_DIR },
     concurrency: { type: "string", default: "3" },
+    // Draft the criteria descriptions for a search with no approved scorecard (on by default).
+    "no-auto-criteria": { type: "boolean", default: false },
     go: { type: "boolean", default: false },
   },
 });
@@ -91,8 +94,8 @@ const stageNames = await workflowStageNames(client);
 
 for (const { job, entries } of plan) {
   console.log(`\n${job.title}`);
-  const scorecard = scorecardFor(job.id, job);
-  console.log(`  scorecard ${scorecard.id}.v${scorecard.version}`);
+  const scorecard = await scorecardForSearch({ job, resolver: scorecardFor, standard: fallback, provider, auto: !args["no-auto-criteria"], approvedDir: args["scorecards-dir"], log: console.log });
+  console.log(`  scorecard ${scorecard.id}.v${scorecard.version}${scorecard.auto ? " (drafted from the job, not yet approved)" : ""}`);
   const { candidates, failures } = await loadCandidates(client, entries, { stageNames });
   for (const f of failures) console.log(`  could not read entry ${f.entry_id}: ${f.error}`);
   let done = 0;
@@ -102,7 +105,7 @@ for (const { job, entries } of plan) {
     onResult: (r, i) => console.log(`  ${String(++done).padStart(4)}/${candidates.length} ${r.status === "scored" ? `scored   ${r.average?.toFixed(1)} ${r.recommendation}` : r.status === "skipped" ? "skipped  not enough in Loxo" : `ERROR    ${r.error}`}`),
   });
   const file = `job-${job.id}.html`;
-  const jobMeta = { ...meta, scorecard: `${scorecard.id}.v${scorecard.version}`, jobTitle: job.title };
+  const jobMeta = { ...meta, scorecard: `${scorecard.id}.v${scorecard.version}`, criteria_auto: Boolean(scorecard.auto), jobTitle: job.title };
   fs.writeFileSync(path.join(dir, file), toHtml(results, jobMeta));
   fs.writeFileSync(path.join(dir, `job-${job.id}.md`), toMarkdown(results, jobMeta));
   fs.writeFileSync(path.join(dir, `job-${job.id}.json`), JSON.stringify({ meta: jobMeta, results }, null, 2));

@@ -20,6 +20,7 @@ import { parseArgs } from "node:util";
 import { loadEnv } from "../src/env.js";
 import { loadScorecard, scorecardResolver, JOB_SCORECARD_DIR } from "../src/scorecard.js";
 import { loadTemplate } from "../src/prompt.js";
+import { scorecardForSearch } from "../src/auto-criteria.js";
 import { getProvider } from "../src/providers/index.js";
 import { scoreJob } from "../src/score.js";
 import { toMarkdown, toHtml } from "../src/report.js";
@@ -41,6 +42,8 @@ const { values: args } = parseArgs({
     stages: { type: "string" },
     "names-file": { type: "string" },
     concurrency: { type: "string", default: "3" },
+    // Draft the criteria descriptions for a search with no approved scorecard (on by default).
+    "no-auto-criteria": { type: "boolean", default: false },
     write: { type: "boolean", default: false },
   },
 });
@@ -78,8 +81,10 @@ if (args["loxo-job"] && args.write && writesAllowed()) {
   if (before !== candidates.length) console.log(`  ${before - candidates.length} already assessed, skipped`);
 }
 
-// A search's own approved scorecard wins over the standard one.
-const scorecard = scorecardFor(job.id, job);
+// The search's approved scorecard; without one, criteria drafted from the job (marked as not
+// yet approved); then the firm's Loxo template; then the standard one.
+const scorecard = await scorecardForSearch({ job, resolver: scorecardFor, standard: loadScorecard(args.scorecard), provider, auto: !args["no-auto-criteria"], approvedDir: args["scorecards-dir"], log: console.log });
+if (scorecard.auto) console.log(`  using criteria drafted from the job, not yet approved: ${scorecard.id}`);
 console.log(`Scoring ${candidates.length} candidates for "${job.title}" with ${provider.name} (${provider.model})`);
 let done = 0;
 const results = await scoreJob({
@@ -91,7 +96,7 @@ const results = await scoreJob({
 const stamp = new Date().toISOString().replace(/[:.]/g, "-");
 const dir = path.join("data", "runs", `${stamp}-${provider.name}`);
 fs.mkdirSync(dir, { recursive: true });
-const meta = { jobTitle: job.title, scorecard: `${scorecard.id}.v${scorecard.version}`, provider: `${provider.name} (${provider.model})`, when: new Date().toLocaleString() };
+const meta = { jobTitle: job.title, scorecard: `${scorecard.id}.v${scorecard.version}`, criteria_auto: Boolean(scorecard.auto), provider: `${provider.name} (${provider.model})`, when: new Date().toLocaleString() };
 fs.writeFileSync(path.join(dir, "results.json"), JSON.stringify({ meta, results }, null, 2));
 fs.writeFileSync(path.join(dir, "report.md"), toMarkdown(results, meta));
 fs.writeFileSync(path.join(dir, "report.html"), toHtml(results, meta));

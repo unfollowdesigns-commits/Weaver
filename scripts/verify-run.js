@@ -37,6 +37,7 @@ line(errors.length === 0, "No errors", `${errors.length} errors`);
 line(!/scorecard (standard|example)/.test(`scorecard ${meta.scorecard}`), "Used the search's own scorecard, not the generic one", meta.scorecard);
 line(!/gpt|openai|claude-|anthropic|\bmock\b/i.test(html.replace(/<style[\s\S]*?<\/style>/, "")), "No AI model or provider name in the report");
 line(html.includes("misses a must-have") && html.includes("Partial record"), "Legend explains Yes/No and the flags");
+if (meta.criteria_auto) console.log("INFO  Criteria drafted automatically from the job, not yet approved: the report says so. Get them approved before go-live.");
 
 const order = scored.map((r) => r.recommendation);
 line(order.indexOf("no") === -1 || order.slice(order.indexOf("no")).every((x) => x === "no"), "Recommended candidates listed before the others");

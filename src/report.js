@@ -90,6 +90,7 @@ tr:first-child td{border-top:0}
 .legend{color:var(--muted);font-size:12px;margin-top:10px}.legend p{margin:0 0 6px;max-width:900px}
 a{color:var(--blue)}
 tr.skip td{color:var(--muted)}
+.note.warn{border-left-color:#c58a1a;color:var(--ink)}
 td.pay{font-size:13px;white-space:nowrap}td.pay.above{color:#9a5b12;font-weight:600}td.pay.within{color:var(--blue)}
 .paybox{margin-top:16px;background:var(--soft);border-left:3px solid var(--muted);padding:10px 14px;font-size:14px}
 .paybox .k{display:block;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-bottom:4px}
@@ -149,6 +150,7 @@ ${fieldPay(r) ? `<div class="paybox"><span class="k">Pay · from Loxo, not used 
   const header = `<span class="eyebrow">First read · dry run</span><h1>${esc(meta.jobTitle)}</h1><p class="meta">${esc(meta.when)}</p>
 <div class="stats"><div><b>${results.length}</b><span>Candidates</span></div><div><b>${scored.length}</b><span>Scored</span></div><div><b>${yes}</b><span>Worth a call</span></div>${skipped ? `<div><b>${skipped}</b><span>Not enough in Loxo</span></div>` : ""}</div>`;
   return page(`Dry run: ${meta.jobTitle}`, header, `<p class="note">Nothing has been written to Loxo. Every result is a first read from the record, waiting for recruiter review.</p>
+${meta.criteria_auto ? '<p class="note warn"><b>Criteria drafted automatically from the job, not yet approved.</b> The criteria names come from your scorecard in Loxo; what a 3 and a 5 look like was drafted from the job description. Approve or adjust them, and the search is re-scored on the approved version.</p>' : ""}
 <h2>Ranked</h2>
 <div class="table"><table><thead><tr><th>#</th><th>Candidate</th><th>Score</th>${showPay ? "<th>Pay</th>" : ""}<th>Strongest signal</th><th>Watch item</th></tr></thead><tbody>${rows}</tbody></table></div>
 <div class="legend"><p>★ Direct industry experience · ☆ Adjacent industry · 1 Does not meet · 2 Weak · 3 Meets · 4 Strong · 5 Exceptional</p>

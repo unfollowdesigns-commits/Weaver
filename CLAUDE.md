@@ -64,9 +64,11 @@ Do not build these in v1 even if they seem useful.
 
 - Loxo REST API for read and write.
 - Claude API for scoring. One call per candidate so 100 candidates is fine.
-- Render for hosting (Pro workspace, Virginia region): one always-on web
-  service (webhook) and one hourly cron job (sweep), in the client's own
-  account. Decided 28 Oct 2026; see docs/RUNBOOK.v2.md.
+- Render for hosting (Pro workspace, Virginia region), in the client's own
+  account. Since 30 Oct 2026: one always-on web service with a small persistent
+  disk; the hourly catch-up runs inside it (Render cron jobs cannot use a disk,
+  and drafted criteria must survive deploys). See docs/RUNBOOK.v3.md. (Decided
+  28 Oct as web service + cron; changed for automatic criteria.)
   n8n was dropped: the server already does the trigger and orchestration.
 - Node for any scripts.
 
@@ -314,6 +316,17 @@ First probe, job 3688816 (Head of Finance and Accounting, 194 candidates), 29 Oc
   410", "240 + 40"), percentages, counts and business amounts kept, school names
   cleaned, hyphenated full names caught, name matches never cross a full stop.
   102 tests. After every real run, `npm run verify` before anything is shown.
+- Automatic criteria (30 Oct 2026, Houssem's decision: "no manual step, every
+  search as sharp as Imperium, Josh can tweak later"): the first time Weaver sees
+  a search without an approved scorecard, it drafts the descriptions (what a 3 and
+  a 5 look like) and the industry definitions from the job, keeping the firm's
+  exact criteria names from the Loxo template, stores them (CRITERIA_DIR, a
+  persistent disk on Render) and uses them straight away, in test runs and live.
+  One draft per search even under concurrent triggers; reused across restarts; a
+  changed job description gives a new version. Reports say "drafted automatically,
+  not yet approved". An approved scorecard always wins; then `npm run rescore`.
+  AUTO_CRITERIA=false restores approved-only live scoring. This replaces "drafted
+  by npm run scorecard:draft, approved by Josh" as the default.
 - Re-scoring after criteria change (30 Oct 2026, Houssem's ask before go-live):
   `npm run rescore -- --loxo-job <id> [--go] [--write]`. Finds AI scorecards on
   the search whose summary names another scorecard version, shows count and

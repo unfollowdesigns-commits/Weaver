@@ -5,6 +5,7 @@
 //   node scripts/draft-scorecard.js --provider claude --loxo-job 123    draft from Loxo
 //   node scripts/draft-scorecard.js --job samples/job.sample.json       draft from a file
 //   node scripts/draft-scorecard.js --approve 123                        approve the latest draft
+//     (or, if there is none, the criteria drafted automatically on the first scoring run)
 //
 // Drafts go to config/scorecards/jobs/job-<id>.draft.json (plus a .txt to send for review).
 // Approving saves it as job-<id>.v<N>.json beside any earlier version; nothing is overwritten.
@@ -35,14 +36,22 @@ fs.mkdirSync(args.dir, { recursive: true });
 
 if (args.approve) {
   const id = args.approve.replace(/[^\w-]/g, "");
-  const draftFile = path.join(args.dir, `job-${id}.draft.json`);
+  let draftFile = path.join(args.dir, `job-${id}.draft.json`);
   if (!fs.existsSync(draftFile)) {
-    console.error(`No draft at ${draftFile}. Make one first.`);
-    process.exit(1);
+    // The criteria drafted automatically on the first scoring run, newest first.
+    const autoDir = "data/scorecards/auto";
+    const autos = fs.existsSync(autoDir) ? fs.readdirSync(autoDir).filter((f) => f.startsWith(`job-${id}.auto-`) && f.endsWith(".json")).map((f) => path.join(autoDir, f)).sort((a, b) => fs.statSync(b).mtimeMs - fs.statSync(a).mtimeMs) : [];
+    if (!autos.length) {
+      console.error(`No draft for search ${id}. Make one first (--loxo-job ${id}), or score the search once.`);
+      process.exit(1);
+    }
+    draftFile = autos[0];
+    console.log(`Approving the criteria drafted automatically: ${draftFile}`);
   }
   const sc = JSON.parse(fs.readFileSync(draftFile, "utf8"));
   const v = nextVersion(args.dir, id);
-  const approved = { ...sc, version: v, status: "approved", approved_at: new Date().toISOString().slice(0, 10) };
+  const { auto, ...rest } = sc;
+  const approved = { ...rest, id: `job-${id}`, version: v, status: "approved", approved_at: new Date().toISOString().slice(0, 10) };
   checkScorecard(approved);
   const out = path.join(args.dir, `job-${id}.v${v}.json`);
   fs.writeFileSync(out, JSON.stringify(approved, null, 2) + "\n", { flag: "wx" });
