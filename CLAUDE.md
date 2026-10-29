@@ -138,7 +138,9 @@ this build. This system runs on the REST API.
   deploys automatically from this branch. Delete it at go-live.
 - Client preview (sample data, no client name):
   https://claude.ai/artifact/AUCwjDSusArDCtc5Lrhoqm, built from
-  `preview/shortlist.html`.
+  `preview/weaver.v2.html` since 29 Oct 2026 (plain-language client version;
+  `preview/shortlist.html` is the earlier one). Client-facing pages use no
+  technical terms: no API, MCP, webhook, server, Render.
 
 ## Findings
 
