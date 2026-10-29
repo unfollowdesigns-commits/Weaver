@@ -1,4 +1,5 @@
 import { INDUSTRY_VALUES } from "./schema.js";
+import { isAboutPay } from "./candidate.js";
 
 const clean = (list) => list.map((t) => t.trim()).filter(Boolean).slice(0, 5);
 
@@ -61,11 +62,17 @@ export function finalize(answer, scorecard) {
     : null;
 
   const flags = [];
+  // Last guard: nothing the recruiter reads may talk about pay.
+  let payDropped = 0;
+  const noPay = (list) => list.filter((t) => (isAboutPay(t) ? (payDropped++, false) : true));
+  answer = { ...answer, where_they_fit: noPay(answer.where_they_fit), where_to_probe: noPay(answer.where_to_probe) };
+  for (const k of ["strongest_signal", "watch_item", "assessment"]) if (isAboutPay(answer[k])) { payDropped++; answer[k] = "[removed: mentioned pay]"; }
   const missing = criteria.length - scored.length;
   if (missing >= 3) flags.push(`thin_record: ${missing} of ${criteria.length} criteria had no evidence`);
   else if (missing > 0) flags.push(`partial_record: ${missing} criteria had no evidence`);
   if (average !== null && answer.recommendation === "yes" && average < 3) flags.push("check: recommended yes with an average below 3");
   if (average !== null && answer.recommendation === "no" && average >= 4) flags.push("check: recommended no with an average of 4 or more");
+  if (payDropped) flags.push(`pay_removed: ${payDropped} line(s) mentioned pay and were removed`);
 
   return {
     criteria,

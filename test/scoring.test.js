@@ -117,3 +117,27 @@ test("flags a candidate whose resume could not be read", async () => {
   const withResume = await scoreCandidate({ candidate: candidates[0], job, scorecard, template, provider: createMockProvider() });
   assert.ok(!withResume.flags.some((f) => f.startsWith("no_resume_text")));
 });
+
+test("pay never reaches the model: sentences about pay are removed, achievements stay", async () => {
+  const { scrubPay, isAboutPay } = await import("../src/candidate.js");
+  const t = scrubPay("Led $800M in partner funding. Currently at $225k base with a 25% bonus. Wants 220k plus 20%. Grew a private equity backed firm to $28M.");
+  assert.ok(t.includes("$800M in partner funding") && t.includes("private equity backed firm to $28M"));
+  assert.ok(!/225|bonus|220k/.test(t));
+  assert.ok(t.includes("[pay detail removed]"));
+  assert.equal(isAboutPay("Owns the monthly close and GAAP reporting."), false);
+  assert.equal(isAboutPay("Salary range is $180,000 to $200,000."), true);
+  const rec = toPromptRecord({ ...candidates[0], notes: [{ text: "Great call. Current comp is 250k all in." }] });
+  assert.ok(!JSON.stringify(rec).includes("250k"));
+  const { system, user } = buildPrompt({ template, scorecard, job: { ...job, description: "Lead finance. Salary: $180k to $200k plus bonus." }, candidate: candidates[0] });
+  assert.ok(!user.includes("180k") && system.includes("never mention pay"));
+});
+
+test("anything the model writes about pay is removed and flagged", () => {
+  const a = goodAnswer();
+  a.where_to_probe = ["Relocation to Tampa.", "Willingness to accept the salary range given current comp."];
+  a.watch_item = "Asking $220k base.";
+  const out = finalize(a, scorecard);
+  assert.deepEqual(out.where_to_probe, ["Relocation to Tampa."]);
+  assert.equal(out.watch_item, "[removed: mentioned pay]");
+  assert.ok(out.flags.some((f) => f.startsWith("pay_removed: 2")));
+});

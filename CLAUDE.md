@@ -244,6 +244,15 @@ First probe, job 3688816 (Head of Finance and Accounting, 194 candidates), 29 Oc
   Submitted 3/3, No longer in process 26/15. The first 10 in pipeline order
   happened to be bare records. No title on the person record: current title
   and company now come from the open work history entry.
+- First real run, 29 Oct 2026: 8 screened/submitted candidates on 3688816,
+  OpenAI gpt-4.1 on Houssem's key (dry run). Resumes and recruiter notes came
+  through; write-ups specific. Found: pay reached the model through recruiter
+  notes and the job's salary range (one "where to probe" mentioned current
+  comp). Fixed: pay sentences removed from notes, resume and job description
+  before the model, prompt v3 forbids pay, output guard removes and flags any
+  pay mention. Their team's top candidate (4.1 / Yes in their report) scored
+  3.4 and ranked 4th on the bare Loxo template; 7 of 8 Yes. Sharpened
+  scorecard job-3688816.v1 written from their report; re-run pending.
 - Rate limit: 429 after a burst of roughly 12 requests a second. Client now
   paces to LOXO_MAX_PER_SECOND (default 4) and retries 429 with 2-30 s waits.
 - Pipeline entry: { id, position, person: {...}, workflow_stage_id,

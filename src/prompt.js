@@ -1,10 +1,10 @@
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { toPromptRecord } from "./candidate.js";
+import { toPromptRecord, scrubPay } from "./candidate.js";
 
 const here = path.dirname(fileURLToPath(import.meta.url));
-export const DEFAULT_PROMPT = path.join(here, "..", "prompts", "scoring", "scoring-prompt.v2.md");
+export const DEFAULT_PROMPT = path.join(here, "..", "prompts", "scoring", "scoring-prompt.v3.md");
 
 export function loadTemplate(file = DEFAULT_PROMPT) {
   return { file: path.basename(file), text: fs.readFileSync(file, "utf8") };
@@ -23,7 +23,7 @@ export function buildPrompt({ template, scorecard, job, candidate }) {
     ? `\n\nIndustry for this search:\nDirect: ${scorecard.industry.direct}\nAdjacent: ${scorecard.industry.adjacent}`
     : "";
   const user = [
-    `<job>\nTitle: ${job.title}\nCompany: ${job.company_summary ?? ""}\n\n${job.description ?? ""}\n</job>`,
+    `<job>\nTitle: ${job.title}\nCompany: ${job.company_summary ?? ""}\n\n${scrubPay(job.description ?? "")}\n</job>`,
     `<scorecard name="${scorecard.name}">\n${criteria}\n\nRecommendation: ${scorecard.recommendation.meaning ?? scorecard.recommendation.values.join(" or ")}${industry}\n</scorecard>`,
     `<candidate_record>\n${JSON.stringify(toPromptRecord(candidate), null, 2)}\n</candidate_record>`,
     "Score this candidate.",
