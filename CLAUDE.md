@@ -297,6 +297,13 @@ First probe, job 3688816 (Head of Finance and Accounting, 194 candidates), 29 Oc
   quirks; test/e2e-real-shape.test.js runs read, privacy, scoring, report, write
   payload and client report end to end; scripts/fake-loxo-real.js serves it on
   port 8792 for running the commands by hand.
+- Re-scoring after criteria change (30 Oct 2026, Houssem's ask before go-live):
+  `npm run rescore -- --loxo-job <id> [--go] [--write]`. Finds AI scorecards on
+  the search whose summary names another scorecard version, shows count and
+  cost, re-scores only those, and updates each existing AI scorecard in place
+  (PUT /scorecards/{id}: documented by Loxo, to test on "Accounting - Test"
+  with the write test). Not available with LOXO_WRITE_TARGET=note yet. Manual
+  on purpose: a criteria change never triggers AI cost by itself.
 - Rate limit: 429 after a burst of roughly 12 requests a second. Client now
   paces to LOXO_MAX_PER_SECOND (default 4) and retries 429 with 2-30 s waits.
 - Pipeline entry: { id, position, person: {...}, workflow_stage_id,

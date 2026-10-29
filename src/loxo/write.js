@@ -129,3 +129,26 @@ export function writeConfigFromEnv(env = process.env) {
 export function writesAllowed(env = process.env) {
   return env.LOXO_WRITE_ENABLED === "true" && env.DRY_RUN === "false";
 }
+
+// Re-scoring after a search's criteria change. Every AI scorecard's summary records the
+// scorecard it used ("Scorecard job-3688816.v1, <date>."); one on another version is out of
+// date. Updated in place (PUT /scorecards/{id}, documented by Loxo, to confirm on the account)
+// so a person never ends up with two AI scorecards on the same search.
+export function scorecardUsed(card) {
+  return /Scorecard ([\w.-]+?\.v\d+),/.exec(String(card?.summary ?? ""))?.[1] ?? null;
+}
+
+export async function outdatedAiScorecards(client, jobId, currentScorecard) {
+  const cards = await client.list("/scorecards", { job_id: jobId });
+  return cards
+    .filter((s) => s.external_creator_name === AI_AUTHOR && sameJob(s, jobId) && pidOf(s) !== "")
+    .map((s) => ({ scorecard_id: s.id, person_id: pidOf(s), used: scorecardUsed(s) }))
+    .filter((x) => x.used !== currentScorecard);
+}
+
+export async function updateScorecard(client, scorecardId, result, cfg) {
+  if (result.status !== "scored") return { status: "skipped", reason: "not scored" };
+  const body = buildScorecardPayload(result, cfg);
+  await client.put(`/scorecards/${scorecardId}`, body);
+  return { status: "updated", id: scorecardId };
+}

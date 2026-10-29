@@ -20,7 +20,8 @@
     "sweep": "node scripts/sweep.js",
     "scorecard:draft": "node scripts/draft-scorecard.js",
     "report:client": "node scripts/client-report.js",
-    "verify": "node scripts/verify-run.js"
+    "verify": "node scripts/verify-run.js",
+    "rescore": "node scripts/rescore-job.js"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "0.133.0"
