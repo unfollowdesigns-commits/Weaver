@@ -1,0 +1,82 @@
+{
+  "id": "job-3688816",
+  "version": 1,
+  "name": "Head of Finance and Accounting scorecard",
+  "job": {
+    "id": "3688816",
+    "title": "Head of Finance and Accounting"
+  },
+  "status": "approved for testing",
+  "approved_at": "2026-10-29",
+  "note": "Labels exactly as the firm's Loxo template on this search. Descriptions and industry definitions from the firm's own client report for this search and the job. To be confirmed by Josh.",
+  "scale": {
+    "min": 1,
+    "max": 5,
+    "labels": {
+      "1": "Does not meet",
+      "2": "Weak",
+      "3": "Meets",
+      "4": "Strong",
+      "5": "Exceptional"
+    },
+    "note": "Scored critically: 3 means meets, 4 is strong, 5 is kept for areas where the candidate is exceptional."
+  },
+  "criteria": [
+    {
+      "id": "industry",
+      "label": "Relevant Industry Experience and Insight",
+      "description": "Knows IT solutions economics from the inside: partner and OEM funding, vendor programs, gross margin and services mix. 3: a finance role at an adjacent technology infrastructure business (data center, fiber and telecom, networking, cloud or security), or a short stint at an IT solutions provider. 5: years of finance leadership at an IT solutions provider, value-added reseller, integrator or MSP, owning partner and vendor economics."
+    },
+    {
+      "id": "accounting",
+      "label": "Accounting Leadership & Technical Depth",
+      "description": "Ownership of the accounting side, not FP&A alone: the close, GAAP reporting, controllership, audit. 3: has owned the monthly and annual close and the financial statements as controller or equivalent, usually with a CPA. 5: has run the full accounting function as its primary owner, built controls and audit readiness, and still works hands-on in it."
+    },
+    {
+      "id": "location",
+      "label": "Relocation or Commuting",
+      "description": "Fit with the role's location as stated in the job description, and any stated willingness to relocate or travel. 3: in commuting distance, or the record or notes show openness to relocate, with no blocking constraint. 5: already local, or relocation confirmed in the notes."
+    },
+    {
+      "id": "fpa",
+      "label": "FP&A, Budgeting & Financial Strategy",
+      "description": "Planning, budgeting, forecasting and turning numbers into decisions. 3: has run budgeting and forecasting cycles and supported business decisions with analysis. 5: built or led an FP&A function, owned the company plan, and shaped strategy with the leadership team."
+    },
+    {
+      "id": "scaling",
+      "label": "Scaling & Growth Experience",
+      "description": "Building finance for a growing company of this size, including acquisitions. 3: has supported growth, a new entity or an acquisition integration. 5: has built or scaled a finance function through rapid growth or private equity ownership, including M&A integration, at a comparable size."
+    },
+    {
+      "id": "cash",
+      "label": "Cash Flow & Working Capital Management",
+      "description": "Owning liquidity: cash forecasting, working capital, lender relationships. 3: has owned cash forecasting (for example a 13-week forecast) and working capital. 5: drove measurable improvements in cash conversion or working capital, and managed banks or lenders directly."
+    },
+    {
+      "id": "systems",
+      "label": "Systems and ability to create efficiences",
+      "description": "Finance systems and automation that remove manual work. 3: implemented or improved an ERP, planning or reporting tool (for example NetSuite, Workday Adaptive Planning, Power BI). 5: led system rollouts or automation with measured results, such as hours or cost removed."
+    },
+    {
+      "id": "csuite",
+      "label": "C-Suite Partnership and Commercial Acument",
+      "description": "Working as a partner to the CEO and business leaders, with a commercial view. 3: reports to or works closely with a CEO, CFO or business unit head and supports their decisions. 5: a trusted advisor relied on by the CEO or a business leader, shaping commercial decisions with measurable impact."
+    },
+    {
+      "id": "market",
+      "label": "Ability to be the face and in the market",
+      "description": "Representing the company outside: partners, vendors, lenders, the local business community. 3: has represented finance with banks, auditors, partners or the board. 5: a visible external presence (lenders, investors, industry groups such as ACG) that clearly benefited the business."
+    }
+  ],
+  "recommendation": {
+    "values": [
+      "yes",
+      "no"
+    ],
+    "meaning": "yes: worth a recruiter conversation for this search. no: not for this search."
+  },
+  "industry": {
+    "direct": "IT solutions providers, value-added resellers (VARs), systems integrators or managed service providers (MSPs).",
+    "adjacent": "Data center, fiber and telecom, networking, cloud or security infrastructure businesses."
+  }
+}
