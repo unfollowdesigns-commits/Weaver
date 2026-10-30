@@ -54,6 +54,9 @@ const written = [];
 
 function route(path, q) {
   let m;
+  // The firm's old test search: same sample people, so the write test can be rehearsed.
+  if (path === "/jobs/3011811") return { ...route("/jobs/900", q), id: 3011811, title: "Accounting - Test", status: { name: "Active" } };
+  if (path === "/jobs/3011811/candidates") return route("/jobs/900/candidates", q);
   if (path === "/jobs") {
     const page = Number(q.get("page") ?? 1);
     const per = Number(q.get("per_page") ?? 100);

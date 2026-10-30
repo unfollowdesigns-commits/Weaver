@@ -387,6 +387,17 @@ First probe, job 3688816 (Head of Finance and Accounting, 194 candidates), 29 Oc
   autoDeployTrigger "off" since autoDeploy is deprecated, 1 GB disk at /var/data, secrets
   sync:false, WEBHOOK_SECRET generated, dry run on); docs/EMAIL-JOSH.v1.md, docs/CALL-AGENDA.v1.md,
   deliverables/dp-recruiting-skill.v4.zip; docs/GO-LIVE.v3.md (Phase 0 ready check, Blueprint).
+- Independent review, 30 Oct 2026 afternoon (a separate Claude session, at Houssem's request), all
+  fixed: (1) the write test could write a real score to any search number typed; it now refuses
+  anything but 3011811 or a search titled "test" (LOXO_TEST_JOB_ID deliberately not used: the Mac's
+  .env may still point it at the live Imperium search); (2) the daily cap lived in memory and did
+  not count every AI call; it is now kept in usage.json on the disk (survives restarts) and every
+  AI call through the server counts, including retries, batches and criteria drafts (capProvider),
+  with none made past it; manual Mac scripts are deliberate and not capped; (3) "stop" only
+  stopped writing; SCORING_PAUSED=true now stops all AI scoring (or Suspend the service);
+  (4) docs: step numbers, preflight's WEBHOOK_SECRET check no longer fails before step 9, email
+  wording ("limits itself to about 200 a day", monthly limit = hard ceiling). GO-LIVE.v4,
+  EMAIL-JOSH.v2, CALL-AGENDA.v2. 127 tests.
 - Rate limit: 429 after a burst of roughly 12 requests a second. Client now
   paces to LOXO_MAX_PER_SECOND (default 4) and retries 429 with 2-30 s waits.
 - Pipeline entry: { id, position, person: {...}, workflow_stage_id,

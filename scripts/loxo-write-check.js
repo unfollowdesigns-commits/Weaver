@@ -42,6 +42,13 @@ if (provider.name === "mock") console.log("Note: provider is mock, so a SAMPLE s
 const jobId = args["loxo-job"];
 const job = await fetchJob(client, jobId);
 console.log(`Search ${jobId}: "${job.title}"`);
+// Only ever on a test search: the "Accounting - Test" search (3011811) or a search whose title says
+// "test". Never on a live search, whatever number is typed (30 Oct 2026 review).
+const TEST_SEARCH = "3011811";
+if (String(jobId) !== TEST_SEARCH && !/\btest\b/i.test(String(job.title ?? ""))) {
+  console.log(`Refused: "${job.title}" is not a test search. The write test only runs on search ${TEST_SEARCH} ("Accounting - Test") or a search with "test" in its title.`);
+  process.exit(1);
+}
 const stageNames = await workflowStageNames(client);
 let entries = await listJobCandidates(client, jobId);
 if (args["person-id"]) entries = entries.filter((e) => personIdOf(e) === String(args["person-id"]));

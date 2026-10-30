@@ -56,6 +56,9 @@ services:
         generateValue: true
       - key: DAILY_SCORE_CAP
         value: "200"
+      # true stops all AI scoring (the full stop); LOXO_WRITE_ENABLED=false only stops writing.
+      - key: SCORING_PAUSED
+        value: "false"
       - key: SWEEP_MAX_PER_RUN
         value: "50"
       - key: USE_BATCH

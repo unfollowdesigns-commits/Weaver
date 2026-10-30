@@ -97,7 +97,9 @@ if (client) {
 }
 
 // Server settings
-line((env.WEBHOOK_SECRET || "").length >= 32, "WEBHOOK_SECRET is long enough", `${(env.WEBHOOK_SECRET || "").length} characters, 32+ needed`);
+// Needed by the server and by step 11 (registering with Loxo); not needed for the Mac runs before.
+if (args.server || env.RENDER) line((env.WEBHOOK_SECRET || "").length >= 32, "WEBHOOK_SECRET is long enough", `${(env.WEBHOOK_SECRET || "").length} characters, 32+ needed`);
+else info("WEBHOOK_SECRET", (env.WEBHOOK_SECRET || "").length >= 32 ? "set" : "not set yet: comes from Render at step 9");
 if (env.AUTO_CRITERIA !== "false") {
   const dir = env.CRITERIA_DIR || "data/scorecards/auto";
   try {
@@ -111,7 +113,8 @@ if (env.AUTO_CRITERIA !== "false") {
   }
   info("On Render, CRITERIA_DIR must be on the persistent disk", env.CRITERIA_DIR || "not set (local default)");
 }
-line(Number(env.DAILY_SCORE_CAP) > 0, "Daily cost cap is set", `${env.DAILY_SCORE_CAP || "not set"} candidates a day`);
+line(Number(env.DAILY_SCORE_CAP) > 0, "Daily cost cap is set", `${env.DAILY_SCORE_CAP || "not set"} AI calls a day, kept on the disk across restarts; the monthly limit on the Claude account is the hard stop`);
+info("Scoring", env.SCORING_PAUSED === "true" ? "PAUSED (SCORING_PAUSED=true): no AI calls at all" : "running (SCORING_PAUSED=true stops all AI calls)");
 info("Hourly catch-up", `${env.SWEEP_EVERY_MINUTES || "60"} minutes, up to ${env.SWEEP_MAX_PER_RUN || "50"} per run, batch ${env.USE_BATCH === "false" ? "off" : "on (half price)"}`);
 const writes = env.LOXO_WRITE_ENABLED === "true" && env.DRY_RUN === "false";
 info("Writing into Loxo", writes ? "ON: scores are written to Loxo" : "OFF: dry run, nothing is written (switch on only after the client approves)");

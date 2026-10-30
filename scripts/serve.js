@@ -26,7 +26,7 @@ import { firstArray } from "../src/loxo/client.js";
 import { personIdOf } from "../src/loxo/map.js";
 import { fetchJob, loadCandidate } from "../src/loxo/read.js";
 import { buildPayload, writeResult, writeConfigFromEnv, writesAllowed, hasAiAssessment } from "../src/loxo/write.js";
-import { createDailyCap, createDeduper } from "../src/limits.js";
+import { createDailyCap, createDeduper, capProvider } from "../src/limits.js";
 import { createSearchList } from "../src/searches.js";
 
 loadEnv();
@@ -37,7 +37,14 @@ if (secret.length < 16) {
   process.exit(1);
 }
 const template = loadTemplate();
-const provider = await getProvider(process.env.SCORING_PROVIDER || "mock");
+// Every AI call made by this server (scoring, retries, batches, drafting criteria) counts against
+// the daily cap, kept on the persistent disk so a restart does not reset it.
+const capFile = process.env.DAILY_CAP_FILE || (process.env.CRITERIA_DIR ? path.join(path.dirname(process.env.CRITERIA_DIR), "usage.json") : "data/usage.json");
+const dailyCap = createDailyCap(Number(process.env.DAILY_SCORE_CAP || 200), undefined, capFile);
+const provider = capProvider(await getProvider(process.env.SCORING_PROVIDER || "mock"), dailyCap);
+// SCORING_PAUSED=true stops all AI scoring (webhook and hourly catch-up): the full stop.
+// LOXO_WRITE_ENABLED=false only stops writing into Loxo.
+const paused = () => process.env.SCORING_PAUSED === "true";
 // Each search: its approved scorecard, else criteria drafted from the job the first time it is
 // seen (the firm's own criteria names kept), stored on the persistent disk (CRITERIA_DIR) and
 // used straight away. AUTO_CRITERIA=false scores only searches with an approved scorecard.
@@ -49,7 +56,6 @@ const cfg = writeConfigFromEnv();
 // Every open search by default; a list of numbers in LOXO_AUTO_SCORE_JOB_IDS limits it.
 const searches = createSearchList({ client, setting: process.env.LOXO_AUTO_SCORE_JOB_IDS, skip: process.env.LOXO_SKIP_JOB_IDS });
 const saveDebug = process.env.SAVE_DEBUG_FILES === "true";
-const dailyCap = createDailyCap(Number(process.env.DAILY_SCORE_CAP || 200));
 const deduper = createDeduper();
 
 const pick = (body, key) =>
@@ -82,6 +88,7 @@ async function handle(body) {
   const { jobId, personId } = idsFromWebhook(body);
   if (!jobId || !personId) return log("delivery without job_id/person_id; field names to confirm (set SAVE_DEBUG_FILES=true locally to keep the body)");
   const tag = `job ${jobId} person ${personId}`;
+  if (paused()) return log(`${tag}: scoring paused (SCORING_PAUSED=true), skipped`);
   if (!(await searches.has(jobId))) return log(`${tag}: search not open or not switched on, skipped`);
   if (deduper.seenRecently(`${jobId}:${personId}`)) return log(`${tag}: duplicate within 15 minutes, skipped`);
   if (await hasAiAssessment(client, jobId, personId, cfg)) return log(`${tag}: already assessed, skipped`);
@@ -97,7 +104,7 @@ async function handle(body) {
   const candidate = await loadCandidate(client, entry);
   if (isThin(candidate)) return log(`${tag}: not enough in Loxo to score yet (no resume, work history or notes), skipped`);
   // The daily cap counts AI readings only, so it is taken here, after the empty-record check.
-  if (!dailyCap.take()) return log(`${tag}: daily cap reached, left for the sweep tomorrow`);
+  if (dailyCap.remaining() <= 0) return log(`${tag}: daily cap reached, left for the catch-up tomorrow`);
   const scorecard = await scorecardFor(jobId, job);
   if (!scorecard) return log(`${tag}: no approved scorecard for this search yet (AUTO_CRITERIA=false); approve its criteria, then it is scored`);
   const result = await scoreCandidate({ candidate, job, scorecard, template, provider });
@@ -156,6 +163,7 @@ if (sweepEvery > 0) {
   let running = false;
   const sweepOnce = () => {
     if (running) return;
+    if (paused()) return log("sweep skipped: scoring paused (SCORING_PAUSED=true)");
     running = true;
     const writes = writesAllowed();
     // The same daily cap as the webhook: the catch-up never reads more than what is left today.
@@ -166,7 +174,7 @@ if (sweepEvery > 0) {
     }
     queue = queue.then(async () => runSweep({ client, provider, jobIds: await searches.ids(), scorecard: scorecardFor, template, cfg, writes,
       maxPerRun: room, useBatch: process.env.USE_BATCH !== "false", log, handled: writes ? null : handledInDryRun }))
-      .then((s) => { dailyCap.use((s.submitted ?? 0) + (s.scored_direct ?? 0)); const { dry_run, ...counts } = s; log(`sweep ${JSON.stringify(counts)}`); })
+      .then((s) => { const { dry_run, ...counts } = s; log(`sweep ${JSON.stringify(counts)}`); })
       .catch((err) => log(`sweep failed: ${err.message}`))
       .finally(() => { running = false; });
   };
@@ -176,5 +184,5 @@ if (sweepEvery > 0) {
 
 const port = Number(process.env.PORT || 8787);
 server.listen(port, () => {
-  log(`Listening on :${port}. Provider ${provider.name}. Searches: ${searches.describe() || "none"}. Writes ${writesAllowed() ? "ON" : "off (dry run)"}. Daily cap ${process.env.DAILY_SCORE_CAP || 200}.`);
+  log(`Listening on :${port}. Provider ${provider.name}. Searches: ${searches.describe() || "none"}. Writes ${writesAllowed() ? "ON" : "off (dry run)"}. Daily cap ${process.env.DAILY_SCORE_CAP || 200} AI calls (${dailyCap.remaining()} left today, kept in ${capFile}).${paused() ? " SCORING PAUSED." : ""}`);
 });
