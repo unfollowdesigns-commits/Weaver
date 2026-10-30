@@ -50,15 +50,15 @@ You should see, with your own numbers:
 ```
 Weaver ready check
 
-1. Tests: 127 passed, 0 failed
+1. Tests: 132 passed, 0 failed
 2. Yes rule on the real run of 2026-10-29: Yes … of … (…%)
    Report opened in your browser. Find the team's #1 candidate from their PDF and note the rank (number only).
 3. Searches and cost:
    PASS  Loxo connection works  (app.loxo.co/district-partners)
    PASS  Searches Weaver will score  (every open search except 3011811: … found)
-   INFO  People on these searches  (… on … searches, about … with enough to score)
-   INFO  One-time cost to score them all  (about $… to $…, over about … days at 200 a day)
-   INFO  After that  (only new candidates, a few cents each)
+   INFO  People on these searches  (… on … searches)
+   INFO  People already on them  (not scored: new candidates only ...)
+   INFO  New candidates  (a few cents each, at most 200 a day)
 ```
 
 - If line 1 shows any "failed" above 0: stop, send that line to the build chat.
@@ -75,7 +75,7 @@ What good looks like: about a third are Yes, and the team's #1 is in the Yes gro
 ## Step 7. Send the results to the build chat
 
 Copy everything from "Weaver ready check" down, plus the rank number, into the build chat.
-The build chat checks the result and gives you the three numbers for the email.
+The build chat checks the result and tells you when the email can go.
 
 If the team's #1 is not in the Yes group, the build chat fixes the rule first. Do not send the
 email until the build chat says the result is right.
@@ -85,15 +85,14 @@ own Claude key (about $2). Send those results to the build chat too.
 
 ## Step 8. Send the email to Josh
 
-The text is in `docs/EMAIL-JOSH.v3.md` in your Weaver folder. Open it:
+The text is in `docs/EMAIL-JOSH.v4.md` in your Weaver folder. Nothing to fill in. Open it:
 
 ```bash
-open -e docs/EMAIL-JOSH.v3.md
+open -e docs/EMAIL-JOSH.v4.md
 ```
 
-1. Replace the three brackets with the numbers from the build chat: [N], [$X–$Y], [D].
-2. Copy from "Josh," down to "Houssem" into a new email in Gmail.
-3. Subject: `Weaver: ready for go-live`
-4. Remove the stars (**) around the bold words if they show up as stars. Send.
+1. Copy from "Josh," down to "Houssem" into a new email in Gmail.
+2. Subject: `Weaver: ready for go-live`
+3. Remove the stars (**) around the bold words if they show up as stars. Send.
 
 Done for today. Next: file 02, when Josh sends the Claude key.

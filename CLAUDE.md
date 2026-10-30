@@ -410,6 +410,17 @@ First probe, job 3688816 (Head of Finance and Accounting, 194 candidates), 29 Oc
   (about $2): Test A real Claude on the Imperium screened candidates plus verify; Test B the server
   on the Mac in dry run, every open search, cap 5 in a separate counter file. Test B rehearsed on the
   stand-in Loxo: criteria drafted, 4 scored, the 5th stopped by the cap (counted as failed), 0 written.
+- Ready check on the real account (30 Oct 2026): Yes 63 of 179 (35%) on the first full run with the
+  current rule; the team's #1 at rank 31 or better, in Yes (team's top 10: 2 to 3 in Yes, 4 just
+  below the bar, their submitted candidate a No for missing IT solutions experience: ask Josh if
+  that is a must-have). 145 open searches, 27,283 people: scoring all would take ~126 days at the
+  cap and $628-1,255. Houssem: "steady and good cost", rank "when they need", as Josh asked (20-100
+  at a time). Built: src/baseline.js. The hourly catch-up scores only people added after Weaver
+  first saw a search (kept in baseline.json on the disk); a search's existing pipeline is scored
+  only when listed in LOXO_BACKLOG_JOB_IDS (Josh names it; "all" = old behaviour). The webhook
+  is unaffected (a created candidate is new). Preflight --estimate costs only the listed searches.
+  EMAIL-JOSH.v4 (nothing to fill in; asks which searches to rank first), GO-LIVE.v5,
+  CALL-AGENDA.v4, guide updated. 132 tests.
 - Rate limit: 429 after a burst of roughly 12 requests a second. Client now
   paces to LOXO_MAX_PER_SECOND (default 4) and retries 429 with 2-30 s waits.
 - Pipeline entry: { id, position, person: {...}, workflow_stage_id,

@@ -28,6 +28,7 @@ import { fetchJob, loadCandidate } from "../src/loxo/read.js";
 import { buildPayload, writeResult, writeConfigFromEnv, writesAllowed, hasAiAssessment } from "../src/loxo/write.js";
 import { createDailyCap, createDeduper, capProvider } from "../src/limits.js";
 import { createSearchList } from "../src/searches.js";
+import { createBaseline } from "../src/baseline.js";
 
 loadEnv();
 
@@ -55,6 +56,9 @@ const client = loxoClientFromEnv(process.env, { allowWrites: true });
 const cfg = writeConfigFromEnv();
 // Every open search by default; a list of numbers in LOXO_AUTO_SCORE_JOB_IDS limits it.
 const searches = createSearchList({ client, setting: process.env.LOXO_AUTO_SCORE_JOB_IDS, skip: process.env.LOXO_SKIP_JOB_IDS });
+// The hourly catch-up scores new candidates on every search, and the people already on a search only
+// where LOXO_BACKLOG_JOB_IDS lists it ("all": every search). Kept next to the daily cap on the disk.
+const baseline = createBaseline({ file: process.env.BASELINE_FILE || path.join(path.dirname(capFile), "baseline.json"), backlog: process.env.LOXO_BACKLOG_JOB_IDS });
 const saveDebug = process.env.SAVE_DEBUG_FILES === "true";
 const deduper = createDeduper();
 
@@ -173,7 +177,7 @@ if (sweepEvery > 0) {
       return log("sweep skipped: daily cap reached, continues tomorrow");
     }
     queue = queue.then(async () => runSweep({ client, provider, jobIds: await searches.ids(), scorecard: scorecardFor, template, cfg, writes,
-      maxPerRun: room, useBatch: process.env.USE_BATCH !== "false", log, handled: writes ? null : handledInDryRun }))
+      maxPerRun: room, useBatch: process.env.USE_BATCH !== "false", log, handled: writes ? null : handledInDryRun, baseline }))
       .then((s) => { const { dry_run, ...counts } = s; log(`sweep ${JSON.stringify(counts)}`); })
       .catch((err) => log(`sweep failed: ${err.message}`))
       .finally(() => { running = false; });
@@ -184,5 +188,5 @@ if (sweepEvery > 0) {
 
 const port = Number(process.env.PORT || 8787);
 server.listen(port, () => {
-  log(`Listening on :${port}. Provider ${provider.name}. Searches: ${searches.describe() || "none"}. Writes ${writesAllowed() ? "ON" : "off (dry run)"}. Daily cap ${process.env.DAILY_SCORE_CAP || 200} AI calls (${dailyCap.remaining()} left today, kept in ${capFile}).${paused() ? " SCORING PAUSED." : ""}`);
+  log(`Listening on :${port}. Provider ${provider.name}. Searches: ${searches.describe() || "none"} (${baseline.describe()}). Writes ${writesAllowed() ? "ON" : "off (dry run)"}. Daily cap ${process.env.DAILY_SCORE_CAP || 200} AI calls (${dailyCap.remaining()} left today, kept in ${capFile}).${paused() ? " SCORING PAUSED." : ""}`);
 });

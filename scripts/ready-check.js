@@ -52,9 +52,9 @@ if (!full) {
 
 // 3. People on the open searches and the one-time cost
 const p = spawnSync(process.execPath, ["scripts/preflight.js", "--estimate"], { encoding: "utf8" });
-const lines = `${p.stdout}`.split("\n").filter((l) => /INFO\s+(People on|One-time cost|After that)|Loxo connection|Searches Weaver/.test(l));
+const lines = `${p.stdout}`.split("\n").filter((l) => /INFO\s+(People on|People already|One-time cost|New candidates)|Loxo connection|Searches Weaver/.test(l));
 say("3. Searches and cost:");
 for (const l of lines) say(`   ${l.trim()}`);
-if (!lines.some((l) => l.includes("One-time cost"))) say("   (could not count: check the Loxo key in .env)");
+if (!lines.some((l) => l.includes("People on"))) say("   (could not count: check the Loxo key in .env)");
 
 say("\nSend these lines to the build chat, plus the #1 rank. No names in them.");

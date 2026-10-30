@@ -1,6 +1,6 @@
 # 03 · The 30-minute call with Josh
 
-The full agenda with answers to likely questions: `docs/CALL-AGENDA.v3.md`. This page is the
+The full agenda with answers to likely questions: `docs/CALL-AGENDA.v4.md`. This page is the
 short version.
 
 ## Before the call (10 minutes)
@@ -58,6 +58,6 @@ information. If any line says FAIL: do not switch writing on later; send the out
 
 ## 5. Questions (5 min)
 
-Answers in `docs/CALL-AGENDA.v3.md`, section 5.
+Answers in `docs/CALL-AGENDA.v4.md`, section 5.
 
 Next: file 04, the same day if you can.

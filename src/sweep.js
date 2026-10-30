@@ -34,7 +34,9 @@ export function parseBatchId(id) {
 // handled: a Set kept by the server across runs ("jobId:personId"). In dry run nothing lands in
 // Loxo, so Loxo cannot tell the next run who was already read; without this the same people were
 // read and paid for again every hour (found 30 Oct 2026, before go-live).
-export async function runSweep({ client, provider, jobIds, scorecard, template, cfg, writes, maxPerRun = 50, maxLoad = 200, useBatch = true, now = Date.now(), log = () => {}, handled = null }) {
+// baseline: optional (src/baseline.js). People already on a search when it was first seen are left
+// out, unless that search's existing pipeline is switched on (LOXO_BACKLOG_JOB_IDS).
+export async function runSweep({ client, provider, jobIds, scorecard, template, cfg, writes, maxPerRun = 50, maxLoad = 200, useBatch = true, now = Date.now(), log = () => {}, handled = null, baseline = null }) {
   // `scorecard` is one scorecard, or (jobId) => scorecard for per-search scorecards.
   const scorecardFor = typeof scorecard === "function" ? scorecard : () => scorecard;
   const summary = { written: 0, already_done: 0, submitted: 0, scored_direct: 0, failed: 0, not_enough_in_loxo: 0, no_approved_scorecard: [], waiting: false, left_for_review: [], dry_run: [] };
@@ -97,9 +99,15 @@ export async function runSweep({ client, provider, jobIds, scorecard, template, 
   // 2. Find candidates on the chosen jobs with no assessment yet.
   const todo = [];
   for (const jobId of allowed) {
-    for (const entry of await listJobCandidates(client, jobId)) {
+    const entries = await listJobCandidates(client, jobId);
+    if (baseline && !baseline.scoresBacklog(jobId) && !baseline.known(jobId)) {
+      baseline.record(jobId, entries.map((e) => personIdOf(e) ?? ""));
+      log(`job ${jobId}: first seen, ${entries.length} people already on it (not scored); new candidates from now on`);
+    }
+    for (const entry of entries) {
       const pid = String(personIdOf(entry) ?? "");
       if (!pid || done.get(jobId).has(pid) || handled?.has(`${jobId}:${pid}`)) continue;
+      if (baseline?.isExisting(jobId, pid)) continue;
       if ((failures.get(`${jobId}:${pid}`) ?? 0) >= MAX_FAILURES) {
         summary.left_for_review.push({ job: jobId, person: pid });
         continue;

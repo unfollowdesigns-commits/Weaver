@@ -44,6 +44,10 @@ services:
         value: ""
       - key: LOXO_SKIP_JOB_IDS
         value: "3011811"
+      # New candidates are scored on every open search. The people already on a search are scored
+      # only on the searches listed here (comma-separated, the ones Josh names). Empty: none.
+      - key: LOXO_BACKLOG_JOB_IDS
+        value: ""
       - key: SCORECARD_FILE
         value: config/scorecards/standard-executive.v2.json
       - key: AUTO_CRITERIA

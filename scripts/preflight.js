@@ -15,6 +15,7 @@ import { loxoClientFromEnv } from "../src/loxo/index.js";
 import { firstArray } from "../src/loxo/client.js";
 import { mapJob, jobStatusOf, isOpenStatus } from "../src/loxo/map.js";
 import { createSearchList } from "../src/searches.js";
+import { parseBacklogSetting } from "../src/baseline.js";
 import { listJobCandidates } from "../src/loxo/read.js";
 
 loadEnv();
@@ -81,16 +82,22 @@ if (client) {
       line(false, `Search ${id} can be read`, err.message.split("\n")[0]);
     }
   }
-  // The one-time backlog: everyone already on the searches gets one read. Counting reads Loxo
-  // only (free). Per read: about 2.5 to 5 cents in the half-price batch the hourly catch-up uses.
+  // The one-time backlog. Since 30 Oct 2026 the people already on a search are scored only where
+  // LOXO_BACKLOG_JOB_IDS lists the search ("all": every search); elsewhere only new candidates.
+  // Counting reads Loxo only (free). Per read: about 2.5 to 5 cents in the half-price batch.
   if (args.estimate) {
-    let people = 0;
-    for (const id of ids) people += (await listJobCandidates(client, id).catch(() => [])).length;
+    const backlog = parseBacklogSetting(env.LOXO_BACKLOG_JOB_IDS);
+    const sizes = new Map();
+    for (const id of ids) sizes.set(id, (await listJobCandidates(client, id).catch(() => [])).length);
+    const people = [...sizes.values()].reduce((a, b) => a + b, 0);
     const cap = Number(env.DAILY_SCORE_CAP) || 200;
-    const reads = Math.round(people * 0.92); // about 8% are name-only records, skipped for free (seen on the real account)
-    info("People on these searches", `${people} on ${ids.length} searches, about ${reads} with enough to score`);
-    info("One-time cost to score them all", `about $${Math.round(reads * 0.025)} to $${Math.round(reads * 0.05)}, over about ${Math.max(1, Math.ceil(reads / cap))} days at ${cap} a day`);
-    info("After that", "only new candidates, a few cents each");
+    const chosen = backlog.all ? ids : [...backlog.ids];
+    const already = chosen.reduce((a, id) => a + (sizes.get(id) ?? 0), 0);
+    const reads = Math.round(already * 0.92); // about 8% are name-only records, skipped for free (seen on the real account)
+    info("People on these searches", `${people} on ${ids.length} searches`);
+    if (!chosen.length) info("People already on them", "not scored: new candidates only (LOXO_BACKLOG_JOB_IDS lists searches whose existing people are scored too)");
+    else info("One-time cost for the people already on the chosen searches", `${already} people on ${chosen.length} searches: about $${Math.round(reads * 0.025)} to $${Math.round(reads * 0.05)}, over about ${Math.max(1, Math.ceil(reads / cap))} days at ${cap} a day`);
+    info("New candidates", "a few cents each, at most " + cap + " a day");
   }
   const hooks = firstArray(await client.get("/webhooks").catch(() => [])).filter((w) => w.item_type === "candidate" && w.action === "create");
   info("Loxo calls Weaver when a candidate is added", hooks.length ? `registered (${hooks.length})` : "not registered yet; the hourly catch-up still scores everyone");

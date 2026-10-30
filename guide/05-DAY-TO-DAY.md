@@ -27,6 +27,7 @@
 | Stop writing into Loxo, keep scoring | `LOXO_WRITE_ENABLED` = `false` |
 | Stop everything, no AI calls, no cost | `SCORING_PAUSED` = `true` (or Suspend the service) |
 | Start again | set them back (`true` / `false`) |
+| Rank a search Josh asks for (everyone already on it) | add its number to `LOXO_BACKLOG_JOB_IDS` (comma-separated). Done the same day; about $5 to $10 for 200 people |
 | Leave a search out | add its number to `LOXO_SKIP_JOB_IDS` (comma-separated) |
 | Score fewer a day | lower `DAILY_SCORE_CAP` |
 | Lower the cost per candidate | `CLAUDE_MODEL` = `claude-sonnet-5-5` (about half the price, a bit less depth) |

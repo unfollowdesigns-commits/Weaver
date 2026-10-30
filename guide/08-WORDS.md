@@ -20,6 +20,8 @@
 | Write test | One test scorecard written on the "Accounting - Test" search to prove writing works. |
 | Batch | Half-price way of sending many candidates to Claude at once; used by the hourly catch-up. |
 | Hourly catch-up | Weaver's hourly pass over all open searches to score anyone new. |
+| Rank a search | Score everyone already on a search, when Josh asks. Its number goes in `LOXO_BACKLOG_JOB_IDS` on Render. |
+| New candidates only | On every other search, Weaver scores only people added after it first saw the search. |
 | Webhook | Loxo telling Weaver "a candidate was just added", so it scores within minutes. |
 | Daily cap | Weaver's own limit: about 200 AI calls a day. |
 | Monthly limit | The spending limit set on DP's Claude account. The hard ceiling. |

@@ -58,34 +58,38 @@ Check the team's #1 from their PDF is in the Yes group, near the top. Note the r
 ## Test B. The automatic part, on your Mac (capped at 5 AI calls, under $1)
 
 This starts Weaver on your Mac the way it will run on Render, but in dry run and limited to 5 AI
-calls. Paste it as one line:
+calls. It treats the tested search (3688816) as one Josh asked to rank, and every other open
+search as "new candidates only". Paste it as one line:
 ```bash
-SCORING_PROVIDER=claude DAILY_SCORE_CAP=5 DAILY_CAP_FILE=data/test-usage.json DRY_RUN=true LOXO_WRITE_ENABLED=false LOXO_AUTO_SCORE_JOB_IDS= LOXO_SKIP_JOB_IDS=3011811 USE_BATCH=false WEBHOOK_SECRET=local-test-only-local-test-only CRITERIA_DIR=data/scorecards/auto npm start
+SCORING_PROVIDER=claude DAILY_SCORE_CAP=5 DAILY_CAP_FILE=data/test-usage.json BASELINE_FILE=data/test-baseline.json LOXO_BACKLOG_JOB_IDS=3688816 DRY_RUN=true LOXO_WRITE_ENABLED=false LOXO_AUTO_SCORE_JOB_IDS= LOXO_SKIP_JOB_IDS=3011811 USE_BATCH=false WEBHOOK_SECRET=local-test-only-local-test-only CRITERIA_DIR=data/scorecards/auto npm start
 ```
 You should see within seconds:
 ```
-... Listening on :8787. Provider claude. Searches: every open search except 3011811. Writes off (dry run). Daily cap 5 AI calls (5 left today, ...).
+... Listening on :8787. Provider claude. Searches: every open search except 3011811 (existing candidates on 3688816; elsewhere new candidates only). Writes off (dry run). Daily cap 5 AI calls (5 left today, ...).
 ```
-After about one minute the hourly catch-up runs once. You should see lines like:
+After one minute the hourly catch-up starts. It reads every open search at Loxo's speed limit,
+so it takes a few minutes. You should see many lines like:
 ```
-... no approved scorecard for this search: drafting the criteria descriptions from the job (not yet approved)
-... sweep {"written":0,"already_done":0,"submitted":0,"scored_direct":4,"failed":1,...}
+... job 1234567: first seen, 120 people already on it (not scored); new candidates from now on
+```
+(one per search: those people are left alone, which is the point), then one line:
+```
+... sweep {"written":0,"already_done":0,"submitted":0,"scored_direct":5,...}
 ```
 - `"written":0`: correct, nothing goes into Loxo in this test.
-- Drafting a search's criteria counts as one of the 5 calls, so about 4 people are scored.
-- `"failed":1` is normal here: it is the next person, stopped by the 5-call limit. It shows the
-  limit works.
+- `"scored_direct"` about 5: people on the tested search, stopped by the 5-call limit. If a
+  `"failed":1` also shows, that is the next person stopped by the limit: the limit works.
 
 When you see the `sweep {...}` line, stop Weaver: press **Control + C**.
 
-Then clean up the test counter:
+Then clean up the two test files:
 ```bash
-rm -f data/test-usage.json
+rm -f data/test-usage.json data/test-baseline.json
 ```
 
 ## Send to the build chat
 
 - From Test A: the verify block (from `Run:` to `ALL CHECKS PASSED`) and the rank number.
-- From Test B: the `Listening on ...` line and the `sweep {...}` line.
+- From Test B: the `Listening on ...` line, one `first seen` line and the `sweep {...}` line.
 
 No names. The build chat confirms both before you send the email to Josh.

@@ -17,7 +17,13 @@ About 20 minutes, then one day of dry run, then live. You need: the Render invit
 6. Wait until the service shows **Live** (a few minutes). Its address is at the top of the
    service page, like `https://weaver-xxxx.onrender.com`. Note it.
 
-Weaver starts in dry run: it scores, writes nothing to Loxo.
+7. Service **weaver** > **Environment**: set `LOXO_BACKLOG_JOB_IDS` to the numbers of the searches
+   Josh asked to rank, comma-separated (for example `3688816,3701234`). Leave it empty if he has
+   not named any yet. Click **Save**.
+
+Weaver starts in dry run: it scores, writes nothing to Loxo. On every open search it scores the
+candidates added from now on; the people already on a search are scored only on the searches
+in `LOXO_BACKLOG_JOB_IDS`.
 
 ## Step 2. Copy the webhook secret to your Mac
 
@@ -55,7 +61,8 @@ every new candidate within the hour.)
 
 In Render: service **weaver** > **Logs**. Over the day you should see lines like:
 ```
-Listening on :10000. Provider claude. Searches: every open search. Writes off (dry run). ...
+Listening on :10000. Provider claude. Searches: every open search except 3011811 (existing candidates on 3688816; elsewhere new candidates only). Writes off (dry run). ...
+job 1234567: first seen, 120 people already on it (not scored); new candidates from now on
 submitted 50 candidates in batch ...
 job 1234567 person 7654321: scored 3.8 yes
 job 1234567 person 7654321: dry run, nothing written
@@ -70,10 +77,10 @@ The next day, in Render: service **weaver** > **Environment**:
 - `LOXO_WRITE_ENABLED` → `true`
 
 Click **Save**. Render restarts Weaver (about a minute). From now on, every first read is written
-into Loxo as a scorecard. The people already on the searches are worked through over the first
-days (about 200 a day); new candidates within minutes.
+into Loxo as a scorecard: new candidates within minutes, and the people already on the searches
+in `LOXO_BACKLOG_JOB_IDS` the same day (at most 200 a day).
 
-Check after an hour: open any candidate on an open search in Loxo; you should see a scorecard by
+Check after an hour: open a candidate on one of the searches Josh asked to rank in Loxo; you should see a scorecard by
 "Candidate scoring (AI, awaiting review)".
 
 ## Step 7. Clean up

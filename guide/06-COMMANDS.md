@@ -7,8 +7,8 @@ cd ~/Documents/"District Partners"/weaver
 
 | Command | What it does | Costs AI money? | Writes to Loxo? |
 |---|---|---|---|
-| `npm test` | Runs Weaver's 127 built-in checks. Should end with `pass 127`, `fail 0`. | No | No |
-| `npm run ready` | Before the email: tests, the Yes rule on your saved real run, people and one-time cost on the open searches. Prefix it as in file 01. | No | No |
+| `npm test` | Runs Weaver's 132 built-in checks. Should end with `pass 132`, `fail 0`. | No | No |
+| `npm run ready` | Before the email: tests, the Yes rule on your saved real run, people on the open searches. Prefix it as in file 01. | No | No |
 | `npm run preflight` | Checks every key, ID and setting. Add `-- --estimate` to count people and cost, `-- --server <address>` to check the live server. | No | No |
 | `npm run score:claude -- --loxo-job <number>` | Scores everyone on one search with Claude and makes a report in `data/runs/`. | Yes (DP's account) | No |
 | `npm run verify` | Checks the newest run: no names, no pay, no errors, real cost. | No | No |
