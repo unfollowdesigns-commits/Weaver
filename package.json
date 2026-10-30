@@ -24,7 +24,8 @@
     "rescore": "node scripts/rescore-job.js",
     "rebar": "node scripts/rebar-run.js",
     "write-test": "node scripts/loxo-write-check.js",
-    "preflight": "node scripts/preflight.js"
+    "preflight": "node scripts/preflight.js",
+    "ready": "node scripts/ready-check.js"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "0.133.0"

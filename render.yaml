@@ -1,0 +1,68 @@
+# Render Blueprint: creates Weaver's production service in the client's Render account in one go
+# (Render > New > Blueprint > this repo). Secrets are asked for on screen (sync: false) and never
+# stored here. Starts in dry run: nothing is written to Loxo until DRY_RUN=false and
+# LOXO_WRITE_ENABLED=true are set after the client approves (go-live plan, step 13).
+services:
+  - type: web
+    name: weaver
+    runtime: node
+    region: virginia
+    plan: 0.5c-512mb
+    buildCommand: npm ci
+    startCommand: npm start
+    healthCheckPath: /health
+    autoDeployTrigger: "off"
+    disk:
+      name: weaver-data
+      mountPath: /var/data
+      sizeGB: 1
+    envVars:
+      - key: NODE_VERSION
+        value: "22"
+      - key: SCORING_PROVIDER
+        value: claude
+      - key: ANTHROPIC_API_KEY
+        sync: false
+      - key: LOXO_API_KEY
+        sync: false
+      - key: LOXO_AGENCY_SLUG
+        value: district-partners
+      - key: LOXO_DOMAIN
+        value: app.loxo.co
+      - key: LOXO_MAX_PER_SECOND
+        value: "4"
+      - key: LOXO_WRITE_TARGET
+        value: scorecard
+      - key: LOXO_SCORECARD_TYPE_ID
+        value: "2"
+      - key: LOXO_RECOMMENDATION_YES_ID
+        value: "3"
+      - key: LOXO_RECOMMENDATION_NO_ID
+        value: "2"
+      # Empty: every open search in Loxo. Only to limit it: search numbers, comma-separated.
+      - key: LOXO_AUTO_SCORE_JOB_IDS
+        value: ""
+      - key: LOXO_SKIP_JOB_IDS
+        value: "3011811"
+      - key: SCORECARD_FILE
+        value: config/scorecards/standard-executive.v2.json
+      - key: AUTO_CRITERIA
+        value: "true"
+      - key: CRITERIA_DIR
+        value: /var/data/criteria
+      - key: SWEEP_EVERY_MINUTES
+        value: "60"
+      - key: WEBHOOK_SECRET
+        generateValue: true
+      - key: DAILY_SCORE_CAP
+        value: "200"
+      - key: SWEEP_MAX_PER_RUN
+        value: "50"
+      - key: USE_BATCH
+        value: "true"
+      - key: SAVE_DEBUG_FILES
+        value: "false"
+      - key: DRY_RUN
+        value: "true"
+      - key: LOXO_WRITE_ENABLED
+        value: "false"

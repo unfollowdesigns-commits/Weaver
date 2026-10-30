@@ -380,6 +380,13 @@ First probe, job 3688816 (Head of Finance and Accounting, 194 candidates), 29 Oc
   Josh, no search list, no Imperium-specific questions). 124 tests. `npm run preflight --
   --estimate` counts everyone on the open searches (Loxo only, free) and shows the one-time
   backlog cost (2.5 to 5 cents a read in batch, about 8% skipped as name-only) and days at the cap.
+- Ready kit (30 Oct 2026, Houssem: "I want everything ready"): `npm run ready` (tests, current Yes
+  rule on the first full real run on the Mac, people and one-time cost on the open searches; prints
+  only counts); render.yaml Blueprint for DP's Render (checked against render.com/docs/blueprint-
+  spec: runtime node, region virginia, plan 0.5c-512mb since "starter" is no longer a plan ID,
+  autoDeployTrigger "off" since autoDeploy is deprecated, 1 GB disk at /var/data, secrets
+  sync:false, WEBHOOK_SECRET generated, dry run on); docs/EMAIL-JOSH.v1.md, docs/CALL-AGENDA.v1.md,
+  deliverables/dp-recruiting-skill.v4.zip; docs/GO-LIVE.v3.md (Phase 0 ready check, Blueprint).
 - Rate limit: 429 after a burst of roughly 12 requests a second. Client now
   paces to LOXO_MAX_PER_SECOND (default 4) and retries 429 with 2-30 s waits.
 - Pipeline entry: { id, position, person: {...}, workflow_stage_id,
