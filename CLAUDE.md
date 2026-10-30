@@ -364,6 +364,12 @@ First probe, job 3688816 (Head of Finance and Accounting, 194 candidates), 29 Oc
   acted as memory); the daily cap now covers the hourly catch-up. Recruiter guide v4 (Yes rule,
   below-bar flag). `npm run rebar` re-applies the bar to a saved run without AI calls.
   120 tests. The OpenAI test key ran out (Houssem, 30 Oct): next real run is on DP's Claude key.
+- Claude skill v4 (30 Oct 2026, Houssem: "Josh asks like he asks a coworker, no limitations, no
+  complications"): plain casual requests, acts first, one short question at most; "sharpen a
+  search" drafts three lines (must-haves, target companies/industries, location) for the Loxo
+  job description, which Weaver's automatic criteria then read (a changed description gives a
+  new criteria version). This is how searches other than Imperium get as sharp: Imperium's
+  criteria were written from the firm's own report, a new search only has its job description.
 - Rate limit: 429 after a burst of roughly 12 requests a second. Client now
   paces to LOXO_MAX_PER_SECOND (default 4) and retries 429 with 2-30 s waits.
 - Pipeline entry: { id, position, person: {...}, workflow_stage_id,
