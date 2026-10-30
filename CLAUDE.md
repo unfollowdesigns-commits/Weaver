@@ -398,6 +398,14 @@ First probe, job 3688816 (Head of Finance and Accounting, 194 candidates), 29 Oc
   (4) docs: step numbers, preflight's WEBHOOK_SECRET check no longer fails before step 9, email
   wording ("limits itself to about 200 a day", monthly limit = hard ceiling). GO-LIVE.v4,
   EMAIL-JOSH.v2, CALL-AGENDA.v2. 127 tests.
+- Guide folder (30 Oct 2026, Houssem: "a full folder of how to use Weaver and what to do now, step
+  by step, as for a person who never used it"): guide/00 to 08 (start here, today, when Josh replies,
+  the call, switch it on, day to day, every command, if something goes wrong, words). Every command
+  checked against the scripts; file 01 step 5 rehearsed with a .env still set to one search (the
+  prefix LOXO_AUTO_SCORE_JOB_IDS= overrides it). Found while writing: DP's Loxo key may be read-only
+  (the plan was "read first, write after a demo"), so EMAIL-JOSH.v3 asks for write access before the
+  call. CALL-AGENDA.v3: pay answer worded exactly (filtered, instructed, output checked), after the
+  review noted that some pay phrasings get through the filter (known limit, see above).
 - Rate limit: 429 after a burst of roughly 12 requests a second. Client now
   paces to LOXO_MAX_PER_SECOND (default 4) and retries 429 with 2-30 s waits.
 - Pipeline entry: { id, position, person: {...}, workflow_stage_id,
