@@ -12,6 +12,7 @@ import { loadEnv } from "../src/env.js";
 import { loxoClientFromEnv } from "../src/loxo/index.js";
 import { firstArray } from "../src/loxo/client.js";
 import { mapJob, jobStatusOf, isOpenStatus } from "../src/loxo/map.js";
+import { createSearchList } from "../src/searches.js";
 
 loadEnv();
 const { values: args } = parseArgs({ options: { server: { type: "string" } } });
@@ -63,9 +64,11 @@ if (client) {
   line(Boolean(nameOf(types, env.LOXO_SCORECARD_TYPE_ID)), "Scorecard type ID exists in Loxo", `${env.LOXO_SCORECARD_TYPE_ID || "not set"} = ${nameOf(types, env.LOXO_SCORECARD_TYPE_ID) ?? "?"}`);
   line(/^yes$/i.test(nameOf(recs, env.LOXO_RECOMMENDATION_YES_ID) ?? ""), "Yes recommendation ID", `${env.LOXO_RECOMMENDATION_YES_ID || "not set"} = ${nameOf(recs, env.LOXO_RECOMMENDATION_YES_ID) ?? "?"}`);
   line(/^no$/i.test(nameOf(recs, env.LOXO_RECOMMENDATION_NO_ID) ?? ""), "No recommendation ID", `${env.LOXO_RECOMMENDATION_NO_ID || "not set"} = ${nameOf(recs, env.LOXO_RECOMMENDATION_NO_ID) ?? "?"}`);
-  const ids = (env.LOXO_AUTO_SCORE_JOB_IDS || "").split(",").map((s) => s.trim()).filter(Boolean);
-  line(ids.length > 0, "Searches switched on for automatic scoring", ids.length ? ids.join(", ") : "LOXO_AUTO_SCORE_JOB_IDS is empty");
-  for (const id of ids) {
+  const searches = createSearchList({ client, setting: env.LOXO_AUTO_SCORE_JOB_IDS, skip: env.LOXO_SKIP_JOB_IDS });
+  const ids = await searches.ids();
+  line(ids.length > 0, "Searches Weaver will score", `${searches.describe()}: ${ids.length} found`);
+  if (searches.all) info("Open searches found in Loxo", ids.length > 15 ? `${ids.slice(0, 15).join(", ")} and ${ids.length - 15} more` : ids.join(", ") || "none");
+  for (const id of searches.all ? [] : ids) {
     try {
       const raw = await client.get(`/jobs/${id}`);
       const job = mapJob(raw);

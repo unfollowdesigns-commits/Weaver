@@ -4,7 +4,7 @@
 //   node scripts/serve.js            listens on PORT (default 8787)
 //
 // Loxo calls:  POST /loxo/webhook?token=<WEBHOOK_SECRET>
-// Cost guards, in order: only jobs in LOXO_AUTO_SCORE_JOB_IDS; the same candidate within
+// Cost guards, in order: only open searches (or those in LOXO_AUTO_SCORE_JOB_IDS); the same candidate within
 // 15 minutes is ignored; anyone who already has an AI assessment is skipped before the AI
 // is called; at most DAILY_SCORE_CAP candidates a day.
 // Nothing is written to disk unless SAVE_DEBUG_FILES=true (local testing only). Logs carry
@@ -27,6 +27,7 @@ import { personIdOf } from "../src/loxo/map.js";
 import { fetchJob, loadCandidate } from "../src/loxo/read.js";
 import { buildPayload, writeResult, writeConfigFromEnv, writesAllowed, hasAiAssessment } from "../src/loxo/write.js";
 import { createDailyCap, createDeduper } from "../src/limits.js";
+import { createSearchList } from "../src/searches.js";
 
 loadEnv();
 
@@ -35,7 +36,6 @@ if (secret.length < 16) {
   console.error("WEBHOOK_SECRET must be set (at least 16 characters).");
   process.exit(1);
 }
-const allowedJobs = new Set((process.env.LOXO_AUTO_SCORE_JOB_IDS ?? "").split(",").map((s) => s.trim()).filter(Boolean));
 const template = loadTemplate();
 const provider = await getProvider(process.env.SCORING_PROVIDER || "mock");
 // Each search: its approved scorecard, else criteria drafted from the job the first time it is
@@ -46,6 +46,8 @@ const approvedDir = process.env.SCORECARD_JOBS_DIR || JOB_SCORECARD_DIR;
 const scorecardFor = liveCriteria({ standard, provider, approvedDir, store: process.env.CRITERIA_DIR || AUTO_DIR, auto: process.env.AUTO_CRITERIA !== "false", resolver: scorecardResolver({ fallback: standard, dir: approvedDir }), log });
 const client = loxoClientFromEnv(process.env, { allowWrites: true });
 const cfg = writeConfigFromEnv();
+// Every open search by default; a list of numbers in LOXO_AUTO_SCORE_JOB_IDS limits it.
+const searches = createSearchList({ client, setting: process.env.LOXO_AUTO_SCORE_JOB_IDS, skip: process.env.LOXO_SKIP_JOB_IDS });
 const saveDebug = process.env.SAVE_DEBUG_FILES === "true";
 const dailyCap = createDailyCap(Number(process.env.DAILY_SCORE_CAP || 200));
 const deduper = createDeduper();
@@ -80,7 +82,7 @@ async function handle(body) {
   const { jobId, personId } = idsFromWebhook(body);
   if (!jobId || !personId) return log("delivery without job_id/person_id; field names to confirm (set SAVE_DEBUG_FILES=true locally to keep the body)");
   const tag = `job ${jobId} person ${personId}`;
-  if (!allowedJobs.has(String(jobId))) return log(`${tag}: job not switched on, skipped`);
+  if (!(await searches.has(jobId))) return log(`${tag}: search not open or not switched on, skipped`);
   if (deduper.seenRecently(`${jobId}:${personId}`)) return log(`${tag}: duplicate within 15 minutes, skipped`);
   if (await hasAiAssessment(client, jobId, personId, cfg)) return log(`${tag}: already assessed, skipped`);
   if (!writesAllowed() && handledInDryRun.has(`${jobId}:${personId}`)) return log(`${tag}: already read in this dry run, skipped`);
@@ -150,7 +152,7 @@ const server = http.createServer((req, res) => {
 // The hourly catch-up runs inside this service (one Render service with the disk; Render's cron
 // jobs cannot use a disk). SWEEP_EVERY_MINUTES=0 turns it off, e.g. when a separate cron is used.
 const sweepEvery = Number(process.env.SWEEP_EVERY_MINUTES ?? 60);
-if (sweepEvery > 0 && allowedJobs.size) {
+if (sweepEvery > 0) {
   let running = false;
   const sweepOnce = () => {
     if (running) return;
@@ -162,7 +164,7 @@ if (sweepEvery > 0 && allowedJobs.size) {
       running = false;
       return log("sweep skipped: daily cap reached, continues tomorrow");
     }
-    queue = queue.then(() => runSweep({ client, provider, jobIds: [...allowedJobs], scorecard: scorecardFor, template, cfg, writes,
+    queue = queue.then(async () => runSweep({ client, provider, jobIds: await searches.ids(), scorecard: scorecardFor, template, cfg, writes,
       maxPerRun: room, useBatch: process.env.USE_BATCH !== "false", log, handled: writes ? null : handledInDryRun }))
       .then((s) => { dailyCap.use((s.submitted ?? 0) + (s.scored_direct ?? 0)); const { dry_run, ...counts } = s; log(`sweep ${JSON.stringify(counts)}`); })
       .catch((err) => log(`sweep failed: ${err.message}`))
@@ -174,5 +176,5 @@ if (sweepEvery > 0 && allowedJobs.size) {
 
 const port = Number(process.env.PORT || 8787);
 server.listen(port, () => {
-  log(`Listening on :${port}. Provider ${provider.name}. Jobs: ${[...allowedJobs].join(", ") || "none"}. Writes ${writesAllowed() ? "ON" : "off (dry run)"}. Daily cap ${process.env.DAILY_SCORE_CAP || 200}.`);
+  log(`Listening on :${port}. Provider ${provider.name}. Searches: ${searches.describe() || "none"}. Writes ${writesAllowed() ? "ON" : "off (dry run)"}. Daily cap ${process.env.DAILY_SCORE_CAP || 200}.`);
 });

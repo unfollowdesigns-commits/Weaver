@@ -18,6 +18,7 @@ import { getProvider } from "../src/providers/index.js";
 import { loxoClientFromEnv } from "../src/loxo/index.js";
 import { writeConfigFromEnv, writesAllowed } from "../src/loxo/write.js";
 import { runSweep } from "../src/sweep.js";
+import { createSearchList } from "../src/searches.js";
 
 loadEnv();
 const { values: args } = parseArgs({ options: { "dry-run-once": { type: "boolean", default: false } } });
@@ -28,9 +29,12 @@ if (!writes && !args["dry-run-once"]) {
   log("Writes are off (DRY_RUN / LOXO_WRITE_ENABLED). Sweep not run. Use --dry-run-once for a local test.");
   process.exit(0);
 }
-const jobIds = (process.env.LOXO_AUTO_SCORE_JOB_IDS ?? "").split(",").map((s) => s.trim()).filter(Boolean);
+const sweepClient = loxoClientFromEnv(process.env, { allowWrites: writes });
+const searches = createSearchList({ client: sweepClient, setting: process.env.LOXO_AUTO_SCORE_JOB_IDS, skip: process.env.LOXO_SKIP_JOB_IDS });
+const jobIds = await searches.ids();
+log(`Searches: ${searches.describe()} (${jobIds.length})`);
 if (!jobIds.length) {
-  log("No jobs in LOXO_AUTO_SCORE_JOB_IDS. Nothing to do.");
+  log("No open searches. Nothing to do.");
   process.exit(0);
 }
 
@@ -38,7 +42,7 @@ const sweepProvider = await getProvider(process.env.SCORING_PROVIDER || "mock");
 
 try {
   const summary = await runSweep({
-    client: loxoClientFromEnv(process.env, { allowWrites: writes }),
+    client: sweepClient,
     provider: sweepProvider,
     jobIds,
     scorecard: (() => {
