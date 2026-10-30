@@ -350,6 +350,20 @@ First probe, job 3688816 (Head of Finance and Accounting, 194 candidates), 29 Oc
   only 7 yes (4%): the AI itself said no to 172, the prompt overshot. Prompt v5: the AI's yes/no
   only answers "is a must-have missed"; the short-list bar is applied in code from the scores.
   Expected near the ~65 estimate above. Re-run to confirm.
+- Go-live package (30 Oct 2026, Houssem: "the full package ready, no surprises, before I write
+  to Josh"). docs/GO-LIVE.v1.md is the one ordered list to delivery (email to Josh, first Claude
+  run, write test on the call, Render setup, switch on). Built for it: `npm run preflight`
+  (every account, key, ID and setting; the Claude key checked free with a model lookup);
+  `npm run write-test` (one scorecard on "Accounting - Test", read back, no duplicate, update
+  in place); verify prints the real AI cost of each run; test/claude-provider.test.js checks the
+  Claude connection against a stand-in Claude service (Opus 5.5 high effort, JSON format,
+  refusal fallback "default", batch without fallback, thinking and fallback blocks skipped).
+  Fixed while auditing: Weaver now recognizes its own Loxo scorecards by creator name OR summary
+  first line (if Loxo drops one, no duplicates); the team-scorecard reader uses the same test;
+  in dry run the server remembers who it read (only mattered with batch off: batches already
+  acted as memory); the daily cap now covers the hourly catch-up. Recruiter guide v4 (Yes rule,
+  below-bar flag). `npm run rebar` re-applies the bar to a saved run without AI calls.
+  120 tests. The OpenAI test key ran out (Houssem, 30 Oct): next real run is on DP's Claude key.
 - Rate limit: 429 after a burst of roughly 12 requests a second. Client now
   paces to LOXO_MAX_PER_SECOND (default 4) and retries 429 with 2-30 s waits.
 - Pipeline entry: { id, position, person: {...}, workflow_stage_id,

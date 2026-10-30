@@ -72,6 +72,9 @@ function saveLocal(sub, name, data) {
 // One at a time: keeps model and Loxo usage steady when many candidates arrive at once.
 let queue = Promise.resolve();
 const jobCache = new Map();
+// Who has been read in dry run since the server started ("jobId:personId"), so neither the
+// webhook nor the hourly catch-up reads them again while nothing is written to Loxo.
+const handledInDryRun = new Set();
 
 async function handle(body) {
   const { jobId, personId } = idsFromWebhook(body);
@@ -80,6 +83,7 @@ async function handle(body) {
   if (!allowedJobs.has(String(jobId))) return log(`${tag}: job not switched on, skipped`);
   if (deduper.seenRecently(`${jobId}:${personId}`)) return log(`${tag}: duplicate within 15 minutes, skipped`);
   if (await hasAiAssessment(client, jobId, personId, cfg)) return log(`${tag}: already assessed, skipped`);
+  if (!writesAllowed() && handledInDryRun.has(`${jobId}:${personId}`)) return log(`${tag}: already read in this dry run, skipped`);
 
   if (!jobCache.has(jobId) || Date.now() - jobCache.get(jobId).at > 10 * 60_000) {
     jobCache.set(jobId, { at: Date.now(), job: await fetchJob(client, jobId) });
@@ -103,6 +107,7 @@ async function handle(body) {
     const out = await writeResult(client, result, cfg);
     log(`${tag}: Loxo ${out.status}${out.reason ? ` (${out.reason})` : ""}`);
   } else {
+    handledInDryRun.add(`${jobId}:${personId}`);
     const file = saveLocal("runs/webhook", `${Date.now()}-${personId}.json`, { result, would_write: buildPayload(result, cfg) });
     log(`${tag}: dry run, nothing written${file ? ` (saved ${file})` : ""}`);
   }
@@ -151,9 +156,15 @@ if (sweepEvery > 0 && allowedJobs.size) {
     if (running) return;
     running = true;
     const writes = writesAllowed();
+    // The same daily cap as the webhook: the catch-up never reads more than what is left today.
+    const room = Math.min(Number(process.env.SWEEP_MAX_PER_RUN || 50), dailyCap.remaining());
+    if (room <= 0) {
+      running = false;
+      return log("sweep skipped: daily cap reached, continues tomorrow");
+    }
     queue = queue.then(() => runSweep({ client, provider, jobIds: [...allowedJobs], scorecard: scorecardFor, template, cfg, writes,
-      maxPerRun: Number(process.env.SWEEP_MAX_PER_RUN || 50), useBatch: process.env.USE_BATCH !== "false", log }))
-      .then((s) => { const { dry_run, ...counts } = s; log(`sweep ${JSON.stringify(counts)}`); })
+      maxPerRun: room, useBatch: process.env.USE_BATCH !== "false", log, handled: writes ? null : handledInDryRun }))
+      .then((s) => { dailyCap.use((s.submitted ?? 0) + (s.scored_direct ?? 0)); const { dry_run, ...counts } = s; log(`sweep ${JSON.stringify(counts)}`); })
       .catch((err) => log(`sweep failed: ${err.message}`))
       .finally(() => { running = false; });
   };

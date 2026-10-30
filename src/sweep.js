@@ -31,7 +31,10 @@ export function parseBatchId(id) {
 // maxLoad: most candidates read from Loxo per run. Name-only records are read, found empty and
 // skipped without paying the AI; the window rotates every hour so they cannot crowd out the
 // rest of a search (30 Oct 2026 review: 146 name-only people on one real search).
-export async function runSweep({ client, provider, jobIds, scorecard, template, cfg, writes, maxPerRun = 50, maxLoad = 200, useBatch = true, now = Date.now(), log = () => {} }) {
+// handled: a Set kept by the server across runs ("jobId:personId"). In dry run nothing lands in
+// Loxo, so Loxo cannot tell the next run who was already read; without this the same people were
+// read and paid for again every hour (found 30 Oct 2026, before go-live).
+export async function runSweep({ client, provider, jobIds, scorecard, template, cfg, writes, maxPerRun = 50, maxLoad = 200, useBatch = true, now = Date.now(), log = () => {}, handled = null }) {
   // `scorecard` is one scorecard, or (jobId) => scorecard for per-search scorecards.
   const scorecardFor = typeof scorecard === "function" ? scorecard : () => scorecard;
   const summary = { written: 0, already_done: 0, submitted: 0, scored_direct: 0, failed: 0, not_enough_in_loxo: 0, no_approved_scorecard: [], waiting: false, left_for_review: [], dry_run: [] };
@@ -52,6 +55,7 @@ export async function runSweep({ client, provider, jobIds, scorecard, template, 
       else summary.already_done++;
     } else {
       summary.dry_run.push({ candidate: result.candidate_id, job: result.job_id, ...buildPayload(result, cfg) });
+      handled?.add(`${result.job_id}:${result.loxo.person_id}`);
     }
     done.get(result.job_id)?.add(String(result.loxo.person_id));
   }
@@ -95,7 +99,7 @@ export async function runSweep({ client, provider, jobIds, scorecard, template, 
   for (const jobId of allowed) {
     for (const entry of await listJobCandidates(client, jobId)) {
       const pid = String(personIdOf(entry) ?? "");
-      if (!pid || done.get(jobId).has(pid)) continue;
+      if (!pid || done.get(jobId).has(pid) || handled?.has(`${jobId}:${pid}`)) continue;
       if ((failures.get(`${jobId}:${pid}`) ?? 0) >= MAX_FAILURES) {
         summary.left_for_review.push({ job: jobId, person: pid });
         continue;

@@ -74,6 +74,21 @@ const belowBar = scored.filter((r) => r.recommendation === "no" && r.ai_recommen
 console.log(`INFO  Yes ${yesCount} of ${scored.length} (${scored.length ? Math.round((yesCount / scored.length) * 100) : 0}%) · No ${scored.length - yesCount}${belowBar ? `, of which ${belowBar} the AI called yes but fall under the bar` : ""}`);
 if (scored.length >= 20 && yesCount / scored.length > 0.5) console.log("WARN  More than half are Yes: that is a pass mark, not a short list. Check the scorecard before sending.");
 
+// What the run cost, from the token counts the AI service reported (list prices, USD per million
+// tokens, as of Oct 2026; check the provider's pricing page if they change).
+const PRICES = { "claude-opus-5-5": [4, 20], "claude-sonnet-5-5": [2, 10], "claude-haiku-5-5": [0.1, 0.5], "gpt-4.1": [2, 8] };
+let cost = 0, priced = 0;
+for (const r of results) {
+  const u = r.usage;
+  const key = Object.keys(PRICES).find((k) => String(r.model ?? "").startsWith(k));
+  if (!u || !key) continue;
+  const [pin, pout] = PRICES[key];
+  const input = (u.input_tokens ?? u.prompt_tokens ?? 0) + (u.cache_creation_input_tokens ?? 0) * 1.25 + (u.cache_read_input_tokens ?? 0) * 0.1;
+  cost += (input * pin + (u.output_tokens ?? u.completion_tokens ?? 0) * pout) / 1e6;
+  priced++;
+}
+if (priced) console.log(`INFO  AI cost of this run: about $${cost.toFixed(2)} for ${priced} reads ($${(cost / priced).toFixed(3)} each, direct; the automatic hourly catch-up uses batch at half price)`);
+
 if (payloads.length) {
   const bodies = payloads.filter((p) => p.body);
   const errs = payloads.filter((p) => p.error);

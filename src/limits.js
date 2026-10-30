@@ -5,16 +5,29 @@
 export function createDailyCap(limit, now = () => Date.now()) {
   let day = "";
   let count = 0;
+  const roll = () => {
+    const d = new Date(now()).toISOString().slice(0, 10);
+    if (d !== day) {
+      day = d;
+      count = 0;
+    }
+  };
   return {
     take() {
-      const d = new Date(now()).toISOString().slice(0, 10);
-      if (d !== day) {
-        day = d;
-        count = 0;
-      }
+      roll();
       if (limit > 0 && count >= limit) return false;
       count++;
       return true;
+    },
+    // Readings still allowed today (Infinity without a cap). The hourly catch-up sizes its run
+    // with this, then records what it used with use(n).
+    remaining() {
+      roll();
+      return limit > 0 ? Math.max(0, limit - count) : Infinity;
+    },
+    use(n) {
+      roll();
+      count += Math.max(0, n);
     },
     get count() {
       return count;

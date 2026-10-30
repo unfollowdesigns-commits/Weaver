@@ -153,3 +153,26 @@ test("a name-only record is not sent to the AI and nothing is written for it", a
   assert.equal(out.scored_direct, 0);
   assert.equal(posts.length, 0);
 });
+
+test("dry run without batches: nobody is read twice across hourly runs (server keeps who it read)", async () => {
+  const { client, posts } = fakeLoxo();
+  const provider = createMockProvider();
+  const handled = new Set();
+  const s1 = await sweep(client, provider, { writes: false, useBatch: false, handled });
+  assert.equal(s1.scored_direct, 1);
+  const s2 = await sweep(client, provider, { writes: false, useBatch: false, handled });
+  assert.equal(s2.scored_direct, 0, "the same person is not read and paid for again");
+  assert.equal(posts.length, 0);
+});
+
+test("the daily cap covers the hourly catch-up too", () => {
+  const cap = createDailyCap(200, () => Date.parse("2026-10-30T10:00:00Z"));
+  assert.equal(cap.remaining(), 200);
+  cap.use(50);
+  cap.take();
+  assert.equal(cap.remaining(), 149);
+  cap.use(500);
+  assert.equal(cap.remaining(), 0);
+  assert.equal(cap.take(), false);
+  assert.equal(createDailyCap(0).remaining(), Infinity);
+});

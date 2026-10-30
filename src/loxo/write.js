@@ -71,6 +71,11 @@ const NOTE_MARKERS = ["AI first read, awaiting recruiter review", "AI assessment
 // Loxo's filters are trusted no further than the page: every record is checked on our side
 // too, so an ignored filter can never mark the wrong person as done (30 Oct 2026 review).
 const pidOf = (x) => String(x?.person_id ?? x?.person?.id ?? "");
+// Weaver's own scorecards, recognized two ways: the creator name it sets, or the first line of
+// its summary. Either alone is enough, so a duplicate can never be written if Loxo does not
+// keep one of the two (not yet confirmed on the account; the write test checks both).
+const SUMMARY_MARKER = "AI first read, awaiting recruiter review";
+export const isAiCard = (s) => s?.external_creator_name === AI_AUTHOR || String(s?.summary ?? "").startsWith(SUMMARY_MARKER);
 const jobOf = (x) => (x?.job_id ?? x?.job?.id ?? null);
 const sameJob = (x, jobId) => jobOf(x) === null || String(jobOf(x)) === String(jobId);
 // A record without a person id is trusted to the filter we sent (the safe side: never write a
@@ -86,7 +91,7 @@ export async function aiScoredPersonIds(client, jobId, cfg) {
     }
   } else {
     const cards = await client.list("/scorecards", { job_id: jobId });
-    for (const s of cards) if (s.external_creator_name === AI_AUTHOR && sameJob(s, jobId)) ids.add(pidOf(s));
+    for (const s of cards) if (isAiCard(s) && sameJob(s, jobId)) ids.add(pidOf(s));
   }
   ids.delete("undefined");
   ids.delete("");
@@ -96,7 +101,7 @@ export async function aiScoredPersonIds(client, jobId, cfg) {
 export async function hasAiAssessment(client, jobId, personId, cfg) {
   if (cfg.target === "note") return (await aiScoredPersonIds(client, jobId, cfg)).has(String(personId));
   const cards = firstArray(await client.get("/scorecards", { person_id: personId, job_id: jobId }));
-  return cards.some((s) => s.external_creator_name === AI_AUTHOR && samePerson(s, personId) && sameJob(s, jobId));
+  return cards.some((s) => isAiCard(s) && samePerson(s, personId) && sameJob(s, jobId));
 }
 
 // Skips a candidate that already has an AI scorecard for this job, so re-runs do not pile up duplicates.
@@ -106,7 +111,7 @@ export async function writeResult(client, result, cfg) {
   const { path, body } = buildPayload(result, cfg);
   if (cfg.target !== "note") {
     const existing = firstArray(await client.get("/scorecards", { person_id: result.loxo.person_id, job_id: result.job_id }));
-    const mine = existing.filter((s) => s.external_creator_name === AI_AUTHOR && samePerson(s, result.loxo.person_id) && sameJob(s, result.job_id));
+    const mine = existing.filter((s) => isAiCard(s) && samePerson(s, result.loxo.person_id) && sameJob(s, result.job_id));
     if (mine.length) {
       // Say when the match rests on Loxo's filter alone (the record carried no person id).
       const unproven = mine.every((s) => pidOf(s) === "");
@@ -141,7 +146,7 @@ export function scorecardUsed(card) {
 export async function outdatedAiScorecards(client, jobId, currentScorecard) {
   const cards = await client.list("/scorecards", { job_id: jobId });
   return cards
-    .filter((s) => s.external_creator_name === AI_AUTHOR && sameJob(s, jobId) && pidOf(s) !== "")
+    .filter((s) => isAiCard(s) && sameJob(s, jobId) && pidOf(s) !== "")
     .map((s) => ({ scorecard_id: s.id, person_id: pidOf(s), used: scorecardUsed(s) }))
     .filter((x) => x.used !== currentScorecard);
 }

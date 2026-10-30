@@ -22,7 +22,9 @@
     "report:client": "node scripts/client-report.js",
     "verify": "node scripts/verify-run.js",
     "rescore": "node scripts/rescore-job.js",
-    "rebar": "node scripts/rebar-run.js"
+    "rebar": "node scripts/rebar-run.js",
+    "write-test": "node scripts/loxo-write-check.js",
+    "preflight": "node scripts/preflight.js"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "0.133.0"

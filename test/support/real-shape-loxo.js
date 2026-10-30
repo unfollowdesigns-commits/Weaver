@@ -49,6 +49,9 @@ function jobList() {
   return out;
 }
 
+// Scorecards written in a writable rehearsal (startRealShapeLoxo({ writable: true })).
+const written = [];
+
 function route(path, q) {
   let m;
   if (path === "/jobs") {
@@ -104,7 +107,10 @@ function route(path, q) {
     const p = byId.get(q.get("person_id") ?? "");
     return { person_events: (p?.notes ?? []).map((n, i) => ({ id: i + 1, notes: n, created_at: `2026-10-2${i}T10:00:00Z`, activity_type: { name: "Note" } })), scroll_id: null, total_count: p?.notes?.length ?? 0 };
   }
-  if (path === "/scorecards") return { current_page: 1, total_pages: 1, per_page: 25, total_count: 0, scorecards: [] };
+  if (path === "/scorecards") {
+    const list = written.filter((c) => (!q.get("person_id") || String(c.person_id) === q.get("person_id")) && (!q.get("job_id") || String(c.job_id) === q.get("job_id")));
+    return { current_page: 1, total_pages: 1, per_page: 25, total_count: list.length, scorecards: list };
+  }
   if (path === "/scorecards/scorecard_types") return { scorecard_types: [{ id: 1, name: "Interviewer" }, { id: 2, name: "Recruiter" }] };
   if (path === "/scorecards/scorecard_recommendation_types") return { scorecard_recommendation_types: [{ id: 1, name: "Strong No" }, { id: 2, name: "No" }, { id: 3, name: "Yes" }, { id: 4, name: "Strong Yes" }] };
   if (path === "/scorecards/scorecard_templates") return { scorecard_templates: [] };
@@ -114,7 +120,8 @@ function route(path, q) {
 }
 
 // Returns { server, url, stats } once listening. stats counts requests, 429s and writes.
-export function startRealShapeLoxo({ port = 0, rateLimit = 12 } = {}) {
+export function startRealShapeLoxo({ port = 0, rateLimit = 12, writable = false, keepCreatorName = true } = {}) {
+  written.length = 0;
   const stats = { requests: 0, limited: 0, writes: 0 };
   const recent = [];
   const server = http.createServer((req, res) => {
@@ -128,7 +135,29 @@ export function startRealShapeLoxo({ port = 0, rateLimit = 12 } = {}) {
     }
     if (req.method !== "GET") {
       stats.writes++;
-      return res.writeHead(405).end("read-only");
+      if (!writable) return res.writeHead(405).end("read-only");
+      let raw = "";
+      req.on("data", (c) => (raw += c));
+      req.on("end", () => {
+        const body = JSON.parse(raw || "{}");
+        // Like an API that ignores a field it does not know: optionally drop the creator name.
+        if (!keepCreatorName) delete body.external_creator_name;
+        const p = new URL(req.url, "http://localhost").pathname.replace(/^\/api\/[^/]+/, "");
+        const m = /^\/scorecards\/(\d+)$/.exec(p);
+        if (req.method === "POST" && p === "/scorecards") {
+          const card = { id: 7000 + written.length, ...body };
+          written.push(card);
+          return res.writeHead(200, { "content-type": "application/json" }).end(JSON.stringify({ scorecard: card }));
+        }
+        if (req.method === "PUT" && m) {
+          const i = written.findIndex((c) => String(c.id) === m[1]);
+          if (i < 0) return res.writeHead(404).end("not found");
+          written[i] = { id: written[i].id, ...body };
+          return res.writeHead(200, { "content-type": "application/json" }).end(JSON.stringify({ scorecard: written[i] }));
+        }
+        res.writeHead(404).end("not found");
+      });
+      return;
     }
     const url = new URL(req.url, "http://localhost");
     const body = route(url.pathname.replace(/^\/api\/[^/]+/, ""), url.searchParams);
