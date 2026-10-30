@@ -4,6 +4,8 @@
 // keys and no candidate data, so the output is safe to share.
 //
 //   npm run preflight
+//   npm run preflight -- --estimate        also counts everyone on those searches and shows the
+//                                           one-time cost to score them (reads Loxo only, free)
 //   npm run preflight -- --server https://<service>.onrender.com     also checks the live server
 import fs from "node:fs";
 import path from "node:path";
@@ -13,9 +15,10 @@ import { loxoClientFromEnv } from "../src/loxo/index.js";
 import { firstArray } from "../src/loxo/client.js";
 import { mapJob, jobStatusOf, isOpenStatus } from "../src/loxo/map.js";
 import { createSearchList } from "../src/searches.js";
+import { listJobCandidates } from "../src/loxo/read.js";
 
 loadEnv();
-const { values: args } = parseArgs({ options: { server: { type: "string" } } });
+const { values: args } = parseArgs({ options: { server: { type: "string" }, estimate: { type: "boolean", default: false } } });
 const env = process.env;
 let fails = 0;
 const line = (ok, label, detail = "") => { if (!ok) fails++; console.log(`${ok ? "PASS" : "FAIL"}  ${label}${detail ? `  (${detail})` : ""}`); };
@@ -77,6 +80,17 @@ if (client) {
     } catch (err) {
       line(false, `Search ${id} can be read`, err.message.split("\n")[0]);
     }
+  }
+  // The one-time backlog: everyone already on the searches gets one read. Counting reads Loxo
+  // only (free). Per read: about 2.5 to 5 cents in the half-price batch the hourly catch-up uses.
+  if (args.estimate) {
+    let people = 0;
+    for (const id of ids) people += (await listJobCandidates(client, id).catch(() => [])).length;
+    const cap = Number(env.DAILY_SCORE_CAP) || 200;
+    const reads = Math.round(people * 0.92); // about 8% are name-only records, skipped for free (seen on the real account)
+    info("People on these searches", `${people} on ${ids.length} searches, about ${reads} with enough to score`);
+    info("One-time cost to score them all", `about $${Math.round(reads * 0.025)} to $${Math.round(reads * 0.05)}, over about ${Math.max(1, Math.ceil(reads / cap))} days at ${cap} a day`);
+    info("After that", "only new candidates, a few cents each");
   }
   const hooks = firstArray(await client.get("/webhooks").catch(() => [])).filter((w) => w.item_type === "candidate" && w.action === "create");
   info("Loxo calls Weaver when a candidate is added", hooks.length ? `registered (${hooks.length})` : "not registered yet; the hourly catch-up still scores everyone");

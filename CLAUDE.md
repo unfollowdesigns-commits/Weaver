@@ -377,7 +377,9 @@ First probe, job 3688816 (Head of Finance and Accounting, 194 candidates), 29 Oc
   LOXO_SKIP_JOB_IDS leaves searches out (the test search 3011811). Used by the server, the
   hourly catch-up, the manual sweep and preflight. Backlog on all open searches is worked
   through within the 200-a-day cap. docs/GO-LIVE.v2.md replaces v1 (four asks in the email to
-  Josh, no search list, no Imperium-specific questions). 124 tests.
+  Josh, no search list, no Imperium-specific questions). 124 tests. `npm run preflight --
+  --estimate` counts everyone on the open searches (Loxo only, free) and shows the one-time
+  backlog cost (2.5 to 5 cents a read in batch, about 8% skipped as name-only) and days at the cap.
 - Rate limit: 429 after a burst of roughly 12 requests a second. Client now
   paces to LOXO_MAX_PER_SECOND (default 4) and retries 429 with 2-30 s waits.
 - Pipeline entry: { id, position, person: {...}, workflow_stage_id,
