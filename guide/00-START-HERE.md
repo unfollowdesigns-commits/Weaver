@@ -33,6 +33,7 @@ their Loxo. Josh has not yet been asked for the go-live accounts.
 | File | What | Who | Time |
 |---|---|---|---|
 | 01-TODAY.md | Update your Mac, run the free check, send the email to Josh | You | 20 min |
+| 01b-TEST-IT-YOURSELF.md | Optional, before the email: test real Claude scoring and the automatic part on your own Claude key | You | 30 min, about $2 |
 | 02-WHEN-JOSH-REPLIES.md | Put DP's Claude key in, first real run on Claude | You | 30 min |
 | 03-THE-CALL.md | The 30-minute call: show results, test writing into Loxo, approval | You and Josh | 30 min |
 | 04-SWITCH-IT-ON.md | Set Weaver up in DP's Render account, one day of dry run, then live | You | 20 min + 1 day |

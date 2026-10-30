@@ -80,6 +80,9 @@ The build chat checks the result and gives you the three numbers for the email.
 If the team's #1 is not in the Yes group, the build chat fixes the rule first. Do not send the
 email until the build chat says the result is right.
 
+Optional, before the email: file 01b tests real Claude scoring and the automatic part on your
+own Claude key (about $2). Send those results to the build chat too.
+
 ## Step 8. Send the email to Josh
 
 The text is in `docs/EMAIL-JOSH.v3.md` in your Weaver folder. Open it:

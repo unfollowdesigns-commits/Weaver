@@ -406,6 +406,10 @@ First probe, job 3688816 (Head of Finance and Accounting, 194 candidates), 29 Oc
   (the plan was "read first, write after a demo"), so EMAIL-JOSH.v3 asks for write access before the
   call. CALL-AGENDA.v3: pay answer worded exactly (filtered, instructed, output checked), after the
   review noted that some pay phrasings get through the filter (known limit, see above).
+- guide/01b-TEST-IT-YOURSELF (30 Oct 2026, Houssem: "how to test"): optional, on his own Claude key
+  (about $2): Test A real Claude on the Imperium screened candidates plus verify; Test B the server
+  on the Mac in dry run, every open search, cap 5 in a separate counter file. Test B rehearsed on the
+  stand-in Loxo: criteria drafted, 4 scored, the 5th stopped by the cap (counted as failed), 0 written.
 - Rate limit: 429 after a burst of roughly 12 requests a second. Client now
   paces to LOXO_MAX_PER_SECOND (default 4) and retries 429 with 2-30 s waits.
 - Pipeline entry: { id, position, person: {...}, workflow_stage_id,
